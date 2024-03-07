@@ -5,7 +5,7 @@ from app.server import app
 # from .worker.start_consumer import start_kafka_consumer
 
 if __name__ == "__main__":
-    # Load environment variables from .base.env
+    # Load env
     load_dotenv(dotenv_path="./builders/.base.env")
 
     # Start worker
