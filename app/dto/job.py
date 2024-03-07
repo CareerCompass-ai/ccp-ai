@@ -1,3 +1,4 @@
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
@@ -23,3 +24,9 @@ class JobBase(BaseModel):
     class Config:
         from_attributes = True
 
+class ListJobResponse(JobBase):
+    # count: int
+    # page: int
+    # size: int
+    # records: List[JobBase]
+    pass
