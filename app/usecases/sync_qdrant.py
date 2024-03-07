@@ -1,4 +1,4 @@
-from ..repo.job_repo import JobRepository
+from app.repo.job_repo import JobRepository
 
 class SyncUseCase:
     def __init__(self):

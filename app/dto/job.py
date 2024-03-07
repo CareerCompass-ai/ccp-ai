@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic.types import conint
 
-class PostBase(BaseModel):
+class JobBase(BaseModel):
     id: int
     title: str
     content: str
@@ -21,5 +21,5 @@ class PostBase(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 

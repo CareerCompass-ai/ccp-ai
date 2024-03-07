@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/otishan/Desktop/hcmus/src/datn/ccp-background/venv"
+VIRTUAL_ENV="/Users/otishan/Desktop/hcmus/src/datn/ccp-ai/venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

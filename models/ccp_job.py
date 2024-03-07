@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, F
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.orm import relationship
 
-from config.database import Base
+from config.postgres import Base
 
 class Job(Base):
     __tablename__ = "ccp_job"
@@ -21,3 +21,4 @@ class Job(Base):
 
     created_at = Column(TIMESTAMP(timezone=True),)
     updated_at = Column(TIMESTAMP(timezone=True),)
+

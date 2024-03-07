@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/otishan/Desktop/hcmus/src/datn/ccp-background/venv"
+set -gx VIRTUAL_ENV "/Users/otishan/Desktop/hcmus/src/datn/ccp-ai/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

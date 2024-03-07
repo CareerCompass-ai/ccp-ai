@@ -1,5 +1,5 @@
 from threading import Thread
-from ..worker.kafka_consumer import KafkaConsumerWrapper
+from kafka_consumer import KafkaConsumerWrapper
 
 def start_kafka_consumer():
     consumer = KafkaConsumerWrapper(topic='your-topic') 

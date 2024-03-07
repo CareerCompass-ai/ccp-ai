@@ -1,4 +1,4 @@
-from ...config.database import SessionLocal
+from ...config.postgres import SessionLocal
 from ...models.ccp_job import Job
 
 class JobRepository:
