@@ -6,7 +6,7 @@
 
 ## How to start
 
-Access to virtual environment
+Access to the virtual environment
 
 ```bash
 source venv/bin/activate
@@ -16,4 +16,10 @@ Run service
 
 ```bash
 python3 main.py
+```
+
+Exit the virtual environment
+
+```bash
+deactivate
 ```
