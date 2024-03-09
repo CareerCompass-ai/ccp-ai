@@ -61,7 +61,7 @@ python3 -m venv venv
 Access to the virtual environment
 
 ```bash
-source venv/bin/activate
+venv\Scripts\activate
 ```
 
 Install initial packages
