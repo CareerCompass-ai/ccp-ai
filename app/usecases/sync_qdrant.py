@@ -8,7 +8,7 @@ import constant.config as constant
 
 ai_helper = ai_helper = AI()
 
-class SyncUseCase:
+class SyncUsecase:
     def __init__(self):
         self.job_repo = JobRepository()
         self.qdrant_client = QdrantClient()
