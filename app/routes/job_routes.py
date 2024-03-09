@@ -19,7 +19,7 @@ job_router = APIRouter(
 )
 
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
-ai_helper = ai_helper = AI()
+ai_helper = AI()
 
 @job_router.get("/list", response_model=List[job.ListJobResponse])
 def list_jobs_from_qdrant(req: Optional[job.ListJobRequest]):
