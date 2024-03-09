@@ -1,8 +1,9 @@
 import os
 from dotenv import load_dotenv
-from config.config import ROOT_FOLDER
 
-dotenv_path = os.path.join(ROOT_FOLDER, "builders", ".base.env")
+import config.config as cfg
+
+dotenv_path = os.path.join(cfg.ROOT_FOLDER, "builders", ".base.env")
 load_dotenv(dotenv_path=dotenv_path)
 
 # HTTP server

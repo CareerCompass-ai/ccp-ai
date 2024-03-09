@@ -4,44 +4,41 @@ from typing import List, Optional
 from sqlalchemy import func
 
 from config.postgres import PostgresDB
-from config.qdrant import QdrantVDB
+from config.qdrant import QdrantVDB as qdrant
 
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo import job_repo 
 
-from models import ccp_job
 from app.dto import job
 
+from app.ai.ai_helper import AI
 
 job_router = APIRouter(
     prefix="/api/job",
     tags=['Job']
 )
 
-job_qdrant_repo = JobQdrantRepository(index_name=QdrantVDB.QDRANT_INDEX_JOB_SEARCH)
+job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
+ai_helper = ai_helper = AI()
 
 @job_router.get("/list", response_model=List[job.ListJobResponse])
 def list_jobs_from_qdrant(req: Optional[job.ListJobRequest]):
+    print("ListJobRequest: ", req)
+
     if req.input is not None:
-        # TODO: embed the input
-        vectors = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
-        req.input=vectors
-        pass
+        vectors = ai_helper.get_embedding(req.input)
+
+        req.vectors=vectors
 
     job_ids = job_qdrant_repo.list_jobs(input=req)
     return job_ids
 
-# # api for test
-# @job_router.get("/list-pg", response_model=List[job.ListJobResponse])
-# def get_jobs(db: Session = Depends(PostgresDB.get_db)):
-#     jobs = job_repo.JobRepository.get_jobs(db)
-#     return [job.ListJobResponse(**j.__dict__) for j in jobs]
-
+# api for test
 @job_router.get("/list-pg", response_model=job.ListJobResponse)
 def get_jobs(request: job.ListJobRequest, db: Session = Depends(PostgresDB.get_db)):
-    print("--------", request)
-    jobs = job_repo.JobRepository.get_jobs(db)
+    print("ListJobRequest: ", request)
 
+    jobs = job_repo.JobRepository.get_jobs(db)
     job_responses = [job.JobBase(**j.__dict__) for j in jobs]
 
     response = job.ListJobResponse(
