@@ -30,7 +30,7 @@ class SyncUsecase:
         # FIXME: Fix upsert
         metadata = {"id": job.id, "vectors": vectors}  
         
-        points = [types.Point(vector=vectors[0], metadata=metadata)]
+        points = [types.Points(vector=vectors[0], metadata=metadata)]
         self.qdrant_client.upsert(
             collection_name=constant.QDRANT_INDEX_JOB_SEARCH,
             points=points,
