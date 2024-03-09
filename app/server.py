@@ -17,6 +17,6 @@ app.add_middleware(
 
 app.include_router(job_router)
 
-@app.get("/")
+@app.get("/health-check")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Good"}
