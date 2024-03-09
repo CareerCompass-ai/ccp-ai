@@ -53,7 +53,7 @@ class JobQdrantRepository:
             )
 
         results = List[types.ScoredPoint]
-        if input.vector is not None:
+        if input.vectors is not None:
             results = self.client.search(
                 collection_name=self.index_name,
                 query_vector=input.input,
