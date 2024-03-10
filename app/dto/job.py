@@ -32,3 +32,7 @@ class ListJobResponse(BaseModel):
     page: int
     size: int
     records: List[JobBase]
+
+class JobAggregate(JobBase):
+    user_id: int
+    user_name: str
