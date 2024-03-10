@@ -12,7 +12,17 @@ class JobQdrantRepository:
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
 
-    def list_jobs(self, input: Optional[job.ListJobRequest]) -> List[int]:
+    def count_total_record(self, filter: Optional[models.Filter]) -> int:
+        return self.client.count(
+            collection_name=self.index_name,
+            count_filter=filter,
+            exact=True 
+            # exact:
+                # If `True` - provide the exact count of points matching the filter.
+                # If `False` - provide the approximate count of points matching the filter. Works faster.
+        )
+
+    def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
         if input.page <= 0:
             input.page = 1
         if input.size <= 0:
@@ -21,6 +31,47 @@ class JobQdrantRepository:
             input.size = 100
 
         filter = models.Filter()
+
+        if input.experience_level is not None:
+            filter.must.append(
+                models.FieldCondition(
+                    key="experience_level",
+                    match=models.MatchValue(
+                        value=input.experience_level,
+                    ),
+                )
+            )
+
+        if input.type is not None:
+            filter.must.append(
+                models.FieldCondition(
+                    key="job_type", # FIXME: fix this
+                    match=models.MatchValue(
+                        value=input.type
+                    )
+                )
+            )
+
+        if input.location is not None:
+            filter.must.append(
+                models.FieldCondition(
+                    key="location", # FIXME: fix this
+                    match=models.MatchValue(
+                        value=input.location
+                    )
+                )
+            )
+
+        # FIXME: fix this
+        if input.last_updated is not None:
+            filter.must.append(
+                models.FieldCondition(
+                    key="updated_at",
+                    range=models.Range(
+                        gte=input.last_updated
+                    )
+                )
+            )
 
         if input.salary_from is not None:
             filter.must.append(
@@ -42,31 +93,57 @@ class JobQdrantRepository:
                 )
             )
 
-        if input.experience_level is not None:
-            filter.must.append(
-                models.FieldCondition(
-                    key="experience_level",
-                    match=models.MatchValue(
-                        value=input.experience_level,
-                    ),
-                )
-            )
+        total_record = self.count_total_record(filter)
 
-        results = List[types.ScoredPoint]
+        hits = List[types.ScoredPoint]
         if input.vectors is not None:
-            results = self.client.search(
+            hits = self.client.search(
                 collection_name=self.index_name,
                 query_vector=input.input,
                 query_filter=filter,
                 offset=(input.page - 1) * input.size,
-            ) 
+            )
         else:
-            # FIXME: handle this case
-            results = self.client.scroll(
+            hits = self.client.scroll(
                 collection_name=self.index_name,
                 scroll_filter=filter,
                 limit=input.size,
+                offset=(input.page - 1) * input.size,
+                order_by=models.OrderBy(
+                    key="updated_at",
+                    direction="desc"
+                )
             )
 
-        job_ids = [result.id for result in results]
-        return job_ids
+        records = []
+        for item in hits:
+            score = item.score
+            payload = item.payload
+
+            job_record = job.JobAggregate(
+                id= id,
+                matching_score= score,
+                title= payload.get("title"),
+                content= payload.get("content"),
+                content_url= payload.get("content_url"),
+                is_hiring= payload.get("is_hiring"),
+                opened_date= payload.get("opened_date"),
+                closed_date= payload.get("closed_date"),
+                salary_from= payload.get("salary_from"),
+                salary_to= payload.get("salary_to"),
+                job_type= payload.get("job_type"),
+                company_type= payload.get("company_type"),
+                created_at= payload.get("created_at"),
+                updated_at= payload.get("updated_at"),
+                user_id= payload.get("user_id"),  
+                user_name= payload.get("user_name")
+            )
+
+            records.append(job_record)            
+
+        return job.ListJobResponse(
+            count=total_record,
+            page=input.page,
+            size=input.size,
+            records=records
+        )
