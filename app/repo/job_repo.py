@@ -8,8 +8,8 @@ class JobRepository:
     def __init__(self):
         self.db = SessionLocal()
 
-    def get_by_id(self, job_id):
-        return self.db.query(Job).filter(Job.id == job_id).first()
+    def get_by_id(self, id):
+        return self.db.query(Job).filter(Job.id == id).first()
     
     def get_jobs(db: Session):
         return db.query(ccp_job.Job).all()
