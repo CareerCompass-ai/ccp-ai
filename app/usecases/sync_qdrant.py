@@ -2,7 +2,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.conversions import common_types as types
 
 from app.repo.job_repo import JobRepository
-from app.repo.aggregate import Aggregate
+from app.repo.aggregate import Aggregate as agg_repo
 from app.ai.ai_helper import AI
 
 import constant.config as constant
@@ -15,7 +15,7 @@ class SyncUsecase:
         self.qdrant_client = QdrantClient()
 
     def sync_job_to_qdrant(self, job_id):
-        payload = Aggregate.get_job(job_id)
+        payload = agg_repo.get_job(job_id)
 
         # Summarize job description
         # summarized_content = ai_helper.get_job_summarized(payload.content)
