@@ -15,8 +15,6 @@ class JobBase(BaseModel):
     job_type: int
     company_type: int
 
-    matching: float
-
     created_at: datetime
     updated_at: datetime
 
@@ -35,6 +33,7 @@ class ListJobRequest(BaseModel):
 
 
 class JobAggregate(JobBase):
+    matching_score: float
     user_id: int
     user_name: str
 

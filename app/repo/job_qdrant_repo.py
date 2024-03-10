@@ -115,33 +115,35 @@ class JobQdrantRepository:
                 )
             )
 
-        # TODO: mapping data retrieve from hits
-            
-        # job_records = []
-        # for result in hits:
-        #     job_record = job.JobAggregate(
-        #         id=result.id,
-        #         title=result.title,
-        #         content=result.content,
-        #         content_url=result.content_url,
-        #         is_hiring=result.is_hiring,
-        #         opened_date=result.opened_date,
-        #         closed_date=result.closed_date,
-        #         salary_from=result.salary_from,
-        #         salary_to=result.salary_to,
-        #         job_type=result.job_type,
-        #         company_type=result.company_type,
-        #         matching=result.matching,
-        #         created_at=result.created_at,
-        #         updated_at=result.updated_at,
-        #         user_id=result.user_id, 
-        #         user_name=result.user_name
-        #     )
-        #     job_records.append(job_record)
+        records = []
+        for item in hits:
+            score = item.score
+            payload = item.payload
+
+            job_record = job.JobAggregate(
+                id= id,
+                matching_score= score,
+                title= payload.get("title"),
+                content= payload.get("content"),
+                content_url= payload.get("content_url"),
+                is_hiring= payload.get("is_hiring"),
+                opened_date= payload.get("opened_date"),
+                closed_date= payload.get("closed_date"),
+                salary_from= payload.get("salary_from"),
+                salary_to= payload.get("salary_to"),
+                job_type= payload.get("job_type"),
+                company_type= payload.get("company_type"),
+                created_at= payload.get("created_at"),
+                updated_at= payload.get("updated_at"),
+                user_id= payload.get("user_id"),  
+                user_name= payload.get("user_name")
+            )
+
+            records.append(job_record)            
 
         return job.ListJobResponse(
             count=total_record,
             page=input.page,
             size=input.size,
-            # records=job_records
+            records=records
         )
