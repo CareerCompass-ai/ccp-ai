@@ -29,11 +29,11 @@ function start() {
 }
 
 function up() {
-	docker compose -f ./builders/docker-compose.yml up -d
+	docker compose -f ./builders/docker-compose-dev.yml up -d
 }
 
 function down() {
-	docker compose -f ./builders/docker-compose.yml down
+	docker compose -f ./builders/docker-compose-dev.yml down
 }
 
 
