@@ -5,7 +5,7 @@ services:
     hostname: zookeeper
     container_name: zookeeper
     ports:
-      - '2181:2181'
+      - "2181:2181"
     env_file:
       - .base.env
     # healthcheck:
@@ -21,9 +21,9 @@ services:
     hostname: broker
     container_name: broker
     ports:
-      - '29092:29092'
-      - '9092:9092'
-      - '9101:9101'
+      - "29092:29092"
+      - "9092:9092"
+      - "9101:9101"
     env_file:
       - .base.env
     depends_on:
@@ -47,13 +47,13 @@ services:
     ports:
       - "9021:9021"
     environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
-      CONTROL_CENTER_CONNECT_CONNECT1_CLUSTER: 'http://connect:8083'
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:29092"
+      CONTROL_CENTER_CONNECT_CONNECT1_CLUSTER: "http://connect:8083"
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
-      CONFLIENT_METRICS_ENABLE: 'false'
+      CONFLIENT_METRICS_ENABLE: "false"
       PORT: 9021
     networks:
       ccp_network:
@@ -71,7 +71,7 @@ services:
       - broker
       - ccp-db
     ports:
-      - '8093:8083'
+      - "8093:8083"
     env_file:
       - .base.env
     # healthcheck:
@@ -91,7 +91,7 @@ services:
     depends_on:
       - debezium
     ports:
-      - '8080:8080'
+      - "8080:8080"
     environment:
       KAFKA_CONNECT_URIS: http://debezium:8083
     networks:
@@ -102,7 +102,7 @@ services:
     container_name: ccp-db
     hostname: ccp-db
     restart: always
-    command: [ 'postgres', '-c', 'wal_level=logical' ]
+    command: ["postgres", "-c", "wal_level=logical"]
     env_file:
       - .base.env
     ports:
