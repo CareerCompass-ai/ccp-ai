@@ -1,14 +1,27 @@
 from confluent_kafka import Consumer, KafkaError, KafkaException
+from app.usecases.sync_qdrant import SyncUsecase
 import json
 class KafkaConsumerWrapper:
-    def __init__(self, topic):
+    def __init__(self, topics):
         conf = {
             'bootstrap.servers': 'localhost:9092',  #  Kafka brokers
             'group.id': 'my_consumer_group',        
             'auto.offset.reset': 'earliest'      
         }
         self.consumer = Consumer(conf)
-        self.consumer.subscribe([topic])
+        self.consumer.subscribe(topics)
+    
+    #Handle_topic 
+    def handle_topic_job(self, msg):
+        # SyncUsecase(msg.value())
+        data = json.loads(msg.key())
+        id = data.get('id')
+        print(id)
+        #CODE HERE!
+    def handle_topic_resume(self, msg):
+        print('TABLE RESUME')
+        #CODE HERE!
+
     def consume(self):
         try:
             while True:
@@ -18,31 +31,15 @@ class KafkaConsumerWrapper:
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:
                         # End of partition
-                        print('%% %s [%d] reached end at offset %d\n' %
-                            (msg.topic(), msg.partition(), msg.offset()))
+                        print('%% %s [%d] reached end at offset %d\n' % (msg.topic(), msg.partition(), msg.offset()))
                     elif msg.error():
                         raise KafkaException(msg.error())
                 else:
-                    # Process message
-                    try:
-                        data = json.loads(msg.value())
-                        payload = data.get('payload')
-                        if payload:
-                            before = payload.get('before')
-                            after = payload.get('after')
-                            if before is None and after is not None:
-                                print(payload)
-                            elif before is not None and after is not None:
-                                print('update')
-                            elif before is not None and after is None:
-                                print('delete')
-                            else:
-                                print('Unknown operation')
-                        else:
-                            print('Payload missing or invalid format:', data)
-                    except Exception as e:
-                        print('Error processing message:', e)
-                        # Handle the error as per your requirement
+                    # Process message based in topic
+                    if msg.topic() == 'cdc.public.ccp_job':
+                        self.handle_topic_job(msg)
+                    elif msg.topic() == 'table_resume.public.resume':
+                        self.handle_topic_resume(msg)
         except KeyboardInterrupt:
             pass
 

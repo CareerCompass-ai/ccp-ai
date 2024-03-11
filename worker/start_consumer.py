@@ -2,8 +2,9 @@ from threading import Thread
 from .kafka_consumer import KafkaConsumerWrapper
 
 def start_kafka_consumer():
-    topic='table_test.public.test'
-    consumer = KafkaConsumerWrapper(topic) 
+    #List of topics
+    topics = ['cdc.public.ccp_job']#, 'table_job.public.resume']
+    consumer = KafkaConsumerWrapper(topics) 
 
     # def consume_messages():
     consumer.consume()
