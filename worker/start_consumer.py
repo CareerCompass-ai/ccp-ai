@@ -1,13 +1,15 @@
 from threading import Thread
-from kafka_consumer import KafkaConsumerWrapper
+from .kafka_consumer import KafkaConsumerWrapper
 
 def start_kafka_consumer():
-    consumer = KafkaConsumerWrapper(topic='your-topic') 
+    topic='table_test.public.test'
+    consumer = KafkaConsumerWrapper(topic) 
 
-    def consume_messages():
-        for message in consumer.consume():
-            print("Received message:", message)
+    # def consume_messages():
+    consumer.consume()
+        # for message in consumer.consume():
+        #     print("Received message:", message)
 
-    consumer_thread = Thread(target=consume_messages, daemon=True)
-    consumer_thread.start()
+    # consumer_thread = Thread(target=consume_messages, daemon=True)
+    # consumer_thread.start()
     
