@@ -4,26 +4,29 @@ import json
 
 import constant.config as cfg
 
+
 class KafkaConsumerWrapper:
     def __init__(self, topics):
         conf = {
             'bootstrap.servers': f'{cfg.SERVER_IP}:{cfg.KAFKA_PORT}',
             'group.id': 'my_consumer_group',        
-            'auto.offset.reset': 'earliest'      
+            'auto.offset.reset': 'earliest',
+            # 'debug': 'broker'
         }
         self.consumer = Consumer(conf)
         self.consumer.subscribe(topics)
-    
-    #Handle_topic 
+        self.sync = SyncUsecase()
+
     def handle_topic_job(self, msg):
-        # SyncUsecase(msg.value())
+        print('TABLE JOB')
         data = json.loads(msg.key())
-        id = data.get('id')
+        id = data['payload'].get('id')
         print(id)
-        #CODE HERE!
+
     def handle_topic_resume(self, msg):
-        print('TABLE RESUME')
-        #CODE HERE!
+        resume_id = json.loads(msg.key()).get('payload').get('id')
+        self.sync.sync_resume_to_qdrant(resume_id)
+
 
     def consume(self):
         try:
@@ -39,9 +42,9 @@ class KafkaConsumerWrapper:
                         raise KafkaException(msg.error())
                 else:
                     # Process message based in topic
-                    if msg.topic() == 'cdc.public.ccp_job':
+                    if msg.topic() == cfg.KAFKA_TOPIC_CDC_JOB:
                         self.handle_topic_job(msg)
-                    elif msg.topic() == 'table_resume.public.resume':
+                    elif msg.topic() == cfg.KAFKA_TOPIC_CDC_RESUME:
                         self.handle_topic_resume(msg)
         except KeyboardInterrupt:
             pass

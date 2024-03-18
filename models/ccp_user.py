@@ -5,21 +5,15 @@ from sqlalchemy.orm import relationship
 
 from config.postgres import Base
 
-class Job(Base):
-    __tablename__ = "ccp_job"
+class User(Base):
+    __tablename__ = "ccp_user"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    title = Column(String, nullable=True)
-    content = Column(String, nullable=True)
-    content_url = Column(String, nullable=True)
-    is_hiring = Column(Boolean, default=True)
-    opened_date = Column(TIMESTAMP(timezone=True), nullable=True)
-    closed_date = Column(TIMESTAMP(timezone=True), nullable=True)
-    salary_from = Column(Float, nullable=True)
-    salary_to = Column(Float, nullable=True)
-    job_type = Column(Integer, nullable=True)
-    company_type = Column(Integer, nullable=True)
     address_id = Column(Integer, nullable=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    work_title = Column(String, nullable=True)
+
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
 
