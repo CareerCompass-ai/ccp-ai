@@ -14,6 +14,7 @@ class JobBase(BaseModel):
     salary_to: float
     job_type: int
     company_type: int
+    address_id: int
 
     created_at: datetime
     updated_at: datetime
@@ -31,11 +32,15 @@ class ListJobRequest(BaseModel):
     location: Optional[str] = None
     last_updated: Optional[str] = None
 
+class Address(BaseModel):
+    pass
 
 class JobAggregate(JobBase):
     matching_score: float
     user_id: int
-    user_name: str
+    user_name: str 
+    address: str 
+    job_tags: list[str]
 
 class ListJobResponse(BaseModel):
     count: int

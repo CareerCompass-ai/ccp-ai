@@ -19,7 +19,7 @@ class Job(Base):
     salary_to = Column(Float, nullable=True)
     job_type = Column(Integer, nullable=True)
     company_type = Column(Integer, nullable=True)
-
+    address_id = Column(Integer, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
 
