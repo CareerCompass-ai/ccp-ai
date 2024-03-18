@@ -2,11 +2,11 @@ from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
-class TagBase(BaseModel):
-    id: int
-    tag_name: str
+class JobTagsBase(BaseModel):
+    tag_id: int
+    job_id: int
     created_at: datetime
     updated_at: datetime
 
-class ListTagResponse(BaseModel):
-    tags: List[TagBase]
+class ListJobTagsResponse(BaseModel):
+    tags: List[JobTagsBase]

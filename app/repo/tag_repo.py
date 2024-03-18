@@ -1,30 +1,26 @@
 from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
-from models import ccp_address
-from models.ccp_address import Address
-
-from app.dto import address
+from models.ccp_tag import Tag
+from app.dto import tag
 
 from typing import List, Optional
 
 
-class AddressRepository:
+class TagRepository:
     def __init__(self):
         self.db = SessionLocal()
-
     def get_by_id(self, id):
-        return self.db.query(Address).filter(Address.id == id).first()
-    
-    def get_countries(self, db: Session) -> List[Address]:
-        addresses = db.query(Address).all()
-        address_aggregates = []
-        for item in addresses:
-            address_aggregate = address.CountryBase(
+        return self.db.query(Tag).filter(Tag.id == id).first()
+
+    def get_tags(self, db: Session) -> List[Tag]:
+        tags = db.query(Tag).all()
+        tag_aggregates = []
+        for item in tags:
+            tag_aggregate = tag.Tag(
                 id=item.id,
-                city_id=item.city_id, 
-                detailed_address = item.detailed_address,
+                tag_name=item.tag_name, 
                 created_at= item.created_at,
                 updated_at=item.updated_at
             )
-            address_aggregates.append(address_aggregate)
-        return address_aggregates
+            tag_aggregates.append(tag_aggregate)
+        return tag_aggregates
