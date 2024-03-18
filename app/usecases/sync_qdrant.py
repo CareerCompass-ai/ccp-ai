@@ -7,32 +7,39 @@ from app.repo.aggregate import Aggregate
 from app.ai.ai_helper import AI
 
 import constant.config as constant
+from constant.config import QDRANT_URL, QDRANT_INDEX_JOB_SEARCH, QDRANT_INDEX_RESUME_SEARCH
+
 
 ai_helper = ai_helper = AI()
 
 class SyncUsecase:
     def __init__(self):
-        self.qdrant_client = QdrantClient()
+        self.qdrant_client = QdrantClient(
+            url="157.245.50.16",
+            port=6333
+        )
         self.agg_repo = Aggregate()
 
     def sync_job_to_qdrant(self, job_id):
         payload = self.agg_repo.get_job(job_id)
 
         # Summarize job description
-        # summarized_content = ai_helper.get_job_summarized(payload.content)
+        summarized_content = ai_helper.get_job_summarized(payload.content)
         
         # Embed summarized job description
-        # vector = ai_helper.get_embedding(summarized_content)
-        # payload["vector"] = vector
+        vector = ai_helper.get_embedding(summarized_content)
+        payload.vector = vector.tolist()
         
         # FIXME: Fix upsert
         
         points = [
             types.Points(
-                    # vector=vector[0],
-                    payloads=payload
-                )
-            ]
+                id=payload.id,
+                vector=payload["vector"],
+                payloads=payload.model_dump(),
+            )
+        ]
+
         self.qdrant_client.upsert(
             collection_name=constant.QDRANT_INDEX_JOB_SEARCH,
             points=points,

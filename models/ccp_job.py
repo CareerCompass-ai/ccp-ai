@@ -9,7 +9,7 @@ class Job(Base):
     __tablename__ = "ccp_job"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    title = Column(String, nullable=True)
+    job_title = Column(String, nullable=True)
     content = Column(String, nullable=True)
     content_url = Column(String, nullable=True)
     is_hiring = Column(Boolean, default=True)
@@ -17,9 +17,10 @@ class Job(Base):
     closed_date = Column(TIMESTAMP(timezone=True), nullable=True)
     salary_from = Column(Float, nullable=True)
     salary_to = Column(Float, nullable=True)
-    job_type = Column(Integer, nullable=True)
-    company_type = Column(Integer, nullable=True)
+    job_type = Column(String, nullable=True)
+    company_type = Column(String, nullable=True)
     address_id = Column(Integer, nullable=True)
+    recruiter_id = Column(Integer, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
 

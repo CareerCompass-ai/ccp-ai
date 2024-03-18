@@ -4,7 +4,7 @@ from datetime import datetime
 
 class JobBase(BaseModel):
     id: int
-    title: str
+    job_title: str
     content: str
     content_url: str
     is_hiring: bool
@@ -12,8 +12,8 @@ class JobBase(BaseModel):
     closed_date: datetime
     salary_from: float
     salary_to: float
-    job_type: int
-    company_type: int
+    job_type: str
+    company_type: str
     address_id: int
 
     created_at: datetime
@@ -41,6 +41,8 @@ class JobAggregate(JobBase):
     user_name: str 
     address: str 
     job_tags: list[str]
+    vector: List[float]
+    recruiter_id: int
 
 class ListJobResponse(BaseModel):
     count: int
