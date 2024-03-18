@@ -3,14 +3,19 @@ from app.usecases.sync_qdrant import SyncUsecase
 import json
 class KafkaConsumerWrapper:
     def __init__(self, topics):
-        conf = {
-            'bootstrap.servers': 'localhost:9092',  #  Kafka brokers
+
+        # conf = {
+        #     'bootstrap.servers': "157.245.50.16:9092",  #  Kafka brokers
+        #     'group.id': 'my_consumer_group',        
+        #     'auto.offset.reset': 'earliest'      
+        # }
+        self.consumer = Consumer({
+            'bootstrap.servers': "157.245.50.16:9092",  #  Kafka brokers
             'group.id': 'my_consumer_group',        
             'auto.offset.reset': 'earliest'      
-        }
-        self.consumer = Consumer(conf)
+        })
         self.consumer.subscribe(topics)
-    
+        self.sync = SyncUsecase()
     #Handle_topic 
     def handle_topic_job(self, msg):
         # SyncUsecase(msg.value())
@@ -19,8 +24,9 @@ class KafkaConsumerWrapper:
         print(id)
         #CODE HERE!
     def handle_topic_resume(self, msg):
-        print('TABLE RESUME')
-        #CODE HERE!
+        resume_id = json.loads(msg.key()).get('payload').get('id')
+        self.sync.sync_resume_to_qdrant(resume_id)
+
 
     def consume(self):
         try:
@@ -38,7 +44,7 @@ class KafkaConsumerWrapper:
                     # Process message based in topic
                     if msg.topic() == 'cdc.public.ccp_job':
                         self.handle_topic_job(msg)
-                    elif msg.topic() == 'table_resume.public.resume':
+                    elif msg.topic() == 'cdc.public.ccp_resume':
                         self.handle_topic_resume(msg)
         except KeyboardInterrupt:
             pass

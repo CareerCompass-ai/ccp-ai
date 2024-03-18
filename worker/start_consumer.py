@@ -3,7 +3,7 @@ from .kafka_consumer import KafkaConsumerWrapper
 
 def start_kafka_consumer():
     #List of topics
-    topics = ['cdc.public.ccp_job']#, 'table_job.public.resume']
+    topics = ['cdc.public.ccp_job', 'cdc.public.ccp_resume']
     consumer = KafkaConsumerWrapper(topics) 
 
     # def consume_messages():

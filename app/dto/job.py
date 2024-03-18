@@ -35,7 +35,6 @@ class ListJobRequest(BaseModel):
 class JobAggregate(JobBase):
     matching_score: float
     user_id: int
-    user_name: str
 
 class ListJobResponse(BaseModel):
     count: int
