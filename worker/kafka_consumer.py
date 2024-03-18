@@ -15,19 +15,18 @@ class KafkaConsumerWrapper:
         }
         self.consumer = Consumer(conf)
         self.consumer.subscribe(topics)
-    
-    #Handle_topic 
+        self.sync = SyncUsecase()
+
     def handle_topic_job(self, msg):
-        # SyncUsecase(msg.value())
         print('TABLE JOB')
         data = json.loads(msg.key())
         id = data['payload'].get('id')
         print(id)
+
     def handle_topic_resume(self, msg):
-        print('TABLE RESUME')
-        data = json.loads(msg.key())
-        id = data['payload'].get('id')
-        print(id)
+        resume_id = json.loads(msg.key()).get('payload').get('id')
+        self.sync.sync_resume_to_qdrant(resume_id)
+
 
     def consume(self):
         try:
