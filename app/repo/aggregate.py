@@ -23,8 +23,6 @@ class Aggregate:
         if job is None:
             raise ValueError(f"Job with ID {id} not found")
         
-        # TODO: Aggregating data ...
-        # user_id = self.get_user_id_for_job(id) # example
         job_aggregate = JobAggregate(
             id=job.id,
             title=job.title,
@@ -37,24 +35,26 @@ class Aggregate:
             salary_to = job.salary_to,
             job_type = job.job_type,
             company_type = job.company_type,
-            address_id= job.address_id,
-
             created_at = job.created_at,
             updated_at = job.updated_at
-            # user_id=user_id,  # example
-            # Add more fields
         )
-        address = self.address_repo.get_by_id(job_aggregate.address_id)
+
+        address = self.address_repo.get_by_id(job.address_id)
         city = self.city_repo.get_by_id(address.city_id)
         country = self.country_repo.get_by_id(city.country_id)
         address_full = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
+        
         job_aggregate.address = address_full
+        
         job_tag_list = self.jobtags_repo.get_jobtags_for_job(job_aggregate.id)
+        
         tag_list = []
         for job_tag in job_tag_list:
             tag = self.tag_repo.get_by_id(job_tag.tag_id)
             tag_list.append(tag.tag_name)
+        
         job_aggregate.job_tags = tag_list
+        
         return job_aggregate
 
 
