@@ -18,6 +18,8 @@ services:
       - ./storage:/zookeeper/data
     networks:
       ccp_network:
+        aliases:
+          - zookeeper
 
   broker:
     image: confluentinc/cp-kafka:latest
@@ -29,14 +31,14 @@ services:
       - "9101:9101"
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_JMX_PORT: 9101
       KAFKA_HOSTNAME: localhost
     depends_on:
@@ -51,6 +53,8 @@ services:
       - ./storage:/broker/data
     networks:
       ccp_network:
+        aliases:
+          - broker
 
   kafka-ui:
     container_name: kafka-ui
@@ -61,11 +65,13 @@ services:
       - broker
       - debezium
     environment:
-      DYNAMIC_CONFIG_ENABLED: 'true'
+      DYNAMIC_CONFIG_ENABLED: "true"
       KAFKA_CLUSTERS_0_NAME: ccp_cdc
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:29092
     networks:
       ccp_network:
+        aliases:
+          - kafka-ui
 
   debezium:
     image: debezium/connect:latest
@@ -85,7 +91,7 @@ services:
       OFFSET_STORAGE_TOPIC: connect_offsets
       KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      ENABLE_DEBEZIUM_SCRIPTING: 'true'
+      ENABLE_DEBEZIUM_SCRIPTING: "true"
     healthcheck:
       test:
         [
@@ -98,13 +104,15 @@ services:
           "http://localhost:8083/connectors",
         ]
       start_period: 10s
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 5
     volumes:
       - ./storage:/debezium_connect/data
     networks:
       ccp_network:
+        aliases:
+          - debezium
 
   connectors-ui:
     image: debezium/debezium-ui:latest
@@ -135,6 +143,12 @@ services:
       - ./storage:/posgresql/data
     networks:
       ccp_network:
+        aliases:
+          - postgres
+    healthcheck:
+      test: pg_isready -U admin -d ccp -h localhost
+      interval: 30s
+      retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -151,6 +165,8 @@ services:
       - ./storage:/qdrant/data
     networks:
       ccp_network:
+        aliases:
+          - qdrant
 
   minio:
     image: minio/minio
@@ -166,6 +182,8 @@ services:
     command: server --console-address ":9001" /data
     networks:
       ccp_network:
+        aliases:
+          - minio
 
 networks:
   ccp_network:

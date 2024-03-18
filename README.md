@@ -61,7 +61,7 @@ python3 -m venv venv
 Access to the virtual environment
 
 ```bash
-venv\Scripts\activate
+venv\Scripts\activate.bat
 ```
 
 Install initial packages
@@ -92,4 +92,18 @@ Exit the virtual environment
 
 ```bash
 deactivate
+```
+
+## 3. Setup infras (for deploying)
+
+Setup infras
+
+```bash
+make infras
+```
+
+Stop infras
+
+```bash
+make infras_down
 ```

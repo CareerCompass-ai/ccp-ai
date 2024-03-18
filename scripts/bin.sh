@@ -16,6 +16,8 @@ function help() {
   echo 1>&2 "  start        start the service"
   echo 1>&2 "  up			      pull and start infrastructure images"
   echo 1>&2 "  down			    stop all infrastructure images"
+  echo 1>&2 "  infras			  pull and start infrastructure images"
+  echo 1>&2 "  infras_down	stop all infrastructure images"
 }
 
 function setup_env() {
@@ -34,6 +36,14 @@ function up() {
 
 function down() {
 	docker compose -f ./builders/docker-compose-dev.yml down
+}
+
+function infras() {
+	docker compose -f ./builders/docker-compose-infras.yml up -d
+}
+
+function infras_down() {
+	docker compose -f ./builders/docker-compose-infras.yml down
 }
 
 
@@ -56,6 +66,16 @@ case "${SUBCOMMAND}" in
   "down" )
     shift
     down "$@"
+    ;;
+
+  "infras" )
+    shift
+    infras "$@"
+    ;;
+
+  "infras_down" )
+    shift
+    infras_down "$@"
     ;;
 
   *)
