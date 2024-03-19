@@ -17,6 +17,7 @@ class AI:
         while retries < max_retries:
             try:
                 response = self.openai_client.embeddings.create(input=input, model=self.embedding_model)
+                
                 return np.array(response.data[0].embedding)
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
@@ -29,9 +30,9 @@ class AI:
         print("Exceeded maximum number of retries. Please try again later.")
         return None
 
-    def get_summarized_content(self, input, prompt, type, max_retries=3):
+    def get_summarized_content(self, input:str, prompt:str, type:str, max_retries=3):
         retries = 0
-        content = prompt.format(input=input["description"], type=type)
+        content = prompt.format(job_description=input)
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
@@ -42,6 +43,7 @@ class AI:
                     ],
                     top_p=0.2,
                 )
+
                 return response.choices[0].message.content.strip()
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:

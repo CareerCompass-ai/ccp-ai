@@ -22,17 +22,18 @@ job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 job_repo = JobRepository()
 ai_helper = AI()
 
-@job_router.get("/list", response_model=List[job.ListJobResponse])
+@job_router.get("/list", response_model=job.ListJobResponse)
 def list_jobs_from_qdrant(req: Optional[job.ListJobRequest]):
-    print("ListJobRequest: ", req)
+    try:
+        if req.input is not None:
+            vectors = ai_helper.get_embedding(req.input)
+            req.vectors = vectors.tolist() if vectors is not None else None
 
-    if req.input is not None:
-        vectors = ai_helper.get_embedding(req.input)
+        data = job_qdrant_repo.list_jobs(input=req)
+        return data
 
-        req.vectors=vectors
-
-    job_ids = job_qdrant_repo.list_jobs(input=req)
-    return job_ids
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # api for test
 @job_router.get("/list-pg", response_model=job.ListJobResponse)

@@ -21,7 +21,7 @@ class JobRepository:
         for item in jobs:
             job_aggregate = job.JobAggregate(
                 id=item.id,
-                title=item.title,
+                job_title=item.job_title,
                 content=item.content,
                 content_url=item.content_url,
                 is_hiring=item.is_hiring,

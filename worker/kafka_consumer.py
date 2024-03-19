@@ -11,7 +11,7 @@ class KafkaConsumerWrapper:
             'bootstrap.servers': f'{cfg.SERVER_IP}:{cfg.KAFKA_PORT}',
             'group.id': 'my_consumer_group',        
             'auto.offset.reset': 'earliest',
-            # 'debug': 'broker'
+            'debug': 'broker'
         }
         self.consumer = Consumer(conf)
         self.consumer.subscribe(topics)
@@ -22,6 +22,8 @@ class KafkaConsumerWrapper:
         data = json.loads(msg.key())
         id = data['payload'].get('id')
         print(id)
+
+        self.sync.sync_job_to_qdrant(id)
 
     def handle_topic_resume(self, msg):
         resume_id = json.loads(msg.key()).get('payload').get('id')

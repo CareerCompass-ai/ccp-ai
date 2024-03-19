@@ -11,6 +11,8 @@ from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.tag_repo import TagRepository
 from app.dto.resume import ResumeAggregate
 
+from datetime import datetime
+
 class Aggregate:
     def __init__(self):
         self.job_repo = JobRepository()
@@ -29,21 +31,42 @@ class Aggregate:
         
         job_aggregate = JobAggregate(
             id=job.id,
-            title=job.title,
+            job_title=job.job_title,
             content=job.content,
             content_url = job.content_url,
             is_hiring = job.is_hiring,
-            opened_date = job.opened_date,
-            closed_date = job.closed_date,
+            # opened_date = job.opened_date,
             salary_from = job.salary_from,
             salary_to = job.salary_to,
             job_type = job.job_type,
             company_type = job.company_type,
-            created_at = job.created_at,
-            updated_at = job.updated_at
         )
+        if job.updated_at is not None:
+            job_aggregate.updated_at = datetime.fromisoformat(str(job.updated_at))
+
+        if job.created_at is not None:
+            job_aggregate.created_at = datetime.fromisoformat(str(job.created_at))
+
+        if job.opened_date is not None:
+            job_aggregate.opened_date = datetime.fromisoformat(str(job.opened_date))
+ 
+        if job.closed_date is not None:
+            job_aggregate.closed_date = datetime.fromisoformat(str(job.closed_date))
+        # if job.created_at is not None:
+        #     job_aggregate.created_at = str(job.created_at)
+        # if job.updated_at is not None:
+        #     job_aggregate.updated_at = str(job.updated_at)
+        # if job.opened_date is not None:
+        #     job_aggregate.opened_date = str(job.opened_date)
+        # if job.closed_date is not None:
+        #     job_aggregate.closed_date = str(job.closed_date)
+        if job.recruiter_id is not None:
+            job_aggregate.recruiter_id = job.recruiter_id
 
         address = self.address_repo.get_by_id(job.address_id)
+        if address is not None:
+            job_aggregate.address_id = job.address_id # TODO: double check
+            
         city = self.city_repo.get_by_id(address.city_id)
         country = self.country_repo.get_by_id(city.country_id)
         address_full = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
