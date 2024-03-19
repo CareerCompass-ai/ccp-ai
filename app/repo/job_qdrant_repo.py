@@ -146,7 +146,7 @@ class JobQdrantRepository:
                 job_record = job.JobAggregate(
                     id= item.id,
                     matching_score= score,
-                    title= payload["job_title"],
+                    job_title= payload["job_title"],
                     content= payload["content"],
                     s_content= payload["s_content"],
                     content_url= payload["content_url"],
@@ -205,7 +205,7 @@ class JobQdrantRepository:
                         job_tags= payload["job_tags"],
                         address= payload["address"],
                     )
-                    
+
                     del payload
                     records.append(job_record)  
 
