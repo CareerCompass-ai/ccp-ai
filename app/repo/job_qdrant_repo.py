@@ -148,32 +148,31 @@ class JobQdrantRepository:
                 # with_vectors=False
             )
             for item in hits:
-                # FIXME: get payload from item in hits
-                payload = item.record.payload
+                if item is not None:
+                    payload = item[0].payload
 
-                job_record = job.JobAggregate(
-                    id= item.id,
-                    title= payload["job_title"],
-                    content= payload["content"],
-                    s_content= payload["s_content"],
-                    content_url= payload["content_url"],
-                    is_hiring= payload["is_hiring"],
-                    opened_date= payload["opened_date"],
-                    closed_date= payload["closed_date"],
-                    salary_from= payload["salary_from"],
-                    salary_to= payload["salary_to"],
-                    job_type= payload["job_type"],
-                    company_type= payload["company_type"],
-                    created_at= payload["created_at"],
-                    updated_at= payload["updated_at"],
-                    user_id= payload["user_id"],  
-                    user_name= payload["user_name"],
-                    job_tags= payload["job_tags"],
-                    address= payload["address"],
-                )
-
-                records.append(job_record)  
-
+                    job_record = job.JobAggregate(
+                        id= item[0].id,
+                        job_title= payload["job_title"],
+                        content= payload["content"],
+                        s_content= payload["s_content"],
+                        content_url= payload["content_url"],
+                        is_hiring= payload["is_hiring"],
+                        opened_date= payload["opened_date"],
+                        closed_date= payload["closed_date"],
+                        salary_from= payload["salary_from"],
+                        salary_to= payload["salary_to"],
+                        job_type= payload["job_type"],
+                        company_type= payload["company_type"],
+                        created_at= payload["created_at"],
+                        updated_at= payload["updated_at"],
+                        user_id= payload["user_id"],  
+                        user_name= payload["user_name"],
+                        job_tags= payload["job_tags"],
+                        address= payload["address"],
+                    )
+                    del payload
+                    records.append(job_record)  
 
         return job.ListJobResponse(
             count=total_record,
