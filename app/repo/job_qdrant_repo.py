@@ -106,11 +106,11 @@ class JobQdrantRepository:
             )
 
             for item in hits:
-                score = item[0].score
-                payload = item[0].payload
+                score = item.score
+                payload = item.payload
 
                 job_record = job.JobAggregate(
-                    id= item[0].id,
+                    id= item.id,
                     matching_score= score,
                     title= payload["job_title"],
                     content= payload["content"],
