@@ -32,7 +32,7 @@ class AI:
 
     def get_summarized_content(self, input:str, prompt:str, type:str, max_retries=3):
         retries = 0
-        content = prompt.format(input=input, type=type)
+        content = prompt.format(job_description=input)
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
