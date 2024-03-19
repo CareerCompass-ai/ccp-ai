@@ -148,8 +148,7 @@ class JobQdrantRepository:
                 # with_vectors=False
             )
             for item in hits:
-                # FIXME: get payload from item in hits
-                payload = item.record.payload
+                payload = item[0].payload
 
                 job_record = job.JobAggregate(
                     id= item.id,
