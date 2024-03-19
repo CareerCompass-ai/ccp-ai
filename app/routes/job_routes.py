@@ -14,7 +14,7 @@ from app.dto import job
 from app.ai.ai_helper import AI
 
 job_router = APIRouter(
-    prefix="/api/job",
+    prefix="/api",
     tags=['Job']
 )
 
@@ -22,7 +22,7 @@ job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 job_repo = JobRepository()
 ai_helper = AI()
 
-@job_router.get("/list", response_model=job.ListJobResponse)
+@job_router.get("/jobs", response_model=job.ListJobResponse)
 def list_jobs_from_qdrant(req: Optional[job.ListJobRequest]):
     try:
         if req.input is not None:
@@ -35,29 +35,16 @@ def list_jobs_from_qdrant(req: Optional[job.ListJobRequest]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# api for test
-@job_router.get("/list-pg", response_model=job.ListJobResponse)
-def get_jobs(request: job.ListJobRequest, db: Session = Depends(PostgresDB.get_db)):
-    print("ListJobRequest: ", request)
 
-    jobs = job_repo.get_jobs(db)
-    job_responses = [job.JobAggregate(**j.__dict__) for j in jobs]
+@job_router.get("/job", response_model=job.JobAggregate)
+def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
+    try:
+        data = job_qdrant_repo.get_job(input=req)
+        return data
 
-    response = job.ListJobResponse(
-        count=len(job_responses),
-        page=request.page,
-        size=request.size,
-        records=job_responses
-    )
-
-    return response
-
-@job_router.get("/", response_model=List[job.JobBase])
-def get_jobs(id: int, db: Session =  Depends(PostgresDB.get_db)):
-    job = job_repo.get_by_id(db, id)
-    if job is None:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return job
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 @job_router.get("/qdrant/health-check")
 async def root():

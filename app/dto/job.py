@@ -42,3 +42,6 @@ class ListJobResponse(BaseModel):
     page: int
     size: int
     records: List[JobAggregate]
+
+class GetJobRequest(BaseModel):
+    id: Optional[int] = None

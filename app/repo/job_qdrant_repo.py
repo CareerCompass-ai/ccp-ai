@@ -12,6 +12,37 @@ class JobQdrantRepository:
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
 
+    def get_job(self, input: Optional[job.GetJobRequest]) -> job.JobAggregate:
+        if input.id is not None:
+            record = self.client.retrieve(
+                self.index_name,
+                ids=[input.id]
+            )[0]
+
+            result = job.JobAggregate(
+                id=record.id,
+                job_title=record.payload["job_title"],
+                content= record.payload["content"],
+                s_content= record.payload["s_content"],
+                content_url= record.payload["content_url"],
+                is_hiring= record.payload["is_hiring"],
+                opened_date= record.payload["opened_date"],
+                closed_date= record.payload["closed_date"],
+                salary_from= record.payload["salary_from"],
+                salary_to= record.payload["salary_to"],
+                job_type= record.payload["job_type"],
+                company_type= record.payload["company_type"],
+                created_at= record.payload["created_at"],
+                updated_at= record.payload["updated_at"],
+                recruiter_id= record.payload["recruiter_id"],  
+                recruiter_name= record.payload["recruiter_name"],
+                job_tags= record.payload["job_tags"],
+                address= record.payload["address"],
+                hiring_level= record.payload["hiring_level"],
+            )
+
+            return result
+
     def count_total_record(self, filter: Optional[models.Filter]) -> int:
         return self.client.count(
             collection_name=self.index_name,
