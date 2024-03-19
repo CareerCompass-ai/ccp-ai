@@ -21,6 +21,8 @@ class Job(Base):
     company_type = Column(String, nullable=True)
     address_id = Column(Integer, nullable=True)
     recruiter_id = Column(Integer, nullable=True)
+    applied_count = Column(Integer, nullable=True)
+    hiring_level = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
 
