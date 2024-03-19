@@ -15,7 +15,8 @@ class JobBase(BaseModel):
     job_type: Optional[str] = None
     company_type: Optional[str] = None
     address_id: Optional[int] = None
-
+    applied_count: Optional[int] = None
+    hiring_level: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -23,10 +24,6 @@ class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
     input: Optional[str] = None
-    vectors: Optional[list[float]] = None
-    salary_from: Optional[float] = None
-    salary_to: Optional[float] = None
-    experience_level: Optional[int] = None
     type: Optional[int] = None
     working_model: Optional[int] = None
     location: Optional[str] = None
@@ -35,8 +32,7 @@ class ListJobRequest(BaseModel):
 class JobAggregate(JobBase):
     matching_score: Optional[float] = None
     s_content: Optional[str] = None
-    user_id: Optional[int] = None
-    user_name: Optional[str] = None
+    recruiter_name: Optional[str] = None
     address: Optional[str] = None
     job_tags: list[str] = None
     recruiter_id: Optional[int] = None

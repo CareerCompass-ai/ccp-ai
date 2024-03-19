@@ -10,7 +10,7 @@ from app.repo.address_repo import AddressRepository
 from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.tag_repo import TagRepository
 from app.dto.resume import ResumeAggregate
-
+from app.repo.user_repo import UserRepository
 from datetime import datetime
 
 class Aggregate:
@@ -22,6 +22,7 @@ class Aggregate:
         self.address_repo = AddressRepository()
         self.tag_repo = TagRepository()
         self.jobtags_repo = JobTagsRepository()
+        self.user_repo = UserRepository()
 
     def get_job(self, id: int) -> Optional[JobAggregate]:
         job = self.job_repo.get_by_id(id)
@@ -31,6 +32,8 @@ class Aggregate:
         
         job_aggregate = JobAggregate(
             id=job.id,
+            applied_count=job.applied_count,
+            hiring_level=job.hiring_level,
             job_title=job.job_title,
             content=job.content,
             content_url = job.content_url,
@@ -62,6 +65,10 @@ class Aggregate:
         #     job_aggregate.closed_date = str(job.closed_date)
         if job.recruiter_id is not None:
             job_aggregate.recruiter_id = job.recruiter_id
+            user = self.user_repo.get_by_id(job.recruiter_id)
+            if user is not None:
+                job_aggregate.recruiter_name = user.first_name + ' ' + user.last_name
+
 
         address = self.address_repo.get_by_id(job.address_id)
         if address is not None:
