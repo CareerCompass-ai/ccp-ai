@@ -28,6 +28,7 @@ class SyncUsecase:
         
         # Embed summarized job description
         vector = ai_helper.get_embedding(summarized_content)
+        payload.s_content = summarized_content
         
         self.qdrant_client.upsert(
             collection_name=constant.QDRANT_INDEX_JOB_SEARCH,

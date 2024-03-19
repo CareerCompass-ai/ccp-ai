@@ -125,7 +125,7 @@ class JobQdrantRepository:
                 id= item.id,
                 matching_score= score,
                 title= payload["job_title"],
-                content= payload["content"],
+                s_content= payload["s_content"],
                 content_url= payload["content_url"],
                 is_hiring= payload["is_hiring"],
                 opened_date= payload["opened_date"],
@@ -139,6 +139,7 @@ class JobQdrantRepository:
                 user_id= payload["user_id"],  
                 user_name= payload["user_name"],
                 job_tags= payload["job_tags"],
+                address= payload["address"],
             )
 
             records.append(job_record)            
