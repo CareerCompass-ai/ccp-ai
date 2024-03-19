@@ -19,6 +19,9 @@ class JobQdrantRepository:
                 ids=[input.id]
             )[0]
 
+            if record is None:
+                return None
+
             result = job.JobAggregate(
                 id=record.id,
                 job_title=record.payload["job_title"],
@@ -156,8 +159,8 @@ class JobQdrantRepository:
                     company_type= payload["company_type"],
                     created_at= payload["created_at"],
                     updated_at= payload["updated_at"],
-                    user_id= payload["user_id"],  
-                    user_name= payload["user_name"],
+                    recruiter_id= payload["recruiter_id"],  
+                    recruiter_name= payload["recruiter_name"],
                     job_tags= payload["job_tags"],
                     address= payload["address"],
                 )
@@ -165,7 +168,6 @@ class JobQdrantRepository:
                 del payload
                 records.append(job_record)  
         else:
-            # FIXME: fix this, note: create a range index for updated_at field
             hits = self.client.scroll(
                 collection_name=self.index_name,
                 scroll_filter=filter,
@@ -198,11 +200,12 @@ class JobQdrantRepository:
                         company_type= payload["company_type"],
                         created_at= payload["created_at"],
                         updated_at= payload["updated_at"],
-                        user_id= payload["user_id"],  
-                        user_name= payload["user_name"],
+                        recruiter_id= payload["recruiter_id"],  
+                        recruiter_name= payload["recruiter_name"],
                         job_tags= payload["job_tags"],
                         address= payload["address"],
                     )
+                    
                     del payload
                     records.append(job_record)  
 
