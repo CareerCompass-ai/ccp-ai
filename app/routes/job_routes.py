@@ -29,10 +29,11 @@ def list_jobs_from_qdrant(req: Optional[job.ListJobRequest]):
     if req.input is not None:
         vectors = ai_helper.get_embedding(req.input)
 
-        req.vectors=vectors
+        req.vectors=vectors.tolist()
 
-    job_ids = job_qdrant_repo.list_jobs(input=req)
-    return job_ids
+    data = job_qdrant_repo.list_jobs(input=req)
+
+    return data
 
 # api for test
 @job_router.get("/list-pg", response_model=job.ListJobResponse)

@@ -99,7 +99,7 @@ class JobQdrantRepository:
         if input.vectors is not None:
             hits = self.client.search(
                 collection_name=self.index_name,
-                query_vector=input.input,
+                query_vector=input.vectors,
                 query_filter=filter,
                 offset=(input.page - 1) * input.size,
             )
@@ -123,10 +123,10 @@ class JobQdrantRepository:
             job_record = job.JobAggregate(
                 id= id,
                 matching_score= score,
-                title= payload.get("title"),
-                content= payload.get("content"),
-                content_url= payload.get("content_url"),
-                is_hiring= payload.get("is_hiring"),
+                title= payload["job_title"],
+                content= payload["content"],
+                content_url= payload["content_url"],
+                is_hiring= payload["is_hiring"],
                 opened_date= payload.get("opened_date"),
                 closed_date= payload.get("closed_date"),
                 salary_from= payload.get("salary_from"),

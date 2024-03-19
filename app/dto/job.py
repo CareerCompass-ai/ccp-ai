@@ -23,7 +23,7 @@ class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
     input: Optional[str] = None
-    vectors: Optional[List[List[float]]] = None
+    vectors: Optional[list[float]] = None
     salary_from: Optional[float] = None
     salary_to: Optional[float] = None
     experience_level: Optional[int] = None
