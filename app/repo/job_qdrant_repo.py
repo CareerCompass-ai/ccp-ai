@@ -93,7 +93,7 @@ class JobQdrantRepository:
                 )
             )
 
-        total_record = self.count_total_record(filter)
+        total_record = self.count_total_record(filter).count
 
         hits = List[types.ScoredPoint]
         if input.vectors is not None:
@@ -104,6 +104,7 @@ class JobQdrantRepository:
                 offset=(input.page - 1) * input.size,
             )
         else:
+            # FIXME: fix this, note: create a range index for updated_at field
             hits = self.client.scroll(
                 collection_name=self.index_name,
                 scroll_filter=filter,
@@ -121,22 +122,23 @@ class JobQdrantRepository:
             payload = item.payload
 
             job_record = job.JobAggregate(
-                id= id,
+                id= item.id,
                 matching_score= score,
                 title= payload["job_title"],
                 content= payload["content"],
                 content_url= payload["content_url"],
                 is_hiring= payload["is_hiring"],
-                opened_date= payload.get("opened_date"),
-                closed_date= payload.get("closed_date"),
-                salary_from= payload.get("salary_from"),
-                salary_to= payload.get("salary_to"),
-                job_type= payload.get("job_type"),
-                company_type= payload.get("company_type"),
-                created_at= payload.get("created_at"),
-                updated_at= payload.get("updated_at"),
-                user_id= payload.get("user_id"),  
-                user_name= payload.get("user_name")
+                opened_date= payload["opened_date"],
+                closed_date= payload["closed_date"],
+                salary_from= payload["salary_from"],
+                salary_to= payload["salary_to"],
+                job_type= payload["job_type"],
+                company_type= payload["company_type"],
+                created_at= payload["created_at"],
+                updated_at= payload["updated_at"],
+                user_id= payload["user_id"],  
+                user_name= payload["user_name"],
+                job_tags= payload["job_tags"],
             )
 
             records.append(job_record)            
