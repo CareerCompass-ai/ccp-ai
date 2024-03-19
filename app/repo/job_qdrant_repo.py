@@ -95,6 +95,7 @@ class JobQdrantRepository:
 
         total_record = self.count_total_record(filter).count
 
+        records = []
         hits = List[types.ScoredPoint]
         if input.vectors is not None:
             hits = self.client.search(
@@ -103,46 +104,75 @@ class JobQdrantRepository:
                 query_filter=filter,
                 offset=(input.page - 1) * input.size,
             )
+
+            for item in hits:
+                score = item.score
+                payload = item.payload
+
+                job_record = job.JobAggregate(
+                    id= item.id,
+                    matching_score= score,
+                    title= payload["job_title"],
+                    content= payload["content"],
+                    s_content= payload["s_content"],
+                    content_url= payload["content_url"],
+                    is_hiring= payload["is_hiring"],
+                    opened_date= payload["opened_date"],
+                    closed_date= payload["closed_date"],
+                    salary_from= payload["salary_from"],
+                    salary_to= payload["salary_to"],
+                    job_type= payload["job_type"],
+                    company_type= payload["company_type"],
+                    created_at= payload["created_at"],
+                    updated_at= payload["updated_at"],
+                    user_id= payload["user_id"],  
+                    user_name= payload["user_name"],
+                    job_tags= payload["job_tags"],
+                    address= payload["address"],
+                )
+
+                records.append(job_record)  
         else:
             # FIXME: fix this, note: create a range index for updated_at field
             hits = self.client.scroll(
                 collection_name=self.index_name,
                 scroll_filter=filter,
                 limit=input.size,
-                offset=(input.page - 1) * input.size,
+                # offset=(input.page - 1) * input.size,
+                # start_from=(input.page - 1) * input.size,
                 order_by=models.OrderBy(
                     key="updated_at",
                     direction="desc"
+                ),
+                with_payload=True
+                # with_vectors=False
+            )
+            for item in hits:
+                payload = item.record.payload
+
+                job_record = job.JobAggregate(
+                    id= item.id,
+                    title= payload["job_title"],
+                    content= payload["content"],
+                    s_content= payload["s_content"],
+                    content_url= payload["content_url"],
+                    is_hiring= payload["is_hiring"],
+                    opened_date= payload["opened_date"],
+                    closed_date= payload["closed_date"],
+                    salary_from= payload["salary_from"],
+                    salary_to= payload["salary_to"],
+                    job_type= payload["job_type"],
+                    company_type= payload["company_type"],
+                    created_at= payload["created_at"],
+                    updated_at= payload["updated_at"],
+                    user_id= payload["user_id"],  
+                    user_name= payload["user_name"],
+                    job_tags= payload["job_tags"],
+                    address= payload["address"],
                 )
-            )
 
-        records = []
-        for item in hits:
-            score = item.score
-            payload = item.payload
+                records.append(job_record)  
 
-            job_record = job.JobAggregate(
-                id= item.id,
-                matching_score= score,
-                title= payload["job_title"],
-                s_content= payload["s_content"],
-                content_url= payload["content_url"],
-                is_hiring= payload["is_hiring"],
-                opened_date= payload["opened_date"],
-                closed_date= payload["closed_date"],
-                salary_from= payload["salary_from"],
-                salary_to= payload["salary_to"],
-                job_type= payload["job_type"],
-                company_type= payload["company_type"],
-                created_at= payload["created_at"],
-                updated_at= payload["updated_at"],
-                user_id= payload["user_id"],  
-                user_name= payload["user_name"],
-                job_tags= payload["job_tags"],
-                address= payload["address"],
-            )
-
-            records.append(job_record)            
 
         return job.ListJobResponse(
             count=total_record,
