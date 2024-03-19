@@ -131,6 +131,7 @@ class JobQdrantRepository:
                     address= payload["address"],
                 )
 
+                del payload
                 records.append(job_record)  
         else:
             # FIXME: fix this, note: create a range index for updated_at field
@@ -147,12 +148,12 @@ class JobQdrantRepository:
                 with_payload=True
                 # with_vectors=False
             )
-            for item in hits:
+            for item in hits[0]:
                 if item is not None:
-                    payload = item[0].payload
+                    payload = item.payload
 
                     job_record = job.JobAggregate(
-                        id= item[0].id,
+                        id= item.id,
                         job_title= payload["job_title"],
                         content= payload["content"],
                         s_content= payload["s_content"],
