@@ -22,15 +22,13 @@ class SyncUsecase:
 
     def sync_job_to_qdrant(self, job_id):
         payload = self.agg_repo.get_job(job_id)
-        print(payload.model_dump())
+
         # Summarize job description
         summarized_content = ai_helper.get_job_summarized(payload.content)
         
         # Embed summarized job description
         vector = ai_helper.get_embedding(summarized_content)
-        # payload.vector = vector.tolist()
         
-        # FIXME: Fix upsert
         self.qdrant_client.upsert(
             collection_name=constant.QDRANT_INDEX_JOB_SEARCH,
             points= [ 
