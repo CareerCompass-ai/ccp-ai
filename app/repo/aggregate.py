@@ -65,10 +65,11 @@ class Aggregate:
         #     job_aggregate.closed_date = str(job.closed_date)
         if job.recruiter_id is not None:
             job_aggregate.recruiter_id = job.recruiter_id
+            user = self.user_repo.get_by_id(job.recruiter_id)
+            if user is not None:
+                job_aggregate.recruiter_name = user.first_name + ' ' + user.last_name
 
-        user = self.user_repo.get_by_id(job.recruiter_id)
-        job_aggregate.user_name = user.first_name + ' ' + user.last_name
-        
+
         address = self.address_repo.get_by_id(job.address_id)
         if address is not None:
             job_aggregate.address_id = job.address_id # TODO: double check
