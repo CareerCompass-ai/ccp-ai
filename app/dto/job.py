@@ -34,6 +34,7 @@ class ListJobRequest(BaseModel):
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = None
+    s_content: Optional[str] = None
     user_id: Optional[int] = None
     user_name: Optional[str] = None
     address: Optional[str] = None
