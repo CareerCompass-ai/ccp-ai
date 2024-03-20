@@ -24,7 +24,7 @@ class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
     input: Optional[str] = None
-    type: Optional[int] = None
+    type: Optional[str] = None
     working_model: Optional[int] = None
     location: Optional[str] = None
     last_updated: Optional[str] = None
