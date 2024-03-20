@@ -65,7 +65,8 @@ class JobQdrantRepository:
             input.size = 100
 
         filter = models.Filter()
-
+        if filter.must is None:
+            filter.must = []
         if input.experience_level is not None:
             filter.must.append(
                 models.FieldCondition(
