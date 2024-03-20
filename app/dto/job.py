@@ -24,14 +24,16 @@ class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
     input: Optional[str] = None
-    type: Optional[str] = None
-    working_model: Optional[int] = None
+    job_type: Optional[str] = None
+    company_type: Optional[str] = None
     location: Optional[str] = None
     last_updated: Optional[str] = None
     vectors: Optional[list[float]] = None
     salary_from: Optional[float] = None
     salary_to: Optional[float] = None
-    experience_level: Optional[int] = None
+    hiring_level: Optional[str] = None
+    applied_count: Optional[int] = None
+    job_tags: Optional[list[str]] = None
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = None

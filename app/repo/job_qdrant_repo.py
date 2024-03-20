@@ -5,6 +5,7 @@ from qdrant_client.http import models
 from config.qdrant import QdrantVDB
 
 from app.dto import job
+from app.dto import mapper
 
 class JobQdrantRepository:
     def __init__(self, index_name: str):
@@ -22,29 +23,7 @@ class JobQdrantRepository:
             if record is None:
                 return None
 
-            result = job.JobAggregate(
-                id=record.id,
-                job_title=record.payload["job_title"],
-                content= record.payload["content"],
-                s_content= record.payload["s_content"],
-                content_url= record.payload["content_url"],
-                is_hiring= record.payload["is_hiring"],
-                opened_date= record.payload["opened_date"],
-                closed_date= record.payload["closed_date"],
-                salary_from= record.payload["salary_from"],
-                salary_to= record.payload["salary_to"],
-                job_type= record.payload["job_type"],
-                company_type= record.payload["company_type"],
-                created_at= record.payload["created_at"],
-                updated_at= record.payload["updated_at"],
-                recruiter_id= record.payload["recruiter_id"],  
-                recruiter_name= record.payload["recruiter_name"],
-                job_tags= record.payload["job_tags"],
-                address= record.payload["address"],
-                hiring_level= record.payload["hiring_level"],
-            )
-
-            return result
+            return mapper.toJobDTO(record.payload)
 
     def count_total_record(self, filter: Optional[models.Filter]) -> int:
         return self.client.count(
@@ -67,22 +46,31 @@ class JobQdrantRepository:
         filter = models.Filter()
         if filter.must is None:
             filter.must = []
-        if input.experience_level is not None:
+        if filter.should is None:
+            filter.should = []
+        if filter.must_not is None:
+            filter.must_not = []
+
+        # TODO: handle this case
+        if input.job_tags is not None :
+            pass
+
+        if input.hiring_level is not None:
             filter.must.append(
                 models.FieldCondition(
-                    key="experience_level",
+                    key="hiring_level",
                     match=models.MatchValue(
-                        value=input.experience_level,
+                        value=input.hiring_level,
                     ),
                 )
             )
 
-        if input.type is not None:
+        if input.job_type is not None:
             filter.must.append(
                 models.FieldCondition(
-                    key="job_type", # FIXME: fix this
+                    key="job_type",
                     match=models.MatchValue(
-                        value=input.type
+                        value=input.job_type
                     )
                 )
             )
@@ -93,6 +81,16 @@ class JobQdrantRepository:
                     key="location", # FIXME: fix this
                     match=models.MatchValue(
                         value=input.location
+                    )
+                )
+            )
+
+        if input.company_type is not None:
+            filter.must.append(
+                models.FieldCondition(
+                    key="company_type", 
+                    match=models.MatchValue(
+                        value=input.company_type
                     )
                 )
             )
@@ -144,30 +142,10 @@ class JobQdrantRepository:
                 score = item.score
                 payload = item.payload
 
-                job_record = job.JobAggregate(
-                    id= item.id,
-                    matching_score= score,
-                    job_title= payload["job_title"],
-                    content= payload["content"],
-                    s_content= payload["s_content"],
-                    content_url= payload["content_url"],
-                    is_hiring= payload["is_hiring"],
-                    opened_date= payload["opened_date"],
-                    closed_date= payload["closed_date"],
-                    salary_from= payload["salary_from"],
-                    salary_to= payload["salary_to"],
-                    job_type= payload["job_type"],
-                    company_type= payload["company_type"],
-                    created_at= payload["created_at"],
-                    updated_at= payload["updated_at"],
-                    recruiter_id= payload["recruiter_id"],  
-                    recruiter_name= payload["recruiter_name"],
-                    job_tags= payload["job_tags"],
-                    address= payload["address"],
-                )
+                result = mapper.toJobDTO(payload)
+                result.matching_score = score
 
-                del payload
-                records.append(job_record)  
+                records.append(result)  
         else:
             hits = self.client.scroll(
                 collection_name=self.index_name,
@@ -186,29 +164,7 @@ class JobQdrantRepository:
                 if item is not None:
                     payload = item.payload
 
-                    job_record = job.JobAggregate(
-                        id= item.id,
-                        job_title= payload["job_title"],
-                        content= payload["content"],
-                        s_content= payload["s_content"],
-                        content_url= payload["content_url"],
-                        is_hiring= payload["is_hiring"],
-                        opened_date= payload["opened_date"],
-                        closed_date= payload["closed_date"],
-                        salary_from= payload["salary_from"],
-                        salary_to= payload["salary_to"],
-                        job_type= payload["job_type"],
-                        company_type= payload["company_type"],
-                        created_at= payload["created_at"],
-                        updated_at= payload["updated_at"],
-                        recruiter_id= payload["recruiter_id"],  
-                        recruiter_name= payload["recruiter_name"],
-                        job_tags= payload["job_tags"],
-                        address= payload["address"],
-                    )
-
-                    del payload
-                    records.append(job_record)  
+                    records.append(mapper.toJobDTO(payload))   
 
         return job.ListJobResponse(
             count=total_record,
