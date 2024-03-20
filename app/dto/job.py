@@ -28,6 +28,10 @@ class ListJobRequest(BaseModel):
     working_model: Optional[int] = None
     location: Optional[str] = None
     last_updated: Optional[str] = None
+    vectors: Optional[list[float]] = None
+    salary_from: Optional[float] = None
+    salary_to: Optional[float] = None
+    experience_level: Optional[int] = None
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = None
