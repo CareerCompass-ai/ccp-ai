@@ -39,7 +39,7 @@ class AI:
                     model=self.completion_model,
                     messages=[
                         {"role": "system", "content": f"You are a helpful assistant designed to summarize the content of {type}"},
-                        {"role": "user", "content": content}
+                        {"role": "system", "content": content}
                     ],
                     top_p=0.2,
                 )
