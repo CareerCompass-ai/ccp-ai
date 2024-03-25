@@ -1,28 +1,22 @@
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-class JobBase(BaseModel):
-    id: int
-    title: str
-    content: str
-    content_url: str
-    is_hiring: bool
-    opened_date: datetime
-    closed_date: datetime
-    salary_from: float
-    salary_to: float
-    job_type: int
-    company_type: int
 
-    created_at: datetime
-    updated_at: datetime
+class ResumeBase(BaseModel):
+    id: Optional[int] = None
+    candidate_id: Optional[int] = None
+    content: Optional[str] = None
+    resume_link: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
-class ResumeAggregate(JobBase):
-    resume_id: int
-    candidate_id: int
-    user_id: int
-    last_name: int
-    first_name: int
-    open_to_work: bool
-    work_title: str
-    content: str
+class ResumeAggregate(ResumeBase):
+    matching_score: Optional[float] = None
+    candidate_name: Optional[str] = None
+    work_title: Optional[str] = None
+    applied_date: Optional[datetime] = None
+    open_to_work: Optional[bool] = None
+    level: Optional[str] = None
+    candidate_address: Optional[str] = None
+    s_content: Optional[str] = None
+    skills: list[str] = None

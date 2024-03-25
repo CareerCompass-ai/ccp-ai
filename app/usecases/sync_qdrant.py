@@ -44,27 +44,23 @@ class SyncUsecase:
 
     def sync_resume_to_qdrant(self, resume_id):
         payload = self.agg_repo.get_resume(resume_id)
-        print(payload)
 
         # Summarize job description
-        # summarized_content = ai_helper.get_job_summarized(payload.content)
+        summarized_content = ai_helper.get_resume_summarized(payload.content)
         
         # Embed summarized job description
-        # vector = ai_helper.get_embedding(summarized_content)
-        # payload["vector"] = vector
-        
-        # FIXME: Fix upsert
-        
-        # points = [
-        #     types.Points(
-        #             # vector=vector[0],
-        #             payloads=payload
-        #         )
-        #     ]
-        # self.qdrant_client.upsert(
-        #     collection_name=constant.QDRANT_INDEX_RESUME_SEARCH,
-        #     points=points,
-        # )
+        vector = ai_helper.get_embedding(summarized_content)
 
-        # print(f"Synced job {job.id} to Qdrant")
+        payload.s_content = summarized_content
+        
+        self.qdrant_client.upsert(
+            collection_name=constant.QDRANT_INDEX_RESUME_SEARCH,
+            points= [ 
+                PointStruct(
+                    id=payload.id,
+                    vector=vector.tolist(),
+                    payload=payload.model_dump(),
+                ),
+            ]
+        )
 
