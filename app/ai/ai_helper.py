@@ -32,14 +32,14 @@ class AI:
 
     def get_summarized_content(self, input:str, prompt:str, type:str, max_retries=3):
         retries = 0
-        content = prompt.format(job_description=input)
+        content = prompt.format(input=input)
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
                     model=self.completion_model,
                     messages=[
                         {"role": "system", "content": f"You are a helpful assistant designed to summarize the content of {type}"},
-                        {"role": "user", "content": content}
+                        {"role": "system", "content": content}
                     ],
                     top_p=0.2,
                 )
