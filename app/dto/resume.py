@@ -20,3 +20,4 @@ class ResumeAggregate(ResumeBase):
     candidate_address: Optional[str] = None
     s_content: Optional[str] = None
     skills: list[str] = None
+    applied_jobs: list[int] = None
