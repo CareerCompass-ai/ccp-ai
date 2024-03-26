@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from app.dto.job import JobAggregate 
+from app.dto.resume import ResumeAggregate 
 
 from app.repo.job_repo import JobRepository
 from app.repo.resume_repo import ResumeRepository
@@ -9,8 +10,10 @@ from app.repo.city_repo import CityRepository
 from app.repo.address_repo import AddressRepository
 from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.tag_repo import TagRepository
-from app.dto.resume import ResumeAggregate
 from app.repo.user_repo import UserRepository
+from app.repo.candidate_repo import CandidateRepository
+from app.repo.application_repo import ApplicationRepository
+from app.repo.candidate_skills_repo import CandidateSkillsRepository
 from datetime import datetime
 
 class Aggregate:
@@ -23,6 +26,9 @@ class Aggregate:
         self.tag_repo = TagRepository()
         self.jobtags_repo = JobTagsRepository()
         self.user_repo = UserRepository()
+        self.candidate_repo = CandidateRepository()
+        self.application_repo = ApplicationRepository()
+        self.candidate_skills_repo = CandidateSkillsRepository()
 
     def get_job(self, id: int) -> Optional[JobAggregate]:
         job = self.job_repo.get_by_id(id)
@@ -91,15 +97,48 @@ class Aggregate:
         
         return job_aggregate
     
-    def get_resume(self, resume_id):
-        resume = self.resume_repo.get_resume(resume_id)
+    def get_resume(self, id: int) -> Optional[ResumeAggregate]:
+        resume = self.resume_repo.get_by_id(id)
 
         if resume is None:
             raise ValueError(f"Resume with ID {id} not found")
 
-        candidate = self.resume_repo.get_candidate(resume.candidate_id)
-        user = self.resume_repo.get_user(candidate.user_id)
-        print(resume.id, candidate.id, user.id)
+        resume_aggregate = ResumeAggregate(
+            id = resume.id,
+            content=resume.content,
+            resume_link=resume.resume_link,
+        )
 
-        return resume
+        if resume.created_at is not None:
+            resume_aggregate.created_at = datetime.fromisoformat(str(resume.created_at))
 
+        if resume.updated_at is not None:
+            resume_aggregate.updated_at = datetime.fromisoformat(str(resume.updated_at))
+        
+        if resume.candidate_id is not None:
+            resume_aggregate.candidate_id = resume.candidate_id
+            user = self.user_repo.get_by_id(resume.candidate_id)
+            if user is not None:
+                resume_aggregate.candidate_name = user.first_name + ' ' + user.last_name
+                resume_aggregate.work_title = user.work_title
+                address = self.address_repo.get_by_id(user.address_id)
+                if address is not None:
+                    city = self.city_repo.get_by_id(address.city_id)
+                    country = self.country_repo.get_by_id(city.country_id)
+                    resume_aggregate.candidate_address = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
+            
+            candidate = self.candidate_repo.get_by_id(resume.candidate_id)
+            if candidate is not None:
+                resume_aggregate.open_to_work = candidate.open_to_work
+                resume_aggregate.level = candidate.level
+            
+            candidate_skills_list = self.candidate_skills_repo.get_by_id(resume.candidate_id)
+            skill_list = []
+            for i in candidate_skills_list:
+                skill = self.tag_repo.get_by_id(i.skill_id)
+                skill_list.append(skill.tag_name)
+            resume_aggregate.skills = skill_list
+            
+        return resume_aggregate
+
+            
