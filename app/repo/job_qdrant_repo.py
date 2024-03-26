@@ -35,6 +35,7 @@ class JobQdrantRepository:
                 # If `False` - provide the approximate count of points matching the filter. Works faster.
         )
 
+    # TODO: find threshold to decide return or not return || base on score -> return label ? relavent or not, not return
     def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
         if input.page <= 0:
             input.page = 1
