@@ -185,7 +185,32 @@ services:
         aliases:
           - minio
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      ccp_network:
+        aliases:
+          - elasticsearch
+
 networks:
   ccp_network:
     name: ccp_network
     driver: bridge
+
+volumes:
+  elasticsearch-data:
+    driver: local
