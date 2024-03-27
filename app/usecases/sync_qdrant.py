@@ -18,12 +18,11 @@ ai_helper = ai_helper = AI()
 class SyncUsecase:
     def __init__(self):
         self.qdrant_client = QdrantClient(
-            url="157.245.50.16",
-            port=6333
+            url=constant.SERVER_IP,
+            port=constant.QDRANT_PORT
         )
         self.es_client = Elasticsearch(
-            hosts=["157.245.50.16:9200"],  
-            scheme="http"
+            hosts=[constant.ES_URL],
         )
         self.agg_repo = Aggregate()
 
