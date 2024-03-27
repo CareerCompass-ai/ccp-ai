@@ -8,5 +8,11 @@ class ApplicationRepository:
     def __init__(self):
         self.db = SessionLocal()
 
-    def get_by_ids(self, resume_id, job_id):
-        return self.db.query(Application).filter(Application.resume_id == resume_id and Application.job_id == job_id).first()
+    def get_job_ids_by_resume_id(self, resume_id):
+        job_ids = (
+            self.db.query(Application.job_id)
+            .filter(Application.resume_id == resume_id)
+            .all()
+        )
+        
+        return [job_id for (job_id,) in job_ids]

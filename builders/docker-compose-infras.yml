@@ -203,6 +203,8 @@ services:
       - 9300:9300
     networks:
       ccp_network:
+        aliases:
+          - elasticsearch
 
 networks:
   ccp_network:
