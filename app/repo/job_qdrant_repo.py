@@ -57,14 +57,15 @@ class JobQdrantRepository:
             pass
 
         if input.hiring_level is not None:
-            filter.must.append(
-                models.FieldCondition(
-                    key="hiring_level",
-                    match=models.MatchValue(
-                        value=input.hiring_level,
-                    ),
+            for level in input.hiring_level:
+                filter.should.append(
+                    models.FieldCondition(
+                        key="hiring_level",
+                        match=models.MatchValue(
+                            value=level,
+                        ),
+                    )
                 )
-            )
 
         if input.job_type is not None:
             filter.must.append(
