@@ -26,7 +26,7 @@ class SyncUsecase:
         )
         self.agg_repo = Aggregate()
 
-    def sync_job_to_qdrant(self, job_id):
+    def sync_job_to_qdrant_and_es(self, job_id):
         payload = self.agg_repo.get_job(job_id)
 
         # Summarize job description
