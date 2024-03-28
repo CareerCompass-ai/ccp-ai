@@ -1,4 +1,4 @@
-from app.dto import job
+from app.dto import job, resume
 
 def toJobDTO(payload: dict) -> job.JobAggregate:
     return job.JobAggregate(
@@ -23,4 +23,17 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         hiring_level=payload["hiring_level"],
         applied_count=payload["applied_count"],
         address_id=payload["address_id"],
+    )
+
+def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
+    return resume.ResumeAggregate (
+        id=payload["id"],
+        candidate_id=payload["candidate_id"],
+        candidate_name=payload["candidate_name"],
+        work_title=payload["work_title"],
+        open_to_work=payload["open_to_work"],
+        level=payload["level"],
+        candidate_address=payload["candidate_address"],
+        s_content=payload["s_content"],
+        skills=payload["skills"],
     )

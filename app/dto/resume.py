@@ -20,3 +20,12 @@ class ResumeAggregate(ResumeBase):
     s_content: Optional[str] = None
     skills: list[str] = None
     applied_jobs: list[int] = None
+class ListResumeRequest(BaseModel):
+    page: Optional[int] = None
+    size: Optional[int] = None
+    job_id: Optional[int] = None
+class ListResumeResponse(BaseModel):
+    count: int = None
+    page: int
+    size: int
+    records: List[ResumeAggregate] = None
