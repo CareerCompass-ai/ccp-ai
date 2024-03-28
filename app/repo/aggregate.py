@@ -141,4 +141,6 @@ class Aggregate:
             
         return resume_aggregate
 
-            
+    def get_list_job_id(self, id: int):
+        job_id_list = self.application_repo.get_job_ids_by_resume_id(id)
+        return job_id_list

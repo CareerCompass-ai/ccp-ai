@@ -29,7 +29,11 @@ class KafkaConsumerWrapper:
         resume_id = json.loads(msg.key()).get('payload').get('id')
         self.sync.sync_resume_to_qdrant(resume_id)
 
-
+    def handle_topic_application(self, msg):
+        print('ALO')
+        resume_id = json.loads(msg.key()).get('payload').get('resume_id')
+        self.sync.sync_jobs_applied_resume_to_qdrant(resume_id)
+        
     def consume(self):
         try:
             while True:
@@ -48,6 +52,8 @@ class KafkaConsumerWrapper:
                         self.handle_topic_job(msg)
                     elif msg.topic() == cfg.KAFKA_TOPIC_CDC_RESUME:
                         self.handle_topic_resume(msg)
+                    elif msg.topic() == cfg.KAFKA_TOPIC_CDC_APPLICATION:
+                        self.handle_topic_application(msg)
         except KeyboardInterrupt:
             pass
 
