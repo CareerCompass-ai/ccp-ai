@@ -23,7 +23,7 @@ class KafkaConsumerWrapper:
         id = data['payload'].get('id')
         print(id)
 
-        self.sync.sync_job_to_qdrant(id)
+        self.sync.sync_job_to_qdrant_and_es(id)
 
     def handle_topic_resume(self, msg):
         resume_id = json.loads(msg.key()).get('payload').get('id')
