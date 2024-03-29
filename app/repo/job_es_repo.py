@@ -12,10 +12,9 @@ class JobESRepository:
         self.index_name = index_name
 
 
-    def count_total_record(self, filter: Optional[str]) -> int:
-        return self.client.count(
-            index=self.index_name,
-        )
+    def count_total_record(self, query: dict) -> int:
+        response = self.client.count(index=self.index_name, body={"query": query})
+        return response["count"]
 
     def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
         if input.page <= 0:
@@ -25,54 +24,38 @@ class JobESRepository:
         if input.size >= 100:
             input.size = 100
 
-        if input.input is not None:
-            # TODO: handle full-text search with input on field "content" in ES
-            pass
+        # Read the search strategies: https://coralogix.com/blog/42-elasticsearch-query-examples-hands-on-tutorial/
+        
+        # match strategy
+        # query = {"match": {"content": input.input}} if input.input else {"match_all": {}}
 
+        # query string strategy
+        query = {
+            "query_string": {
+                "query": input.input if input.input else "*",
+                "default_field": "content"  # Specify the field to search on
+            }
+        }
+        
+        response = self.client.search(
+            index=self.index_name,
+            body={
+                "query": query,
+                "from": (input.page - 1) * input.size,
+                "size": input.size,
+            }
+        )
 
-        total_record = self.count_total_record(filter).count
+        total_record = self.count_total_record(query)
 
-    #     records = []
-    #     hits = List[types.ScoredPoint]
-    #     if input.vectors is not None:
-    #         hits = self.client.search(
-    #             collection_name=self.index_name,
-    #             query_vector=input.vectors,
-    #             query_filter=filter,
-    #             offset=(input.page - 1) * input.size,
-    #         )
+        records = []
+        for hit in response["hits"]["hits"]:
+            payload = hit["_source"]
+            records.append(mapper.toJobDTO(payload))
 
-    #         for item in hits:
-    #             score = item.score
-    #             payload = item.payload
-
-    #             result = mapper.toJobDTO(payload)
-    #             result.matching_score = score
-
-    #             records.append(result)  
-    #     else:
-    #         hits = self.client.scroll(
-    #             collection_name=self.index_name,
-    #             scroll_filter=filter,
-    #             limit=input.size,
-    #             # offset=(input.page - 1) * input.size,
-    #             # start_from=(input.page - 1) * input.size,
-    #             order_by=models.OrderBy(
-    #                 key="updated_at",
-    #                 direction="desc"
-    #             ),
-    #             with_payload=True
-    #             # with_vectors=False
-    #         )
-    #         for item in hits[0]:
-    #             if item is not None:
-    #                 payload = item.payload
-
-    #                 records.append(mapper.toJobDTO(payload))   
-
-    #     return job.ListJobResponse(
-    #         count=total_record,
-    #         page=input.page,
-    #         size=input.size,
-    #         records=records
-    #     )
+        return job.ListJobResponse(
+            count=total_record,
+            page=input.page,
+            size=input.size,
+            records=records
+        )
