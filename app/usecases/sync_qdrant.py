@@ -49,11 +49,11 @@ class SyncUsecase:
         )
 
         # Create or update a document in ES index
-        self.es_client.index(
-            index=constant.ES_INDEX_JOB_SEARCH,
-            id=payload.id,
-            body=payload.model_dump(),
-        )
+        # self.es_client.index(
+        #     index=constant.ES_INDEX_JOB_SEARCH,
+        #     id=payload.id,
+        #     body=payload.model_dump(),
+        # )
         # print(f"Synced job {job.id} to Qdrant")
 
     def sync_resume_to_qdrant(self, resume_id):
@@ -83,7 +83,7 @@ class SyncUsecase:
         self.qdrant_client.set_payload(
             collection_name=constant.QDRANT_INDEX_RESUME_SEARCH,
             payload={
-                "applied_date": jobs_id_list,
+                "applied_jobs": jobs_id_list,
             },
             points=[resume_id],
         )

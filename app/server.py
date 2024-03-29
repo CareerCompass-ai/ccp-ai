@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routes.job_routes import job_router
-
+from .routes.resume_routes import resume_router
 app = FastAPI()
 
 origins = ["*"]
@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 app.include_router(job_router)
-
+app.include_router(resume_router)
 @app.get("/health-check")
 async def root():
     return {"message": "Good"}
