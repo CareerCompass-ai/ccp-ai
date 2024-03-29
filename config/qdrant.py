@@ -1,12 +1,15 @@
 from qdrant_client import QdrantClient
 
-from constant.config import QDRANT_URL, QDRANT_INDEX_JOB_SEARCH, QDRANT_INDEX_RESUME_SEARCH
+import constant.config as constant
 
 class QdrantVDB:
-    QDRANT_URL = QDRANT_URL
-    QDRANT_INDEX_JOB_SEARCH = QDRANT_INDEX_JOB_SEARCH
-    QDRANT_INDEX_RESUME_SEARCH = QDRANT_INDEX_RESUME_SEARCH
+    QDRANT_URL = constant.QDRANT_URL
+    QDRANT_INDEX_JOB_SEARCH = constant.QDRANT_INDEX_JOB_SEARCH
+    QDRANT_INDEX_RESUME_SEARCH = constant.QDRANT_INDEX_RESUME_SEARCH
 
     @staticmethod
     def setup_qdrant_connection() -> QdrantClient:
-        return QdrantClient(QdrantVDB.QDRANT_URL)
+        return QdrantClient(
+            url=constant.SERVER_IP,
+            port=constant.QDRANT_PORT
+        )

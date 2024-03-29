@@ -29,7 +29,12 @@ class SyncUsecase:
         #     verify_certs=False,
         #     basic_auth=("elastic", "change_me"),
         # )
-        self.es_client = Elasticsearch(hosts=constant.ES_URL, basic_auth=("elastic", "change_me"), verify_certs=False)
+        self.es_client = Elasticsearch(
+            hosts=constant.ES_URL, 
+            basic_auth=("elastic", "change_me"), 
+            verify_certs=False,
+            ca_certs=False
+        )
 
         self.agg_repo = Aggregate()
 
@@ -56,11 +61,11 @@ class SyncUsecase:
         )
 
         # Create or update a document in ES index
-        # self.es_client.index(
-        #     index=constant.ES_INDEX_JOB_SEARCH,
-        #     id=payload.id,
-        #     body=payload.model_dump(),
-        # )
+        self.es_client.index(
+            index=constant.ES_INDEX_JOB_SEARCH,
+            id=payload.id,
+            body=payload.model_dump(),
+        )
         # print(f"Synced job {job.id} to Qdrant")
 
     def sync_resume_to_qdrant(self, resume_id):
