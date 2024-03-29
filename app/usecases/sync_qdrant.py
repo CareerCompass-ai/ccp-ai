@@ -30,10 +30,8 @@ class SyncUsecase:
         #     basic_auth=("elastic", "change_me"),
         # )
         self.es_client = Elasticsearch(
-            hosts=constant.ES_URL, 
-            basic_auth=("elastic", "change_me"), 
-            verify_certs=False,
-            ca_certs=False
+            constant.ES_URL, 
+            basic_auth=["elastic", "change_me"], 
         )
 
         self.agg_repo = Aggregate()
