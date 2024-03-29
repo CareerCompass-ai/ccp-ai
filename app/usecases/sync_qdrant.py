@@ -1,3 +1,5 @@
+import ssl
+
 from qdrant_client import QdrantClient
 from qdrant_client.conversions import common_types as types
 from qdrant_client.http.models import PointStruct
@@ -21,9 +23,14 @@ class SyncUsecase:
             url=constant.SERVER_IP,
             port=constant.QDRANT_PORT
         )
-        self.es_client = Elasticsearch(
-            hosts=[constant.ES_URL],
-        )
+        # self.es_client = Elasticsearch(
+        #     constant.ES_URL,
+        #     # ca_certs=False,
+        #     verify_certs=False,
+        #     basic_auth=("elastic", "change_me"),
+        # )
+        self.es_client = Elasticsearch(hosts=constant.ES_URL, basic_auth=("elastic", "change_me"), verify_certs=False)
+
         self.agg_repo = Aggregate()
 
     def sync_job_to_qdrant_and_es(self, job_id):

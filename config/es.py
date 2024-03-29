@@ -8,4 +8,8 @@ class ElasticSearchDB:
 
     @staticmethod
     def setup_elasticsearch_connection() -> Elasticsearch:
-        return Elasticsearch([ElasticSearchDB.ES_URL])
+        return Elasticsearch(
+            [ElasticSearchDB.ES_URL],
+            verify_certs=False,
+            basic_auth=("elastic", "change_me"),
+        )

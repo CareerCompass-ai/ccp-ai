@@ -15,7 +15,7 @@ services:
       retries: 20
       interval: 10s
     volumes:
-      - ./storage:/zookeeper/data
+      - zookeeper-data:/usr/share/zookeeper/data
     networks:
       ccp_network:
         aliases:
@@ -50,7 +50,7 @@ services:
       timeout: 10s
       retries: 10
     volumes:
-      - ./storage:/broker/data
+      - broker-data:/usr/share/broker/data
     networks:
       ccp_network:
         aliases:
@@ -108,7 +108,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./storage:/debezium_connect/data
+      - debezium_connect-data:/usr/share/debezium_connect/data
     networks:
       ccp_network:
         aliases:
@@ -140,7 +140,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./storage:/posgresql/data
+      - posgresql-data:/usr/share/posgresql/data
     networks:
       ccp_network:
         aliases:
@@ -162,7 +162,7 @@ services:
       - 6334
       - 6335
     volumes:
-      - ./storage:/qdrant/data
+      - qdrant-data:/usr/share/qdrant/data
     networks:
       ccp_network:
         aliases:
@@ -175,7 +175,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./storage:/minio/data
+      - minio-data:/usr/share/minio/data
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: change_me
@@ -189,9 +189,10 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
     container_name: elasticsearch
     environment:
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
       - "discovery.type=single-node"
       - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - ELASTIC_PASSWORD=change_me
     ulimits:
       memlock:
         soft: -1
@@ -213,4 +214,16 @@ networks:
 
 volumes:
   elasticsearch-data:
+    driver: local
+  zookeeper-data:
+    driver: local
+  broker-data:
+    driver: local
+  debezium_connect-data:
+    driver: local
+  posgresql-data:
+    driver: local
+  qdrant-data:
+    driver: local
+  minio-data:
     driver: local
