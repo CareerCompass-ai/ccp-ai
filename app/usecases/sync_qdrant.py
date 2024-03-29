@@ -85,3 +85,12 @@ class SyncUsecase:
             ]
         )
 
+    def sync_jobs_applied_resume_to_qdrant(self, resume_id):
+        jobs_id_list = self.agg_repo.get_list_job_id(resume_id)
+        self.qdrant_client.set_payload(
+            collection_name=constant.QDRANT_INDEX_RESUME_SEARCH,
+            payload={
+                "applied_date": jobs_id_list,
+            },
+            points=[resume_id],
+        )
