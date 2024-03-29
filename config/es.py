@@ -1,15 +1,14 @@
 from elasticsearch import Elasticsearch
-from constant.config import ES_URL, ES_INDEX_JOB_SEARCH, ES_INDEX_RESUME_SEARCH
+import constant.config as constant
 
 class ElasticSearchDB:
-    ES_URL = ES_URL
-    ES_INDEX_JOB_SEARCH = ES_INDEX_JOB_SEARCH
-    ES_INDEX_RESUME_SEARCH = ES_INDEX_RESUME_SEARCH
+    ES_URL = constant.ES_URL
+    ES_INDEX_JOB_SEARCH = constant.ES_INDEX_JOB_SEARCH
+    ES_INDEX_RESUME_SEARCH = constant.ES_INDEX_RESUME_SEARCH
 
     @staticmethod
     def setup_elasticsearch_connection() -> Elasticsearch:
         return Elasticsearch(
-            [ElasticSearchDB.ES_URL],
-            verify_certs=False,
-            basic_auth=("elastic", "change_me"),
+            constant.ES_URL, 
+            basic_auth=["elastic", "change_me"], 
         )
