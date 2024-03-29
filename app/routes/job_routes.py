@@ -35,10 +35,10 @@ def list_jobs_from_qdrant(req: Optional[job.ListJobRequest]):
             data = job_qdrant_repo.list_jobs(input=req)
 
             return data
-        elif req.search_type == "fulltext":
-            data = job_es_repo.list_jobs(input=req)
+        # elif req.search_type == "fulltext":
+        #     data = job_es_repo.list_jobs(input=req)
 
-            return data
+        #   return data
         else:
             return job.ListJobResponse(
                 count=0,
