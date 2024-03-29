@@ -8,7 +8,7 @@ import constant.config as cfg
 class KafkaConsumerWrapper:
     def __init__(self, topics):
         conf = {
-            'bootstrap.servers': f'{cfg.SERVER_IP}:{cfg.KAFKA_PORT}',
+            'bootstrap.servers': f'{cfg.KAFKA_SERVER_IP}:{cfg.KAFKA_PORT}',
             'group.id': 'my_consumer_group',        
             'auto.offset.reset': 'earliest',
             'debug': 'broker'

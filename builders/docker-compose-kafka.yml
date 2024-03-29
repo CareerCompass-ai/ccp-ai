@@ -1,0 +1,140 @@
+version: "3.7"
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: echo srvr | nc zookeeper 2181 || exit 1
+      start_period: 10s
+      retries: 20
+      interval: 10s
+    volumes:
+      - zookeeper-data:/usr/share/zookeeper/data
+    networks:
+      ccp_network:
+        aliases:
+          - zookeeper
+
+  broker:
+    image: confluentinc/cp-kafka:latest
+    hostname: broker
+    container_name: broker
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://54.252.183.129:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_JMX_PORT: 9101
+      KAFKA_HOSTNAME: 54.252.183.129
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - broker-data:/usr/share/broker/data
+    networks:
+      ccp_network:
+        aliases:
+          - broker
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    depends_on:
+      - broker
+      - debezium
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: ccp_cdc
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:29092
+    networks:
+      ccp_network:
+        aliases:
+          - kafka-ui
+
+  debezium:
+    image: debezium/connect:latest
+    container_name: debezium
+    hostname: debezium
+    depends_on:
+      - broker
+    ports:
+      - "8093:8083"
+    environment:
+      BOOTSTRAP_SERVERS: broker:29092
+      CONNECT_REST_ADVERTISED_HOST_NAME: debezium
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      STATUS_STORAGE_TOPIC: connect_statuses
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      ENABLE_DEBEZIUM_SCRIPTING: "true"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--silent",
+          "--fail",
+          "-X",
+          "GET",
+          "http://localhost:8083/connectors",
+        ]
+      start_period: 10s
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - debezium_connect-data:/usr/share/debezium_connect/data
+    networks:
+      ccp_network:
+        aliases:
+          - debezium
+
+  connectors-ui:
+    image: debezium/debezium-ui:latest
+    container_name: connectors-ui
+    hostname: connectors-ui
+    depends_on:
+      - debezium
+    ports:
+      - "8086:8080"
+    environment:
+      KAFKA_CONNECT_URIS: http://debezium:8083
+    networks:
+      ccp_network:
+
+networks:
+  ccp_network:
+    name: ccp_network
+    driver: bridge
+
+volumes:
+  zookeeper-data:
+    driver: local
+  broker-data:
+    driver: local
+  debezium_connect-data:
+    driver: local

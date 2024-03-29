@@ -10,6 +10,6 @@ class QdrantVDB:
     @staticmethod
     def setup_qdrant_connection() -> QdrantClient:
         return QdrantClient(
-            url=constant.SERVER_IP,
+            url=constant.DB_SERVER_IP,
             port=constant.QDRANT_PORT
         )
