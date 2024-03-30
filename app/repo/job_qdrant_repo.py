@@ -56,16 +56,17 @@ class JobQdrantRepository:
         if input.job_tags is not None :
             pass
 
+        input.hiring_level = input.hiring_level[0].split(',')
         if input.hiring_level is not None:
             for level in input.hiring_level:
                 filter.should.append(
-                    models.FieldCondition(
-                        key="hiring_level",
-                        match=models.MatchValue(
-                            value=level,
-                        ),
+                        models.FieldCondition(
+                            key="hiring_level",
+                            match=models.MatchValue(
+                                value=level,
+                            ),
+                        )
                     )
-                )
 
         if input.job_type is not None:
             for job_type in input.job_type:
@@ -87,7 +88,6 @@ class JobQdrantRepository:
                     )
                 )
             )
-
         if input.company_type is not None:
             for type in input.company_type:
                 filter.should.append(
