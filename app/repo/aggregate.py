@@ -61,14 +61,7 @@ class Aggregate:
  
         if job.closed_date is not None:
             job_aggregate.closed_date = datetime.fromisoformat(str(job.closed_date))
-        # if job.created_at is not None:
-        #     job_aggregate.created_at = str(job.created_at)
-        # if job.updated_at is not None:
-        #     job_aggregate.updated_at = str(job.updated_at)
-        # if job.opened_date is not None:
-        #     job_aggregate.opened_date = str(job.opened_date)
-        # if job.closed_date is not None:
-        #     job_aggregate.closed_date = str(job.closed_date)
+
         if job.recruiter_id is not None:
             job_aggregate.recruiter_id = job.recruiter_id
             user = self.user_repo.get_by_id(job.recruiter_id)
@@ -109,6 +102,10 @@ class Aggregate:
             resume_link=resume.resume_link,
         )
 
+        job_id_list = self.application_repo.get_job_ids_by_resume_id(resume.id)
+        if job_id_list is not None:
+            resume_aggregate.applied_jobs = job_id_list
+
         if resume.created_at is not None:
             resume_aggregate.created_at = datetime.fromisoformat(str(resume.created_at))
 
@@ -140,7 +137,3 @@ class Aggregate:
             resume_aggregate.skills = skill_list
             
         return resume_aggregate
-
-    def get_list_job_id(self, id: int):
-        job_id_list = self.application_repo.get_job_ids_by_resume_id(id)
-        return job_id_list
