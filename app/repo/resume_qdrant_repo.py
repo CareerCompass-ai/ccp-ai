@@ -6,21 +6,17 @@ from config.qdrant import QdrantVDB
 
 from app.dto import resume
 from app.dto import mapper
-from qdrant_client import QdrantClient
+
 import constant.config as constant
 
 class ResumeQdrantRepository:
     def __init__(self, index_name: str):
         self.qdrant_setup = QdrantVDB()
-        # self.client = self.qdrant_setup.setup_qdrant_connection()
+        self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
-        self.qdrant_client = QdrantClient(
-            url=constant.SERVER_IP,
-            port=constant.QDRANT_PORT
-        )
         
     def count_total_record(self, filter: Optional[models.Filter]) -> int:
-        return self.qdrant_client.count(
+        return self.client.count(
             collection_name=self.index_name,
             count_filter=filter,
             exact=True
@@ -34,8 +30,8 @@ class ResumeQdrantRepository:
         if input.size >= 100:
             input.size = 100
 
-        job_vector = self.qdrant_client.retrieve(
-            collection_name="ccp_job_search",
+        job_vector = self.client.retrieve(
+            collection_name=constant.QDRANT_INDEX_JOB_SEARCH,
             ids=[input.job_id],
             with_vectors=True,
         )
@@ -49,16 +45,18 @@ class ResumeQdrantRepository:
                 match=models.MatchValue(value=input.job_id)
             )
         )
+
         total_record = self.count_total_record(filter).count
 
         records = []
         hits = List[types.ScoredPoint]
-        hits = self.qdrant_client.search(
+        hits = self.client.search(
             collection_name=self.index_name,
             query_vector=job_vector[0].vector,
             query_filter=filter,
             offset=(input.page - 1) * input.size,
         )
+
         for item in hits:
             score = item.score
             payload = item.payload
@@ -67,6 +65,7 @@ class ResumeQdrantRepository:
             result.matching_score = score
 
             records.append(result)
+
         return resume.ListResumeResponse(
             count=total_record,
             page=input.page,
