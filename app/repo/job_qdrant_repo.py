@@ -88,6 +88,7 @@ class JobQdrantRepository:
                     )
                 )
             )
+
         if input.company_type is not None:
             for type in input.company_type:
                 filter.should.append(
@@ -105,7 +106,7 @@ class JobQdrantRepository:
                 models.FieldCondition(
                     key="updated_at",
                     range=models.Range(
-                        gte=input.last_updated
+                        lte=input.last_updated
                     )
                 )
             )
@@ -130,6 +131,40 @@ class JobQdrantRepository:
                     )
                 )
             )
+
+        input.work_place = input.work_place[0].split(',')
+        if input.work_place is not None:
+            for level in input.work_place:
+                filter.should.append(
+                        models.FieldCondition(
+                            key="work_place",
+                            match=models.MatchValue(
+                                value=level,
+                            ),
+                        )
+                    )
+                
+        if input.city_name is not None:
+            for type in input.city_name:
+                filter.should.append(
+                    models.FieldCondition(
+                        key="city_name",
+                        match=models.MatchValue(
+                            value=type,
+                        ),
+                    )
+                )
+
+        if input.country_name is not None:
+            for type in input.country_name:
+                filter.should.append(
+                    models.FieldCondition(
+                        key="country_name",
+                        match=models.MatchValue(
+                            value=type,
+                        ),
+                    )
+                )
 
         total_record = self.count_total_record(filter).count
 

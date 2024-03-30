@@ -44,13 +44,13 @@ class Aggregate:
             content=job.content,
             content_url = job.content_url,
             is_hiring = job.is_hiring,
-            # opened_date = job.opened_date,
             salary_from = job.salary_from,
             salary_to = job.salary_to,
             job_type = job.job_type,
             company_type = job.company_type,
             work_place = job.work_place
         )
+
         if job.updated_at is not None:
             job_aggregate.updated_at = datetime.fromisoformat(str(job.updated_at))
 
@@ -59,7 +59,7 @@ class Aggregate:
 
         if job.opened_date is not None:
             job_aggregate.opened_date = datetime.fromisoformat(str(job.opened_date))
- 
+
         if job.closed_date is not None:
             job_aggregate.closed_date = datetime.fromisoformat(str(job.closed_date))
             
@@ -68,7 +68,6 @@ class Aggregate:
             user = self.user_repo.get_by_id(job.recruiter_id)
             if user is not None:
                 job_aggregate.recruiter_name = user.first_name + ' ' + user.last_name
-
 
         address = self.address_repo.get_by_id(job.address_id)
         if address is not None:
@@ -79,6 +78,8 @@ class Aggregate:
         address_full = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
         
         job_aggregate.address = address_full
+        job_aggregate.city_name = city.city_name
+        job_aggregate.country_name = country.country_name
         
         job_tag_list = self.jobtags_repo.get_jobtags_for_job(job_aggregate.id)
         
