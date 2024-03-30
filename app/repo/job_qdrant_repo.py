@@ -68,14 +68,15 @@ class JobQdrantRepository:
                 )
 
         if input.job_type is not None:
-            filter.must.append(
-                models.FieldCondition(
-                    key="job_type",
-                    match=models.MatchValue(
-                        value=input.job_type
+            for job_type in input.job_type:
+                filter.should.append(
+                    models.FieldCondition(
+                        key="job_type",
+                        match=models.MatchValue(
+                            value=job_type,
+                        ),
                     )
                 )
-            )
 
         if input.location is not None:
             filter.must.append(
@@ -88,14 +89,15 @@ class JobQdrantRepository:
             )
 
         if input.company_type is not None:
-            filter.must.append(
-                models.FieldCondition(
-                    key="company_type", 
-                    match=models.MatchValue(
-                        value=input.company_type
+            for type in input.company_type:
+                filter.should.append(
+                    models.FieldCondition(
+                        key="company_type",
+                        match=models.MatchValue(
+                            value=type,
+                        ),
                     )
                 )
-            )
 
         # FIXME: fix this
         if input.last_updated is not None:
@@ -117,6 +119,7 @@ class JobQdrantRepository:
                     )
                 )
             )
+
 
         if input.salary_to is not None:
             filter.must.append(
