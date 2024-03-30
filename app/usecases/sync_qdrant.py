@@ -20,7 +20,7 @@ ai_helper = ai_helper = AI()
 class SyncUsecase:
     def __init__(self):
         self.qdrant_client = QdrantClient(
-            url=constant.DB_SERVER_IP,
+            url=constant.SERVER_IP,
             port=constant.QDRANT_PORT
         )
 

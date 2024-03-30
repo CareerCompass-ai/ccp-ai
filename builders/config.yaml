@@ -1,4 +1,4 @@
 topics:
-  - cdc_v1.public.ccp_job
-  - cdc_v1.public.ccp_resume
+  - cdc.public.ccp_job
+  - cdc.public.ccp_resume
 
