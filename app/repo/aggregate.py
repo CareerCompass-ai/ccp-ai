@@ -49,6 +49,7 @@ class Aggregate:
             salary_to = job.salary_to,
             job_type = job.job_type,
             company_type = job.company_type,
+            work_place = job.work_place
         )
         if job.updated_at is not None:
             job_aggregate.updated_at = datetime.fromisoformat(str(job.updated_at))
