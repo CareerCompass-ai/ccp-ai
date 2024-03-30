@@ -24,8 +24,8 @@ class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
     input: Optional[str] = None
-    job_type: Optional[str] = None
-    company_type: Optional[str] = None
+    job_type: Optional[list[str]] = None
+    company_type: Optional[list[str]] = None
     location: Optional[str] = None
     last_updated: Optional[str] = None
     vectors: Optional[list[float]] = None
