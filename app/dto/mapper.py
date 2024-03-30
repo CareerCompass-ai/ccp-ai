@@ -20,9 +20,12 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         recruiter_name=payload["recruiter_name"],
         job_tags=payload["job_tags"],
         address=payload["address"],
+        city_name=payload["city_name"],
+        country_name=payload["country_name"],
         hiring_level=payload["hiring_level"],
         applied_count=payload["applied_count"],
         address_id=payload["address_id"],
+        work_place=payload["work_place"],
     )
 
 def toResumeDTO(payload: dict) -> resume.ResumeAggregate:

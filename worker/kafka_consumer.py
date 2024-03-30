@@ -18,18 +18,13 @@ class KafkaConsumerWrapper:
         self.sync = SyncUsecase()
 
     def handle_topic_job(self, msg):
-        data = json.loads(msg.key())
-        id = data['payload'].get('id')
-
-        self.sync.sync_job_to_qdrant_and_es(id)
+        self.sync.sync_job_to_qdrant_and_es(msg)
 
     def handle_topic_resume(self, msg):
-        resume_id = json.loads(msg.key()).get('payload').get('id')
-        self.sync.sync_resume_to_qdrant(resume_id)
-
+        self.sync.sync_resume_to_qdrant(msg)
+        
     def handle_topic_application(self, msg):
-        resume_id = json.loads(msg.key()).get('payload').get('resume_id')
-        self.sync.sync_jobs_applied_resume_to_qdrant(resume_id)
+        self.sync.sync_jobs_applied_resume_to_qdrant(msg)
         
     def consume(self):
         try:
@@ -46,7 +41,6 @@ class KafkaConsumerWrapper:
                 else:
                     # Process message based in topic
                     if msg.topic() == cfg.KAFKA_TOPIC_CDC_JOB:
-                        print('ALO')
                         self.handle_topic_job(msg)
                     elif msg.topic() == cfg.KAFKA_TOPIC_CDC_RESUME:
                         self.handle_topic_resume(msg)

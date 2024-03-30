@@ -9,6 +9,7 @@ from typing import List, Optional
 class AddressRepository:
     def __init__(self):
         self.db = SessionLocal()
+        
     def get_by_id(self, id):
         return self.db.query(Address).filter(Address.id == id).first()
 

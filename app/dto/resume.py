@@ -9,7 +9,7 @@ class ResumeBase(BaseModel):
     resume_link: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
+
 class ResumeAggregate(ResumeBase):
     matching_score: Optional[float] = None
     candidate_name: Optional[str] = None
@@ -20,10 +20,12 @@ class ResumeAggregate(ResumeBase):
     s_content: Optional[str] = None
     skills: list[str] = None
     applied_jobs: list[int] = None
+
 class ListResumeRequest(BaseModel):
     page: Optional[int] = None
     size: Optional[int] = None
     job_id: Optional[int] = None
+
 class ListResumeResponse(BaseModel):
     count: int = None
     page: int
