@@ -19,11 +19,12 @@ resume_router = APIRouter(
     prefix="/api",
     tags=['Resume']
 )
-# job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
+
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 job_repo = JobRepository()
 ai_helper = AI()
 
+# TODO: double check and remove this @ngoctrana
 @resume_router.get("/resumes", response_model=resume.ListResumeResponse)
 def list_resumes_from_qdrant(req: Optional[resume.ListResumeRequest]):
     try:
