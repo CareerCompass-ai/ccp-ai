@@ -10,5 +10,5 @@ class ElasticSearchDB:
     def setup_elasticsearch_connection() -> Elasticsearch:
         return Elasticsearch(
             constant.ES_URL, 
-            basic_auth=["elastic", "change_me"], 
+            basic_auth=[constant.ES_USERNAME, constant.ES_PASSWORD], 
         )

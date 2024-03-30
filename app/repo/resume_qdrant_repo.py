@@ -15,7 +15,7 @@ class ResumeQdrantRepository:
         # self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
         self.qdrant_client = QdrantClient(
-            url=constant.DB_SERVER_IP,
+            url=constant.SERVER_IP,
             port=constant.QDRANT_PORT
         )
         
