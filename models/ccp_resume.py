@@ -13,7 +13,7 @@ class Resume(Base):
     resume_name = Column(String, nullable=True) 
     content = Column(String, nullable=True)
     resume_link = Column(String, nullable=True)
-
+    applied_count = Column(Integer, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
 
