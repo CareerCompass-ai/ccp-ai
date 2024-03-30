@@ -46,7 +46,6 @@ class KafkaConsumerWrapper:
                 else:
                     # Process message based in topic
                     if msg.topic() == cfg.KAFKA_TOPIC_CDC_JOB:
-                        print('ALO')
                         self.handle_topic_job(msg)
                     elif msg.topic() == cfg.KAFKA_TOPIC_CDC_RESUME:
                         self.handle_topic_resume(msg)

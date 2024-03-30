@@ -40,7 +40,7 @@ class SyncUsecase:
         # Embed summarized job description
         vector = ai_helper.get_embedding(summarized_content)
         payload.s_content = summarized_content
-        
+        print('Sync Job to qdrant')
         # Upsert to qdrant collection
         self.qdrant_client.upsert(
             collection_name=constant.QDRANT_INDEX_JOB_SEARCH,
@@ -54,6 +54,7 @@ class SyncUsecase:
         )
 
         # Create or update a document in ES index
+        print('Sync Job to es')
         self.es_client.index(
             index=constant.ES_INDEX_JOB_SEARCH,
             id=payload.id,
@@ -71,7 +72,8 @@ class SyncUsecase:
         vector = ai_helper.get_embedding(summarized_content)
 
         payload.s_content = summarized_content
-        
+
+        print('Sync Resume to qdrant')
         self.qdrant_client.upsert(
             collection_name=constant.QDRANT_INDEX_RESUME_SEARCH,
             points= [ 
