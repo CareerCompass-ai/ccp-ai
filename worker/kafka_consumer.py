@@ -18,17 +18,18 @@ class KafkaConsumerWrapper:
         self.sync = SyncUsecase()
 
     def handle_topic_job(self, msg):
-        data = json.loads(msg.key())
-        id = data['payload'].get('id')
+        job_id = json.loads(msg.value()).get('after').get('id')
 
-        self.sync.sync_job_to_qdrant_and_es(id)
+        self.sync.sync_job_to_qdrant_and_es(job_id)
 
     def handle_topic_resume(self, msg):
-        resume_id = json.loads(msg.key()).get('payload').get('id')
-        self.sync.sync_resume_to_qdrant(resume_id)
+        resume_id = json.loads(msg.value()).get('after').get('id')
 
+        self.sync.sync_resume_to_qdrant(resume_id)
+        
     def handle_topic_application(self, msg):
-        resume_id = json.loads(msg.key()).get('payload').get('resume_id')
+        resume_id = json.loads(msg.value()).get('after').get('resume_id')
+
         self.sync.sync_jobs_applied_resume_to_qdrant(resume_id)
         
     def consume(self):

@@ -32,6 +32,7 @@ class ListJobRequest(BaseModel):
     salary_from: Optional[float] = None
     salary_to: Optional[float] = None
     hiring_level: Optional[list[str]] = None
+    work_place: Optional[str] = None
     applied_count: Optional[int] = None
     job_tags: Optional[list[str]] = None
 
