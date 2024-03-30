@@ -23,15 +23,10 @@ class SyncUsecase:
             url=constant.SERVER_IP,
             port=constant.QDRANT_PORT
         )
-        # self.es_client = Elasticsearch(
-        #     constant.ES_URL,
-        #     # ca_certs=False,
-        #     verify_certs=False,
-        #     basic_auth=("elastic", "change_me"),
-        # )
+
         self.es_client = Elasticsearch(
             constant.ES_URL, 
-            basic_auth=["elastic", "change_me"], 
+            basic_auth=[constant.ES_USERNAME, constant.ES_PASSWORD], 
         )
 
         self.agg_repo = Aggregate()
