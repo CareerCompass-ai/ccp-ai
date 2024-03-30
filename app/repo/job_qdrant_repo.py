@@ -35,6 +35,7 @@ class JobQdrantRepository:
                 # If `False` - provide the approximate count of points matching the filter. Works faster.
         )
 
+    # TODO: find threshold to decide return or not return || base on score -> return label ? relavent or not, not return
     def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
         if input.page <= 0:
             input.page = 1
@@ -56,14 +57,15 @@ class JobQdrantRepository:
             pass
 
         if input.hiring_level is not None:
-            filter.must.append(
-                models.FieldCondition(
-                    key="hiring_level",
-                    match=models.MatchValue(
-                        value=input.hiring_level,
-                    ),
+            for level in input.hiring_level:
+                filter.should.append(
+                    models.FieldCondition(
+                        key="hiring_level",
+                        match=models.MatchValue(
+                            value=level,
+                        ),
+                    )
                 )
-            )
 
         if input.job_type is not None:
             filter.must.append(

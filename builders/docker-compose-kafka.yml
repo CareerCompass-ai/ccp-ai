@@ -33,14 +33,14 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://157.245.50.16:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://54.252.183.129:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_JMX_PORT: 9101
-      KAFKA_HOSTNAME: 157.245.50.16
+      KAFKA_HOSTNAME: 54.252.183.129
     depends_on:
       - zookeeper
     healthcheck:
@@ -79,7 +79,6 @@ services:
     hostname: debezium
     depends_on:
       - broker
-      - ccp-db
     ports:
       - "8093:8083"
     environment:
@@ -127,103 +126,15 @@ services:
     networks:
       ccp_network:
 
-  ccp-db:
-    image: postgres:16.1-alpine3.19
-    container_name: ccp-db
-    hostname: ccp-db
-    restart: always
-    command: ["postgres", "-c", "wal_level=logical"]
-    environment:
-      POSTGRES_DB: ccp
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: change_me
-    ports:
-      - 5432:5432
-    volumes:
-      - posgresql-data:/usr/share/posgresql/data
-    networks:
-      ccp_network:
-        aliases:
-          - postgres
-    healthcheck:
-      test: pg_isready -U admin -d ccp -h localhost
-      interval: 30s
-      retries: 5
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    restart: always
-    container_name: qdrant
-    ports:
-      - 6333:6333
-      - 6334:6334
-    expose:
-      - 6333
-      - 6334
-      - 6335
-    volumes:
-      - qdrant-data:/usr/share/qdrant/data
-    networks:
-      ccp_network:
-        aliases:
-          - qdrant
-
-  minio:
-    image: minio/minio
-    container_name: minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio-data:/usr/share/minio/data
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: change_me
-    command: server --console-address ":9001" /data
-    networks:
-      ccp_network:
-        aliases:
-          - minio
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
-    container_name: elasticsearch
-    environment:
-      - xpack.security.enabled=true
-      - "discovery.type=single-node"
-      - ES_JAVA_OPTS=-Xms750m -Xmx750m
-      - ELASTIC_PASSWORD=change_me
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-      - 9300:9300
-    networks:
-      ccp_network:
-        aliases:
-          - elasticsearch
-
 networks:
   ccp_network:
     name: ccp_network
     driver: bridge
 
 volumes:
-  elasticsearch-data:
-    driver: local
   zookeeper-data:
     driver: local
   broker-data:
     driver: local
   debezium_connect-data:
-    driver: local
-  posgresql-data:
-    driver: local
-  qdrant-data:
-    driver: local
-  minio-data:
     driver: local
