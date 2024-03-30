@@ -17,6 +17,7 @@ class JobBase(BaseModel):
     address_id: Optional[int] = None
     applied_count: Optional[int] = None
     hiring_level: Optional[str] = None
+    work_place: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
