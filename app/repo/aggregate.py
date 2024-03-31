@@ -1,4 +1,6 @@
-from typing import List, Optional
+from datetime import datetime
+
+from typing import Optional
 
 from app.dto.job import JobAggregate 
 from app.dto.resume import ResumeAggregate 
@@ -14,7 +16,6 @@ from app.repo.user_repo import UserRepository
 from app.repo.candidate_repo import CandidateRepository
 from app.repo.application_repo import ApplicationRepository
 from app.repo.candidate_skills_repo import CandidateSkillsRepository
-from datetime import datetime
 
 class Aggregate:
     def __init__(self):

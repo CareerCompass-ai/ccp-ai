@@ -1,11 +1,10 @@
+from typing import List
+
 from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
+
 from models.ccp_city import City
-
 from app.dto import city
-
-from typing import List, Optional
-
 
 class CityRepository:
     def __init__(self):

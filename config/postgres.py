@@ -4,7 +4,9 @@ from sqlalchemy.orm import sessionmaker
 
 from constant.config import DATABASE_URL
 
-engine = create_engine(DATABASE_URL)
+MAX_CONNECTIONS = 20
+
+engine = create_engine(DATABASE_URL, pool_size=MAX_CONNECTIONS)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

@@ -3,12 +3,13 @@ from sqlalchemy.orm import Session
 from models.ccp_jobtag import JobTag
 from app.dto import job_tag
 
-from typing import List, Optional
+from typing import List
 
 
 class JobTagsRepository:
     def __init__(self):
         self.db = SessionLocal()
+        
     def get_by_id(self, id_tag, id_job):
         return self.db.query(JobTag).filter(JobTag.tag_id == id_tag and JobTag.job_id == id_job).first()
     

@@ -1,9 +1,7 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from sqlalchemy import func
 
-from config.postgres import PostgresDB
 from config.qdrant import QdrantVDB as qdrant
 from config.es import ElasticSearchDB as es
 

@@ -1,12 +1,6 @@
 from config.postgres import SessionLocal
-from sqlalchemy.orm import Session
-from models import ccp_job
+
 from models.ccp_job import Job
-
-from app.dto import job
-
-from typing import List, Optional
-
 
 class JobRepository:
     def __init__(self):

@@ -1,8 +1,6 @@
 from config.postgres import SessionLocal
-from sqlalchemy.orm import Session
+
 from models.ccp_candidate import Candidate
-
-
 
 class CandidateRepository:
     def __init__(self):
