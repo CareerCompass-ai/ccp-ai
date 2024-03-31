@@ -1,7 +1,7 @@
 from config.postgres import SessionLocal
-from sqlalchemy.orm import Session
-from models import ccp_resume
+
 from models.ccp_resume import Resume
+
 class ResumeRepository:
     def __init__(self):
         self.db = SessionLocal()

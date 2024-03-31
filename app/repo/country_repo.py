@@ -1,12 +1,11 @@
 from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
-from models import ccp_country
+
 from models.ccp_country import Country
 
 from app.dto import country
 
-from typing import List, Optional
-
+from typing import List
 
 class CountryRepository:
     def __init__(self):

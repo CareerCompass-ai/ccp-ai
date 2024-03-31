@@ -16,7 +16,6 @@ class UserBase(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-
 class UserAggregate(UserBase):
     matching_score: Optional[float] = None
 
