@@ -1,6 +1,6 @@
 from confluent_kafka import Consumer, KafkaError, KafkaException
+
 from app.usecases.sync_qdrant import SyncUsecase
-import json
 
 import constant.config as cfg
 

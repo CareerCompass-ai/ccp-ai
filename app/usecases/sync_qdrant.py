@@ -1,15 +1,10 @@
 import json
 import hashlib
-import numpy
 
 from qdrant_client import QdrantClient
-from qdrant_client.conversions import common_types as types
-from qdrant_client.http.models import PointStruct
 
 from elasticsearch import Elasticsearch
 
-from app.repo.job_repo import JobRepository
-from app.repo.resume_repo import ResumeRepository
 from app.repo.aggregate import Aggregate
 
 from app.ai.ai_helper import AI
@@ -86,7 +81,7 @@ class SyncUsecase:
         jobs_id_list = self.agg_repo.get_list_job_id(resume_id)
         
         payload={
-                "applied_jobs": jobs_id_list,
+            "applied_jobs": jobs_id_list,
         },
 
         self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_id, payload)
