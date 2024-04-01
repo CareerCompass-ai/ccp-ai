@@ -1,21 +1,16 @@
-import ssl
+import json
+import hashlib
 
 from qdrant_client import QdrantClient
-from qdrant_client.conversions import common_types as types
-from qdrant_client.http.models import PointStruct
 
 from elasticsearch import Elasticsearch
 
-from app.repo.job_repo import JobRepository
-from app.repo.resume_repo import ResumeRepository
 from app.repo.aggregate import Aggregate
 
 from app.ai.ai_helper import AI
+from .sync_helper import SyncHelper
 
 import constant.config as constant
-
-
-ai_helper = ai_helper = AI()
 
 class SyncUsecase:
     def __init__(self):
@@ -29,68 +24,64 @@ class SyncUsecase:
             basic_auth=[constant.ES_USERNAME, constant.ES_PASSWORD], 
         )
 
+        self.ai_helper = AI()
+        self.sync_helper = SyncHelper(qdrant_client=self.qdrant_client, es_client=self.es_client)
+
         self.agg_repo = Aggregate()
 
-    def sync_job_to_qdrant_and_es(self, job_id):
-        payload = self.agg_repo.get_job(job_id)
+    def sync_job_to_qdrant_and_es(self, msg):
+        payload = dict(json.loads(msg.value()))
+        job_id = dict(payload.get('after', {})).get('id')
+
+        job_agg = self.agg_repo.get_job(job_id)
+
+        if 'before' in payload and payload['before'] is not None:
+            old_content = str(payload['before']['content'])
+            new_content = str(payload['after']['content'])
+
+            if hashlib.md5(old_content.encode()).hexdigest() != hashlib.md5(new_content.encode()).hexdigest():
+                summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
+                vector = self.ai_helper.get_embedding(summarized_content)
+                job_agg.s_content = summarized_content
+
+                self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
+                self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
+            else:
+                self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_id, job_agg.model_dump())
+                self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
+        else:
+            summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
+            vector = self.ai_helper.get_embedding(summarized_content)
+            job_agg.s_content = summarized_content
+
+            self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
+            self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
+
+    def sync_resume_to_qdrant(self, msg):
+        payload = dict(json.loads(msg.value()))
+        resume_id = dict(payload.get('after', {})).get('id')
+
+        resume_agg = self.agg_repo.get_resume(resume_id)
 
         # Summarize job description
-        summarized_content = ai_helper.get_job_summarized(payload.content)
+        summarized_content = self.ai_helper.get_resume_summarized(resume_agg.content)
         
         # Embed summarized job description
-        vector = ai_helper.get_embedding(summarized_content)
-        payload.s_content = summarized_content
-        print('Sync Job to qdrant')
-        # Upsert to qdrant collection
-        self.qdrant_client.upsert(
-            collection_name=constant.QDRANT_INDEX_JOB_SEARCH,
-            points= [ 
-                PointStruct(
-                    id=payload.id,
-                    vector=vector.tolist(),
-                    payload=payload.model_dump(),
-                ),
-            ]
-        )
+        vector = self.ai_helper.get_embedding(summarized_content)
 
-        # Create or update a document in ES index
-        print('Sync Job to es')
-        self.es_client.index(
-            index=constant.ES_INDEX_JOB_SEARCH,
-            id=payload.id,
-            body=payload.model_dump(),
-        )
-        # print(f"Synced job {job.id} to Qdrant")
+        resume_agg.s_content = summarized_content
 
-    def sync_resume_to_qdrant(self, resume_id):
-        payload = self.agg_repo.get_resume(resume_id)
+        self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_agg, vector)
 
-        # Summarize job description
-        summarized_content = ai_helper.get_resume_summarized(payload.content)
-        
-        # Embed summarized job description
-        vector = ai_helper.get_embedding(summarized_content)
+    def sync_jobs_applied_resume_to_qdrant(self, msg):
+        msg_dict = dict(json.loads(msg.value()))
 
-        payload.s_content = summarized_content
+        resume_id = dict(msg_dict.get('after', {})).get('id')
 
-        print('Sync Resume to qdrant')
-        self.qdrant_client.upsert(
-            collection_name=constant.QDRANT_INDEX_RESUME_SEARCH,
-            points= [ 
-                PointStruct(
-                    id=payload.id,
-                    vector=vector.tolist(),
-                    payload=payload.model_dump(),
-                ),
-            ]
-        )
-
-    def sync_jobs_applied_resume_to_qdrant(self, resume_id):
         jobs_id_list = self.agg_repo.get_list_job_id(resume_id)
-        self.qdrant_client.set_payload(
-            collection_name=constant.QDRANT_INDEX_RESUME_SEARCH,
-            payload={
-                "applied_jobs": jobs_id_list,
-            },
-            points=[resume_id],
-        )
+        
+        payload={
+            "applied_jobs": jobs_id_list,
+        },
+
+        self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_id, payload)

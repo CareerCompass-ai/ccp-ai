@@ -18,6 +18,7 @@ class Job(Base):
     salary_from = Column(Float, nullable=True)
     salary_to = Column(Float, nullable=True)
     job_type = Column(String, nullable=True)
+    work_place = Column(String, nullable=True)
     company_type = Column(String, nullable=True)
     address_id = Column(Integer, nullable=True)
     recruiter_id = Column(Integer, nullable=True)

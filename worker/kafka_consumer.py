@@ -1,6 +1,6 @@
 from confluent_kafka import Consumer, KafkaError, KafkaException
+
 from app.usecases.sync_qdrant import SyncUsecase
-import json
 
 import constant.config as cfg
 
@@ -18,18 +18,13 @@ class KafkaConsumerWrapper:
         self.sync = SyncUsecase()
 
     def handle_topic_job(self, msg):
-        data = json.loads(msg.key())
-        id = data['payload'].get('id')
-
-        self.sync.sync_job_to_qdrant_and_es(id)
+        self.sync.sync_job_to_qdrant_and_es(msg)
 
     def handle_topic_resume(self, msg):
-        resume_id = json.loads(msg.key()).get('payload').get('id')
-        self.sync.sync_resume_to_qdrant(resume_id)
-
+        self.sync.sync_resume_to_qdrant(msg)
+        
     def handle_topic_application(self, msg):
-        resume_id = json.loads(msg.key()).get('payload').get('resume_id')
-        self.sync.sync_jobs_applied_resume_to_qdrant(resume_id)
+        self.sync.sync_jobs_applied_resume_to_qdrant(msg)
         
     def consume(self):
         try:

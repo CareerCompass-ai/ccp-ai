@@ -1,14 +1,15 @@
 from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
+
 from models.ccp_address import Address
 from app.dto import address
 
-from typing import List, Optional
-
+from typing import List
 
 class AddressRepository:
     def __init__(self):
         self.db = SessionLocal()
+        
     def get_by_id(self, id):
         return self.db.query(Address).filter(Address.id == id).first()
 
