@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path
+from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from io import BytesIO
+import PyPDF2
 
 from config.qdrant import QdrantVDB as qdrant
 from config.es import ElasticSearchDB as es
@@ -97,7 +99,73 @@ def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+@job_router.post("/jobs/create", response_model=job.CreateJobPostResponse)
+def upload(
+        job_title: str = Form(None),
+        content: str = Form(None) ,
+        is_hiring: str = Form(None) ,
+        opened_date: str = Form(None) ,
+        closed_date: str = Form(None) ,
+        salary_from: str = Form(None) ,
+        salary_to: str = Form(None) ,
+        job_type: str = Form(None) ,
+        company_type: str = Form(None) ,
+        address_id: str = Form(None) ,
+        recruiter_id: str = Form(None) ,
+        hiring_level: str = Form(None), 
+        work_place: str = Form(None) ,
+        file: UploadFile = File(None),
+    ):
+    try:
+        # TODO: upload to minio -> get url
+        url = ""
+        
+        record = job.JobBase(
+            job_title=job_title,
+            content_url=url,
+            is_hiring=is_hiring,
+            opened_date=opened_date,
+            closed_date=closed_date,
+            salary_from=salary_from,
+            salary_to=salary_to,
+            job_type=job_type,
+            work_place=work_place,
+            company_type=company_type,
+            address_id=address_id,
+            recruiter_id=recruiter_id,
+            hiring_level=hiring_level
+        )
+
+        if file is not None:
+            # get content from file for processing
+            file_content = file.file.read()
+
+            pdf_file = BytesIO(file_content)
+
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+
+            text_content = ""
+            for page_num in range(len(pdf_reader.pages)):
+                text_content += pdf_reader.pages[page_num].extract_text()
+
+            record.content = text_content
+            print(text_content)
+
+        # TODO: save models to table job
+        print(record)
+        # call job repo to save record to ccp_job
+        # after saved job record to ccp_job -> worker will consume message from kafka to processing the job record
+
+        return job.CreateJobPostResponse()
+
+    except Exception:
+        return {"message": "There was an error uploading or processing the PDF file"}
+
+    finally:
+        if file is not None:
+            file.file.close()
+
 @job_router.get("/job/{id}/resumes", response_model=resume.ListResumeResponse)
 def list_resumes_from_qdrant(
         id: int = Path(..., title="Job ID"),
