@@ -19,13 +19,14 @@ class JobBase(BaseModel):
     hiring_level: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    work_place: Optional[str] = None
 
 class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
     input: Optional[str] = None
-    job_type: Optional[list[str]] = None
-    company_type: Optional[list[str]] = None
+    job_type: Optional[str] = None
+    company_type: Optional[str] = None
     location: Optional[str] = None
     last_updated: Optional[str] = None
     vectors: Optional[list[float]] = None
