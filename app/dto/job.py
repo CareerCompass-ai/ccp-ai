@@ -69,3 +69,9 @@ class CreateJobPostRequest(BaseModel):
 
 class CreateJobPostResponse(BaseModel):
     message: str = "Job post created successfully"
+
+class UploadJobMinioRequest(BaseModel):
+    temp_path: str
+    file_name: str
+class UploadJobMinioResponse(BaseModel):
+    url: str 

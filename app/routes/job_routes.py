@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from io import BytesIO
 import PyPDF2
-
+import os
 from config.qdrant import QdrantVDB as qdrant
 from config.es import ElasticSearchDB as es
 
@@ -11,7 +11,7 @@ from app.repo.job_es_repo import JobESRepository
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.job_repo import JobRepository 
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
-
+from app.repo.job_minio_repo import JobMinioRepository
 from app.dto import job
 from app.dto import resume
 
@@ -26,6 +26,8 @@ job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 job_repo = JobRepository()
+job_minio_repo = JobMinioRepository()
+
 ai_helper = AI()
 
 @job_router.get("/jobs", response_model=job.ListJobResponse)
@@ -101,7 +103,7 @@ def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
         raise HTTPException(status_code=500, detail=str(e))
 
 @job_router.post("/jobs/create", response_model=job.CreateJobPostResponse)
-def upload(
+async def upload(
         job_title: str = Form(None),
         content: str = Form(None) ,
         is_hiring: str = Form(None) ,
@@ -117,13 +119,25 @@ def upload(
         work_place: str = Form(None) ,
         file: UploadFile = File(None),
     ):
+
     try:
         # TODO: upload to minio -> get url
-        url = ""
+        content = await file.read()
+
+        temp_dỉr = os.path.dirname(os.path.abspath(__file__))
+        temp_file_path = os.path.join(temp_dỉr, file.filename)
+        with open(temp_file_path, "wb") as temp_file:
+            temp_file.write(content)
+
+        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file.filename))
+
+        os.remove(temp_file_path)
+
+        content_url = url.url
         
         record = job.JobBase(
             job_title=job_title,
-            content_url=url,
+            content_url=content_url,
             is_hiring=is_hiring,
             opened_date=opened_date,
             closed_date=closed_date,
@@ -136,12 +150,11 @@ def upload(
             recruiter_id=recruiter_id,
             hiring_level=hiring_level
         )
-
         if file is not None:
             # get content from file for processing
-            file_content = file.file.read()
+            # file_content = file.file.read()
 
-            pdf_file = BytesIO(file_content)
+            pdf_file = BytesIO(content)
 
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
@@ -150,10 +163,9 @@ def upload(
                 text_content += pdf_reader.pages[page_num].extract_text()
 
             record.content = text_content
-            print(text_content)
 
         # TODO: save models to table job
-        print(record)
+        job_repo.post_job(input=record)
         # call job repo to save record to ccp_job
         # after saved job record to ccp_job -> worker will consume message from kafka to processing the job record
 
