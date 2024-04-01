@@ -10,10 +10,11 @@ from config.es import ElasticSearchDB as es
 from app.repo.job_es_repo import JobESRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.job_repo import JobRepository 
-
+from app.repo.resume_minio_repo import ResumeMinioRepository
 from app.dto import resume
 
 from app.ai.ai_helper import AI
+from minio import Minio
 
 resume_router = APIRouter(
     prefix="/api",
@@ -21,6 +22,7 @@ resume_router = APIRouter(
 )
 
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
+resume_minio_repo = ResumeMinioRepository()
 job_repo = JobRepository()
 ai_helper = AI()
 
@@ -32,3 +34,11 @@ def list_resumes_from_qdrant(req: Optional[resume.ListResumeRequest]):
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@resume_router.post("/upload/resume", response_model=resume.ResumeResponse_Url)
+def upload_resume_to_minio(req: Optional[resume.ResumeurlRequest]):
+    try:
+        data = resume_minio_repo.upload_resume_to_minio(input=req)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))  

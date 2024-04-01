@@ -31,3 +31,12 @@ class ListResumeResponse(BaseModel):
     page: int
     size: int
     records: List[ResumeAggregate] = None
+
+class ResumeurlRequest(BaseModel):
+    resume_name: Optional[str]
+    resume_path: Optional[str] 
+class ResumeResponse_Url(BaseModel):
+    resume_name: str = None
+    bucket_name: str = None
+    minio_resume_link: str = None
+
