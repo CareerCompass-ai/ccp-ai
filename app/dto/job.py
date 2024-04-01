@@ -1,3 +1,4 @@
+from fastapi import UploadFile, File, Form
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr, ValidationError
 from datetime import datetime
@@ -61,3 +62,10 @@ class ListJobResponse(BaseModel):
 
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
+
+class CreateJobPostRequest(BaseModel):
+    file: UploadFile = File(...)
+    hiring_level: str = Form(...)
+
+class CreateJobPostResponse(BaseModel):
+    message: str = "Job post created successfully"
