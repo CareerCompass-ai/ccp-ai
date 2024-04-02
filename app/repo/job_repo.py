@@ -1,7 +1,9 @@
 from config.postgres import SessionLocal
-from typing import List, Optional
+from sqlalchemy.orm import Session
+from typing import Optional
 from models.ccp_job import Job
 from app.dto import job
+
 class JobRepository:
     def __init__(self):
         self.db = SessionLocal()
@@ -9,11 +11,13 @@ class JobRepository:
     def get_by_id(self, id):
         return self.db.query(Job).filter(Job.id == id).first()
     
-    def post_job(self, input: Optional[job.JobBase]):
-        if input:
-            job_instance = Job(**input.model_dump())
-            job_instance.id = None
-            self.db.add(job_instance)
-            self.db.commit()
-            self.db.refresh(job_instance)
-            return job_instance
+    def create(self, session: Session, record: Optional[job.JobBase]) -> Optional[Job]:
+        if record:
+            record = Job(**record.model_dump())
+            session.add(record)
+            session.flush()  
+            session.refresh(record)  
+
+            return record
+        
+        return None

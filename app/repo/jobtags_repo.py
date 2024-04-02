@@ -38,3 +38,11 @@ class JobTagsRepository:
             )
             jobtag_aggregates.append(jobtag_aggregate)
         return jobtag_aggregates
+    
+    def create(self, session: Session, tag_id: int, job_id: int) -> JobTag:
+        record = JobTag(tag_id=tag_id, job_id=job_id)
+        session.add(record)
+        session.flush()  
+        session.refresh(record)  
+
+        return record
