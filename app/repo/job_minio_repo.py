@@ -15,10 +15,10 @@ class JobMinioRepository:
             secure=False
         )
     def upload_job_to_minio(self, input: Optional[job.UploadJobMinioRequest]) -> job.UploadJobMinioResponse:
-        if self.client.bucket_exists("ccp"):
-            self.client.fput_object("ccp", input.file_name, input.temp_path)
+        if self.client.bucket_exists(constant.MINIO_BUCKET_JOB):
+            self.client.fput_object(constant.MINIO_BUCKET_JOB, input.file_name, input.temp_path)
             return job.UploadJobMinioResponse(
-                url="ccp/" + input.file_name
+                url=constant.MINIO_BUCKET_JOB+"/" + input.file_name
             )
         else:
             print("Bucket does not exist")
