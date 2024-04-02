@@ -58,6 +58,7 @@ class JobQdrantRepository:
 
         if input.hiring_level is not None:
             input.hiring_level = input.hiring_level[0].split(',')
+
             for level in input.hiring_level:
                 filter.should.append(
                         models.FieldCondition(
@@ -69,6 +70,7 @@ class JobQdrantRepository:
                     )
 
         if input.job_type is not None:
+            input.job_type = input.job_type.split(',')
             for job_type in input.job_type:
                 filter.should.append(
                     models.FieldCondition(
@@ -88,8 +90,11 @@ class JobQdrantRepository:
                     )
                 )
             )
+        
 
         if input.company_type is not None:
+            input.company_type = input.company_type.split(',')
+
             for type in input.company_type:
                 filter.should.append(
                     models.FieldCondition(

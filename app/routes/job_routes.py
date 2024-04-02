@@ -45,8 +45,8 @@ def list_jobs_from_qdrant(
     work_place: Optional[list[str]] = Query(None, description="Work place filter"),    
     applied_count: Optional[int] = Query(None, description="Applied count filter"),
     job_tags: Optional[list[str]] = Query(None, description="Job tags filter"),
-    city_name: Optional[int] = Query(None, description="City name filter"),
-    country_name: Optional[int] = Query(None, description="Country name filter"),
+    city_name: Optional[str] = Query(None, description="City name filter"),
+    country_name: Optional[str] = Query(None, description="Country name filter"),
     search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'fulltext'"),
 ):
     # map query params to req
