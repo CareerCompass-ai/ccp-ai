@@ -7,6 +7,7 @@ class ResumeBase(BaseModel):
     candidate_id: Optional[int] = None
     content: Optional[str] = None
     resume_link: Optional[str] = None
+    resume_name: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -31,3 +32,20 @@ class ListResumeResponse(BaseModel):
     page: int
     size: int
     records: List[ResumeAggregate] = None
+
+class ResumeurlRequest(BaseModel):
+    resume_name: Optional[str]
+    resume_path: Optional[str] 
+class ResumeResponse_Url(BaseModel):
+    resume_name: str = None
+    bucket_name: str = None
+    minio_resume_link: str = None
+
+class ContentResponse(BaseModel):
+    content: Optional[str] = None
+
+class ResumeRequest(BaseModel):
+    candidate_id: Optional[int] = None
+    content: Optional[str] = None
+    resume_link: Optional[str] = None
+    resume_name: Optional[str] = None
