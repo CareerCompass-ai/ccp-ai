@@ -33,13 +33,11 @@ class ListResumeResponse(BaseModel):
     size: int
     records: List[ResumeAggregate] = None
 
-class ResumeurlRequest(BaseModel):
-    resume_name: Optional[str]
-    resume_path: Optional[str] 
-class ResumeResponse_Url(BaseModel):
-    resume_name: str = None
-    bucket_name: str = None
-    minio_resume_link: str = None
+class UploadResumeMinioRequest(BaseModel):
+    temp_path: str
+    file_name: str
+class UploadResumeMinioResponse(BaseModel):
+    url: str
 
 class ContentResponse(BaseModel):
     content: Optional[str] = None
@@ -49,3 +47,6 @@ class ResumeRequest(BaseModel):
     content: Optional[str] = None
     resume_link: Optional[str] = None
     resume_name: Optional[str] = None
+
+class CreateResumePostResponse(BaseModel):
+    message: str = "Resume post created successfully"

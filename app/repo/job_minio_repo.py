@@ -22,24 +22,3 @@ class JobMinioRepository:
             )
         else:
             print("Bucket does not exist")
-    # def convert_resume_to_content(self, input: Optional[resume.ResumeRequest]) -> resume.ContentResponse:
-    #     if self.client.bucket_exists("ccp"):
-
-    #         response = self.client.get_object("ccp", input.resume_name)
-    #         content = response.read()
-
-    #         # Wrap the binary data in a BytesIO object
-    #         pdf_file = BytesIO(content)
-
-    #         # Create a PDF file reader object
-    #         pdf_reader = PyPDF2.PdfReader(pdf_file)
-
-    #         # Extract text from each page
-    #         text = ""
-    #         for page_num in range(len(pdf_reader.pages)):
-    #             text += pdf_reader.pages[page_num].extract_text()
-    #         return resume.ContentResponse (
-    #             content=text
-    #         )
-    #     else:
-    #         return
