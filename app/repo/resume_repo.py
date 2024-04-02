@@ -12,7 +12,7 @@ class ResumeRepository:
         result = self.db.query(Resume).filter(Resume.id == id).first()
         return result
     
-    def post_resume(self, input: Optional[resume.ResumeRequest]):
+    def post_resume(self, input: Optional[resume.ResumeBase]):
         if input:
             resume_instance = Resume(**input.model_dump())
             resume_instance.id = None

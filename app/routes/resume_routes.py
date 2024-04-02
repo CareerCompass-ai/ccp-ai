@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
+from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from sqlalchemy import func
@@ -12,6 +12,8 @@ from app.repo.resume_minio_repo import ResumeMinioRepository
 from app.repo.resume_repo import ResumeRepository
 from app.dto import resume
 
+import os, PyPDF2
+from io import BytesIO
 
 resume_router = APIRouter(
     prefix="/api",
@@ -29,21 +31,51 @@ def list_resumes_from_qdrant(req: Optional[resume.ListResumeRequest]):
         data = resume_qdrant_repo.list_resumes(input=req)
         return data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) 
 
-@resume_router.post("/resume/upload", response_model=resume.ResumeResponse_Url)
-def upload_resume_to_minio(req: Optional[resume.ResumeurlRequest]):
+@resume_router.post("/resume/create", response_model=resume.CreateResumePostResponse)
+async def upload(
+    candidate_id: str = Form(None),
+    file: UploadFile = File(None),
+):
     try:
-        data = resume_minio_repo.upload_resume_to_minio(input=req)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))  
+        content = await file.read()
 
-@resume_router.post("/resume/create")
-def post_resume(req: Optional[resume.ResumeRequest]):
-    try:
-        content = resume_minio_repo.convert_resume_to_content(input=req)
-        req.content = content.content
-        resume_repo.post_resume(input=req)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))      
+        temp_dir = os.path.dirname(os.path.abspath(__file__))
+        temp_file_path = os.path.join(temp_dir, file.filename)
+        with open(temp_file_path, "wb") as temp_file:
+            temp_file.write(content)
+        
+        url = resume_minio_repo.upload_resume_to_minio(input=resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=file.filename))
+   
+        os.remove(temp_file_path)
+
+        content_url = url.url
+
+        record = resume.ResumeBase(
+            candidate_id=candidate_id,
+            resume_name=file.filename,
+            resume_link=content_url,
+        )
+
+        if file is not None:
+
+            pdf_file = BytesIO(content)
+
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+
+            text_content = ""
+            for page_num in range(len(pdf_reader.pages)):
+                text_content += pdf_reader.pages[page_num].extract_text()
+
+            record.content = text_content
+
+        resume_repo.post_resume(input=record)
+
+        return resume.CreateResumePostResponse
+    except Exception:
+        return {"message": "There was an error uploading or processing the PDF file"}
+
+    finally:
+        if file is not None:
+            file.file.close()
