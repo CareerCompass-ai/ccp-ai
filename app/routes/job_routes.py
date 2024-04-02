@@ -1,15 +1,19 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from typing import List, Optional
 from io import BytesIO
 import PyPDF2
 import os
+from config.postgres import SessionLocal
+from config import postgres
 from config.qdrant import QdrantVDB as qdrant
 from config.es import ElasticSearchDB as es
 
 from app.repo.job_es_repo import JobESRepository
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.job_repo import JobRepository 
+from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.job_minio_repo import JobMinioRepository
 from app.dto import job
@@ -26,6 +30,7 @@ job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 job_repo = JobRepository()
+jobtag_repo = JobTagsRepository()
 job_minio_repo = JobMinioRepository()
 
 ai_helper = AI()
@@ -102,8 +107,8 @@ def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@job_router.post("/jobs/create", response_model=job.CreateJobPostResponse)
-async def upload(
+@job_router.post("/job/create", response_model=job.CreateJobPostResponse)
+async def create(
         job_title: str = Form(None),
         content: str = Form(None) ,
         is_hiring: str = Form(None) ,
@@ -117,15 +122,16 @@ async def upload(
         recruiter_id: str = Form(None) ,
         hiring_level: str = Form(None), 
         work_place: str = Form(None) ,
+        tags: str = Form(None),
         file: UploadFile = File(None),
+        session: Session = Depends(postgres.PostgresDB.get_db),
     ):
 
     try:
-        # TODO: upload to minio -> get url
         content = await file.read()
 
-        temp_dỉr = os.path.dirname(os.path.abspath(__file__))
-        temp_file_path = os.path.join(temp_dỉr, file.filename)
+        temp_dir = os.path.dirname(os.path.abspath(__file__))
+        temp_file_path = os.path.join(temp_dir, file.filename)
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(content)
 
@@ -150,10 +156,8 @@ async def upload(
             recruiter_id=recruiter_id,
             hiring_level=hiring_level
         )
-        if file is not None:
-            # get content from file for processing
-            # file_content = file.file.read()
 
+        if file is not None:
             pdf_file = BytesIO(content)
 
             pdf_reader = PyPDF2.PdfReader(pdf_file)
@@ -164,17 +168,28 @@ async def upload(
 
             record.content = text_content
 
-        # TODO: save models to table job
-        job_repo.post_job(input=record)
-        # call job repo to save record to ccp_job
-        # after saved job record to ccp_job -> worker will consume message from kafka to processing the job record
+        session.autocommit = False # TODO: remove this?
+        with session.begin():
+            try:
+                job_rec = job_repo.create(session, record)
 
-        return job.CreateJobPostResponse()
+                if tags is not None:
+                    tags = tags.split(',')
+
+                    for tag_id in tags:
+                        jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_rec.id)
+
+                return job.CreateJobPostResponse()
+
+            except SQLAlchemyError as e:
+                session.rollback()
+                raise e
 
     except Exception:
-        return {"message": "There was an error uploading or processing the PDF file"}
+        return {"message": "There was an error creating or processing the PDF file"}
 
     finally:
+        session.close()
         if file is not None:
             file.file.close()
 
