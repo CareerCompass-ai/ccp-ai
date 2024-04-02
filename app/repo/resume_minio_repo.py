@@ -16,10 +16,10 @@ class ResumeMinioRepository:
         )
     
     def upload_resume_to_minio(self, input: Optional[resume.UploadResumeMinioRequest]) -> resume.UploadResumeMinioResponse:
-        if self.client.bucket_exists("ccp"):
-            self.client.fput_object("ccp", input.file_name, input.temp_path)
+        if self.client.bucket_exists(constant.MINIO_BUCKET_RESUME):
+            self.client.fput_object(constant.MINIO_BUCKET_RESUME, input.file_name, input.temp_path)
             return resume.UploadResumeMinioResponse(
-                url="ccp/" + input.file_name
+                url=constant.MINIO_BUCKET_RESUME+"/" + input.file_name
             )
         else:
             print("Bucket does not exist")
