@@ -4,6 +4,8 @@ from app.dto import common
 
 from app.repo.tag_repo import TagRepository 
 
+import constant.common as constant
+
 common_router = APIRouter(
     prefix="/api",
     tags=['Common']
@@ -17,7 +19,11 @@ def list_common_types():
         tags = tag_repo.list_tag()
 
         data = common.ListCommonTypes(
-            tags=tags
+            tags=tags,
+            hiring_levels=constant.HIRING_LEVELS,
+            job_types=constant.JOB_TYPES,
+            company_types=constant.COMPANY_TPYES,
+            work_places=constant.WORK_PLACE,
         )
 
         return data
