@@ -1,11 +1,6 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
-from sqlalchemy.orm import Session
-from typing import List, Optional
 from sqlalchemy import func
-
-
 from config.qdrant import QdrantVDB as qdrant
-from config.es import ElasticSearchDB as es
 
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.resume_minio_repo import ResumeMinioRepository
@@ -23,15 +18,6 @@ resume_router = APIRouter(
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 resume_minio_repo = ResumeMinioRepository()
 resume_repo = ResumeRepository()
-
-# TODO: double check and remove this @ngoctrana
-@resume_router.get("/resumes", response_model=resume.ListResumeResponse)
-def list_resumes_from_qdrant(req: Optional[resume.ListResumeRequest]):
-    try:
-        data = resume_qdrant_repo.list_resumes(input=req)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) 
 
 @resume_router.post("/resume/create", response_model=resume.CreateResumePostResponse)
 async def upload(

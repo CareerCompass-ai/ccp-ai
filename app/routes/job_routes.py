@@ -208,10 +208,15 @@ async def create(
 @job_router.get("/job/{id}/resumes", response_model=resume.ListResumeResponse)
 def list_resumes_from_qdrant(
         id: int = Path(..., title="Job ID"),
-        req: Optional[resume.ListResumeRequest] = None,
+        page: Optional[int] = Query(None, description="Page numeber"),
+        size: Optional[int] = Query(None, description="Page size")
     ):
     try:
-        req.job_id = id
+        req = resume.ListResumeRequest(
+            page=page,
+            size=size,
+            job_id=id
+        )
         data = resume_qdrant_repo.list_resumes(input=req)
         return data
     except Exception as e:

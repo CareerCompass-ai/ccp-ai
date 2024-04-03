@@ -8,3 +8,5 @@ class ApplicationBase(BaseModel):
     job_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+class ListJobResponse(BaseModel):
+    applied_jobs: list[int] = None

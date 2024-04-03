@@ -9,7 +9,7 @@ from app.repo.aggregate import Aggregate
 
 from app.ai.ai_helper import AI
 from .sync_helper import SyncHelper
-
+from app.dto import application
 import constant.config as constant
 
 class SyncUsecase:
@@ -76,12 +76,12 @@ class SyncUsecase:
     def sync_jobs_applied_resume_to_qdrant(self, msg):
         msg_dict = dict(json.loads(msg.value()))
 
-        resume_id = dict(msg_dict.get('after', {})).get('id')
+        resume_id = dict(msg_dict.get('after', {})).get('resume_id')
 
         jobs_id_list = self.agg_repo.get_list_job_id(resume_id)
         
-        payload={
-            "applied_jobs": jobs_id_list,
-        },
-
-        self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_id, payload)
+        payload = application.ListJobResponse(
+            applied_jobs=jobs_id_list
+        )
+        record = payload.model_dump()
+        self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_id, record)

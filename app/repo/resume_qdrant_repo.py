@@ -56,7 +56,6 @@ class ResumeQdrantRepository:
             query_filter=filter,
             offset=(input.page - 1) * input.size,
         )
-
         for item in hits:
             score = item.score
             payload = item.payload
