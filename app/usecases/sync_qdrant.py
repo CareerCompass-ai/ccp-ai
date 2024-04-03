@@ -63,15 +63,15 @@ class SyncUsecase:
 
         resume_agg = self.agg_repo.get_resume(resume_id)
 
-        # Summarize job description
-        summarized_content = self.ai_helper.get_resume_summarized(resume_agg.content)
-        
-        # Embed summarized job description
-        vector = self.ai_helper.get_embedding(summarized_content)
+        if 'before' in payload and payload['before'] is not None:
+            self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_id, resume_agg.model_dump())
+        else:
+            summarized_content = self.ai_helper.get_resume_summarized(resume_agg.content)
+            vector = self.ai_helper.get_embedding(summarized_content)
+            resume_agg.s_content = summarized_content
 
-        resume_agg.s_content = summarized_content
-
-        self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_agg, vector)
+            self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_agg, vector)
+            
 
     def sync_jobs_applied_resume_to_qdrant(self, msg):
         msg_dict = dict(json.loads(msg.value()))
