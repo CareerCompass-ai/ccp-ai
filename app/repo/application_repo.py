@@ -1,5 +1,7 @@
 from config.postgres import SessionLocal
 
+from sqlalchemy.orm import Session
+
 from models.ccp_application import Application
 
 class ApplicationRepository:
@@ -14,3 +16,10 @@ class ApplicationRepository:
         )
         
         return [job_id for (job_id,) in job_ids]
+    
+    def create(self, session: Session, record: Application) -> Application:
+        session.add(record)
+        session.flush()
+        session.refresh(record)
+
+        return record
