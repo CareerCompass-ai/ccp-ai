@@ -5,23 +5,23 @@ from datetime import datetime
 
 class JobBase(BaseModel):
     id: Optional[int] = None
-    job_title: Optional[str] = None
-    content: Optional[str] = None
-    content_url: Optional[str] = None
-    is_hiring: Optional[bool] = None
+    job_title: Optional[str] = ""
+    content: Optional[str] = ""
+    content_url: Optional[str] = ""
+    is_hiring: Optional[bool] = True
     opened_date: Optional[datetime] = None
     closed_date: Optional[datetime] = None
-    salary_from: Optional[float] = None
-    salary_to: Optional[float] = None
-    job_type: Optional[str] = None
-    company_type: Optional[str] = None
-    address_id: Optional[int] = None
-    applied_count: Optional[int] = None
-    hiring_level: Optional[str] = None
-    work_place: Optional[str] = None
+    salary_from: Optional[float] = 0.0
+    salary_to: Optional[float] = 0.0
+    job_type: Optional[str] = ""
+    company_type: Optional[str] = ""
+    address_id: Optional[int] = 0
+    applied_count: Optional[int] = 0
+    hiring_level: Optional[str] = ""
+    work_place: Optional[str] = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    work_place: Optional[str] = None
+    work_place: Optional[str] = ""
 
 class ListJobRequest(BaseModel):
     page: Optional[int]
@@ -46,14 +46,14 @@ class ListJobRequest(BaseModel):
     search_type: Optional[str] = None 
 
 class JobAggregate(JobBase):
-    matching_score: Optional[float] = None
-    s_content: Optional[str] = None
-    address: Optional[str] = None
-    city_name: Optional[str] = None
-    country_name: Optional[str] = None
-    job_tags: list[str] = None
-    recruiter_id: Optional[int] = None
-    recruiter_name: Optional[str] = None
+    matching_score: Optional[float] = 0.0
+    s_content: Optional[str] = ""
+    address: Optional[str] = ""
+    city_name: Optional[str] = ""
+    country_name: Optional[str] = ""
+    job_tags: list[str] = ""
+    recruiter_id: Optional[int] = 0
+    recruiter_name: Optional[str] = ""
 
 class ListJobResponse(BaseModel):
     count: int
