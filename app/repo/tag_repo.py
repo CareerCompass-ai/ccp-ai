@@ -13,17 +13,15 @@ class TagRepository:
     def get_by_id(self, id):
         return self.db.query(Tag).filter(Tag.id == id).first()
 
-    def get_tags(self, db: Session) -> List[Tag]:
-        tags = db.query(Tag).all()
-        tag_aggregates = []
+    def list_tag(self) -> List[Tag]:
+        records = self.db.query(Tag).all()
 
-        for item in tags:
-            tag_aggregate = tag.TagBase(
+        tags = []
+        for item in records:
+            tag_aggregate = tag.Tag(
                 id=item.id,
                 tag_name=item.tag_name, 
-                created_at= item.created_at,
-                updated_at=item.updated_at
             )
-            tag_aggregates.append(tag_aggregate)
+            tags.append(tag_aggregate)
 
-        return tag_aggregates
+        return tags

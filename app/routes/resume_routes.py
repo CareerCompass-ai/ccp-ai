@@ -31,7 +31,7 @@ def list_resumes_from_qdrant(req: Optional[resume.ListResumeRequest]):
         data = resume_qdrant_repo.list_resumes(input=req)
         return data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) 
 
 @resume_router.post("/resume/create", response_model=resume.CreateResumePostResponse)
 async def upload(
@@ -47,7 +47,7 @@ async def upload(
             temp_file.write(content)
         
         url = resume_minio_repo.upload_resume_to_minio(input=resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=file.filename))
-   
+
         os.remove(temp_file_path)
 
         content_url = url.url
