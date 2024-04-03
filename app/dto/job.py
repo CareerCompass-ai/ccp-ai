@@ -38,9 +38,9 @@ class ListJobRequest(BaseModel):
     work_place: Optional[list[str]] = None
     applied_count: Optional[int] = None
     job_tags: Optional[list[str]] = None
-    city_name: Optional[int] = None
+    city_name: Optional[str] = None
     country_name: Optional[int] = None
-
+    salary: Optional[str] = None
     # For vector search: search_type = "vector"
     # For full-text search: search_type = "fulltext"
     search_type: Optional[str] = None 
