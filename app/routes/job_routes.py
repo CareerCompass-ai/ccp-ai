@@ -18,8 +18,13 @@ from app.repo.job_repo import JobRepository
 from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.job_minio_repo import JobMinioRepository
+from app.repo.application_repo import ApplicationRepository
+
+from models.ccp_application import Application
+
 from app.dto import job
 from app.dto import resume
+from app.dto import application
 
 from app.ai.ai_helper import AI
 
@@ -34,6 +39,7 @@ resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUM
 job_repo = JobRepository()
 jobtag_repo = JobTagsRepository()
 job_minio_repo = JobMinioRepository()
+application_repo = ApplicationRepository()
 
 ai_helper = AI()
 
@@ -211,6 +217,38 @@ def list_resumes_from_qdrant(
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
+
+@job_router.post("/job/apply", response_model=job.ApplyJobResponse)
+def apply(
+        req: Optional[job.ApplyJobRequest], 
+        session: Session = Depends(postgres.PostgresDB.get_db)
+    ):
+    try:
+        now = datetime.now()
+
+        record = Application(
+            resume_id=req.resume_id,
+            job_id=req.job_id,
+            created_at=now,
+            updated_at=now
+        )
+
+        session.autocommit = False # TODO: remove this?
+        with session.begin():
+            try:
+                application_repo.create(session, record)
+
+                return job.ApplyJobResponse()
+
+            except SQLAlchemyError as e:
+                session.rollback()
+                raise e
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+
 @job_router.get("/qdrant/health-check")
 async def root():
     return {"message": "Good"}

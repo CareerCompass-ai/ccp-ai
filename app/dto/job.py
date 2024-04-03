@@ -69,10 +69,17 @@ class CreateJobPostRequest(BaseModel):
     hiring_level: str = Form(...)
 
 class CreateJobPostResponse(BaseModel):
-    message: str = "Job post created successfully"
+    message: str = "Job posted successfully"
 
 class UploadJobMinioRequest(BaseModel):
     temp_path: str
     file_name: str
 class UploadJobMinioResponse(BaseModel):
     url: str 
+
+class ApplyJobRequest(BaseModel):
+    resume_id: int
+    job_id: int
+
+class ApplyJobResponse(BaseModel):
+    message: str = "Applied successfully"
