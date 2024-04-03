@@ -103,6 +103,7 @@ class Aggregate:
             id = resume.id,
             content=resume.content,
             resume_link=resume.resume_link,
+            resume_name=resume.resume_name
         )
 
         if resume.created_at is not None:
