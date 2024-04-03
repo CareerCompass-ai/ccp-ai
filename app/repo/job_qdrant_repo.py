@@ -34,6 +34,36 @@ class JobQdrantRepository:
                 # If `True` - provide the exact count of points matching the filter.
                 # If `False` - provide the approximate count of points matching the filter. Works faster.
         )
+    def reduce_ranges(self, temp_range):
+        if not temp_range:
+            return []
+
+        sorted_ranges = sorted(temp_range, key=lambda x: x[0] if x[0] is not None else float('-inf'))
+        print("Sorted Ranges:", sorted_ranges)
+        reduced_ranges = []
+        flag_0 = 0
+        flag_1 = 0
+        for start, end in sorted_ranges:
+            if start is None:
+                flag_0 = 1
+            if end is None:
+                flag_1 = 1
+            if flag_0 * flag_1 ==1:
+                del reduced_ranges
+                reduced_ranges = [[None, None]]
+                break
+            if not reduced_ranges:
+                reduced_ranges.append([start, end])
+            elif reduced_ranges[-1][1] is None:
+                break
+            elif start is None or reduced_ranges[-1][1] > start:
+                if end is None:
+                    reduced_ranges[-1][1] = None
+                    break
+                reduced_ranges[-1][1] = max(end, reduced_ranges[-1][1])
+            else:
+                reduced_ranges.append([start, end])
+        return reduced_ranges
 
     # TODO: find threshold to decide return or not return || base on score -> return label ? relavent or not, not return
     def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
@@ -57,7 +87,8 @@ class JobQdrantRepository:
                 elif 'none' in temp[1].lower():
                     temp[1] = None
                 temp_range.append(temp)
-            for range in temp_range:
+            reduced_range = self.reduce_ranges(temp_range)
+            for range in reduced_range:
                 filter = models.Filter()
                 if filter.must is None:
                     filter.must = []
@@ -203,6 +234,7 @@ class JobQdrantRepository:
                         result.matching_score = score
 
                         records.append(result)  
+                        del result
                 else:
                     hits = self.client.scroll(
                         collection_name=self.index_name,
@@ -223,7 +255,6 @@ class JobQdrantRepository:
 
                             records.append(mapper.toJobDTO(payload))   
                 del filter
-                del result
                 del hits
         else:
             filter = models.Filter()
