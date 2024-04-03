@@ -10,6 +10,8 @@ from config import postgres
 from config.qdrant import QdrantVDB as qdrant
 from config.es import ElasticSearchDB as es
 
+from datetime import datetime
+
 from app.repo.job_es_repo import JobESRepository
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.job_repo import JobRepository 
@@ -140,6 +142,8 @@ async def create(
         os.remove(temp_file_path)
 
         content_url = url.url
+
+        now = datetime.now()
         
         record = job.JobBase(
             job_title=job_title,
@@ -154,7 +158,9 @@ async def create(
             company_type=company_type,
             address_id=address_id,
             recruiter_id=recruiter_id,
-            hiring_level=hiring_level
+            hiring_level=hiring_level,
+            created_at=now,
+            updated_at=now
         )
 
         if file is not None:
