@@ -39,7 +39,7 @@ class SyncUsecase:
             old_content = str(payload['before']['content'])
             new_content = str(payload['after']['content'])
 
-            if hashlib.md5(old_content.encode()).hexdigest() == hashlib.md5(new_content.encode()).hexdigest():
+            if hashlib.md5(old_content.encode()).hexdigest() != hashlib.md5(new_content.encode()).hexdigest():
                 summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
                 vector = self.ai_helper.get_embedding(summarized_content)
                 job_agg.s_content = summarized_content
