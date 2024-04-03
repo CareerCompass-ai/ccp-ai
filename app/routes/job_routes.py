@@ -96,7 +96,7 @@ def list_jobs_from_qdrant(
             )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @job_router.get("/job", response_model=job.JobAggregate)
 def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
@@ -105,7 +105,7 @@ def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
         return data
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @job_router.post("/job/create", response_model=job.CreateJobPostResponse)
 async def create(
@@ -203,7 +203,7 @@ def list_resumes_from_qdrant(
         data = resume_qdrant_repo.list_resumes(input=req)
         return data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @job_router.get("/qdrant/health-check")
 async def root():
