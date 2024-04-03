@@ -83,3 +83,9 @@ class ApplyJobRequest(BaseModel):
 
 class ApplyJobResponse(BaseModel):
     message: str = "Applied successfully"
+
+class CloseJobRequest(BaseModel):
+    job_id: int
+
+class CloseJobResponse(BaseModel):
+    message: str = "Job closed successfully"

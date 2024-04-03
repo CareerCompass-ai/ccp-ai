@@ -21,3 +21,10 @@ class JobRepository:
             return record
         
         return None
+    
+    def update_with_map(self, record: Job, props: dict) -> Job:
+        for key, val in props.items():
+            setattr(record, key, val)
+
+            self.db.commit()
+            self.db.refresh(record)

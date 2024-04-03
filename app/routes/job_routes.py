@@ -246,7 +246,36 @@ def apply(
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
 
+@job_router.post("/job/close", response_model=job.CloseJobResponse)
+def apply(
+        req: Optional[job.CloseJobRequest], 
+        session: Session = Depends(postgres.PostgresDB.get_db)
+    ):
+    try:
+        now = datetime.now()
+
+        data = job_repo.get_by_id(req.job_id)
+
+        props = {
+            "is_hiring": False,
+            'updated_at': now,
+            'closed_date': now,
+        }
+
+        session.autocommit = False # TODO: remove this?
+        with session.begin():
+            try:
+                job_repo.update_with_map(data, props)
+
+                return job.CloseJobResponse()
+            except SQLAlchemyError as e:
+                session.rollback()
+                raise e
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @job_router.get("/qdrant/health-check")
