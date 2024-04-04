@@ -6,8 +6,8 @@ from .tag import Tag
 import constant.common as constant
 
 class ListCommonTypes(BaseModel):
-    tags: list[Tag]
-    hiring_levels: list[str]
-    job_types: list[str]
-    company_types: list[str]
-    work_places: list[str]
+    tag: list[Tag]
+    hiring_level: list[str]
+    job_type: list[str]
+    company_type: list[str]
+    work_place: list[str]

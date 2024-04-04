@@ -19,11 +19,11 @@ def list_common_types():
         tags = tag_repo.list_tag()
 
         data = common.ListCommonTypes(
-            tags=tags,
-            hiring_levels=constant.HIRING_LEVELS,
-            job_types=constant.JOB_TYPES,
-            company_types=constant.COMPANY_TPYES,
-            work_places=constant.WORK_PLACE,
+            tag=tags,
+            hiring_level=constant.HIRING_LEVELS,
+            job_type=constant.JOB_TYPES,
+            company_type=constant.COMPANY_TYPES,
+            work_place=constant.WORK_PLACES,
         )
 
         return data

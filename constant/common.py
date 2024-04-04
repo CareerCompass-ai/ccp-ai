@@ -2,6 +2,6 @@ HIRING_LEVELS = ['Entry level', 'Associate', "Junior level", "Mid-Senior level",
 
 JOB_TYPES = ['Contract', "Part-time", "Full-time"]
 
-COMPANY_TPYES = ['Product', 'Outsource']
+COMPANY_TYPES = ['Product', 'Outsource']
 
-WORK_PLACE = ['On-site', 'Remote', 'Hybrid']
+WORK_PLACES = ['On-site', 'Remote', 'Hybrid']
