@@ -1,10 +1,13 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+
 from typing import List, Optional
-from io import BytesIO
-import PyPDF2
 import os
+from io import BytesIO
+
+import PyPDF2
+
 from config.postgres import SessionLocal
 from config import postgres
 from config.qdrant import QdrantVDB as qdrant
@@ -230,7 +233,7 @@ def apply(
         req: Optional[job.ApplyJobRequest], 
         session: Session = Depends(postgres.PostgresDB.get_db)
     ):
-    try:
+    # try:
         now = datetime.now()
 
         record = Application(
@@ -246,13 +249,16 @@ def apply(
                 application_repo.create(session, record)
 
                 return job.ApplyJobResponse()
-
+            
+            except IntegrityError as e:
+                session.rollback()
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You have already applied for this job.")
             except SQLAlchemyError as e:
                 session.rollback()
-                raise e
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    # except Exception as e:
+    #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 
 @job_router.post("/job/close", response_model=job.CloseJobResponse)
@@ -276,11 +282,10 @@ def apply(
             try:
                 job_repo.update_with_map(data, props)
 
-                return job.CloseJobResponse()
             except SQLAlchemyError as e:
                 session.rollback()
                 raise e
-
+            
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
