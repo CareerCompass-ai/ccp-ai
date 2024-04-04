@@ -64,7 +64,7 @@ def list_jobs_from_qdrant(
     city_name: Optional[str] = Query(None, description="City name filter"),
     country_name: Optional[str] = Query(None, description="Country name filter"),
     search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'fulltext'"),
-    salary:  Optional[str] = Query(None, description="Search type: 'vector' or 'fulltext'")
+    salary:  Optional[str] = Query(None, description="Salary range (multile range)'")
 ):
     # map query params to req
     try:
