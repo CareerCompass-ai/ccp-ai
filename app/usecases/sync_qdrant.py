@@ -25,7 +25,7 @@ class SyncUsecase:
         # )
 
         self.ai_helper = AI()
-        self.sync_helper = SyncHelper(qdrant_client=self.qdrant_client, es_client=self.es_client)
+        self.sync_helper = SyncHelper(qdrant_client=self.qdrant_client)
 
         self.agg_repo = Aggregate()
 
