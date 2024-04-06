@@ -3,7 +3,7 @@ import hashlib
 
 from qdrant_client import QdrantClient
 
-from elasticsearch import Elasticsearch
+# from elasticsearch import Elasticsearch
 
 from app.repo.aggregate import Aggregate
 
@@ -19,10 +19,10 @@ class SyncUsecase:
             port=constant.QDRANT_PORT
         )
 
-        self.es_client = Elasticsearch(
-            constant.ES_URL, 
-            basic_auth=[constant.ES_USERNAME, constant.ES_PASSWORD], 
-        )
+        # self.es_client = Elasticsearch(
+        #     constant.ES_URL, 
+        #     basic_auth=[constant.ES_USERNAME, constant.ES_PASSWORD], 
+        # )
 
         self.ai_helper = AI()
         self.sync_helper = SyncHelper(qdrant_client=self.qdrant_client, es_client=self.es_client)
@@ -45,17 +45,17 @@ class SyncUsecase:
                 job_agg.s_content = summarized_content
 
                 self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
-                self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
+                # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
             else:
                 self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_id, job_agg.model_dump())
-                self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
+                # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
         else:
             summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
             vector = self.ai_helper.get_embedding(summarized_content)
             job_agg.s_content = summarized_content
 
             self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
-            self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
+            # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
 
     def sync_resume_to_qdrant(self, msg):
         payload = dict(json.loads(msg.value()))

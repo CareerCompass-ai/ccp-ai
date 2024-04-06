@@ -11,11 +11,11 @@ import PyPDF2
 from config.postgres import SessionLocal
 from config import postgres
 from config.qdrant import QdrantVDB as qdrant
-from config.es import ElasticSearchDB as es
+# from config.es import ElasticSearchDB as es
 
 from datetime import datetime
 
-from app.repo.job_es_repo import JobESRepository
+# from app.repo.job_es_repo import JobESRepository
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.job_repo import JobRepository 
 from app.repo.jobtags_repo import JobTagsRepository
@@ -36,7 +36,7 @@ job_router = APIRouter(
     tags=['Job']
 )
 
-job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
+# job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 job_repo = JobRepository()
@@ -88,25 +88,13 @@ def list_jobs_from_qdrant(
             salary=salary
         )
 
-        if search_type == "vector": # handle vector search
-            if input is not None:
-                vectors = ai_helper.get_embedding(input)
-                req.vectors = vectors.tolist() if vectors is not None else None
+        if input is not None:
+            vectors = ai_helper.get_embedding(input)
+            req.vectors = vectors.tolist() if vectors is not None else None
 
-            data = job_qdrant_repo.list_jobs(input=req)
+        data = job_qdrant_repo.list_jobs(input=req)
 
-            return data
-        elif search_type == "fulltext": # handle fulltext search
-            data = job_es_repo.list_jobs(input=req)
-
-            return data
-        else:
-            return job.ListJobResponse(
-                count=0,
-                page=req.size,
-                size=req.size,
-                records=list[job.JobAggregate]
-            )
+        return data
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -141,12 +129,12 @@ async def create(
     ):
 
     try:
-        content = await file.read()
+        file_content = await file.read()
 
         temp_dir = os.path.dirname(os.path.abspath(__file__))
         temp_file_path = os.path.join(temp_dir, file.filename)
         with open(temp_file_path, "wb") as temp_file:
-            temp_file.write(content)
+            temp_file.write(file_content)
 
         url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file.filename))
 
@@ -175,7 +163,7 @@ async def create(
         )
 
         if file is not None:
-            pdf_file = BytesIO(content)
+            pdf_file = BytesIO(file_content)
 
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
