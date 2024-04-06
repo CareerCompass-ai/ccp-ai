@@ -25,12 +25,12 @@ async def upload(
     file: UploadFile = File(None),
 ):
     try:
-        content = await file.read()
+        file_content = await file.read()
 
         temp_dir = os.path.dirname(os.path.abspath(__file__))
         temp_file_path = os.path.join(temp_dir, file.filename)
         with open(temp_file_path, "wb") as temp_file:
-            temp_file.write(content)
+            temp_file.write(file_content)
         
         url = resume_minio_repo.upload_resume_to_minio(input=resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=file.filename))
 
@@ -46,7 +46,7 @@ async def upload(
 
         if file is not None:
 
-            pdf_file = BytesIO(content)
+            pdf_file = BytesIO(file_content)
 
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
