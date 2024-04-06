@@ -185,27 +185,54 @@ services:
         aliases:
           - minio
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
-    container_name: elasticsearch
-    environment:
-      - xpack.security.enabled=true
-      - "discovery.type=single-node"
-      - ES_JAVA_OPTS=-Xms750m -Xmx750m
-      - ELASTIC_PASSWORD=change_me
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
+  weaviate:
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8060"
+      - --scheme
+      - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.24.7
     ports:
-      - 9200:9200
-      - 9300:9300
+      - 8060:8060
+      - 50051:50051
+    volumes:
+      - weaviate-data:/usr/share/weaviate/data
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 30
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/usr/share/weaviate/data"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      ENABLE_MODULES: "text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai"
+      CLUSTER_HOSTNAME: "node1"
     networks:
       ccp_network:
         aliases:
-          - elasticsearch
+          - weaviate
+
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+  #   container_name: elasticsearch
+  #   environment:
+  #     - xpack.security.enabled=true
+  #     - "discovery.type=single-node"
+  #     - ES_JAVA_OPTS=-Xms750m -Xmx750m
+  #     - ELASTIC_PASSWORD=change_me
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  #   ports:
+  #     - 9200:9200
+  #     - 9300:9300
+  #   networks:
+  #     ccp_network:
+  #       aliases:
+  #         - elasticsearch
 
 networks:
   ccp_network:
@@ -213,8 +240,6 @@ networks:
     driver: bridge
 
 volumes:
-  elasticsearch-data:
-    driver: local
   zookeeper-data:
     driver: local
   broker-data:
@@ -227,3 +252,7 @@ volumes:
     driver: local
   minio-data:
     driver: local
+  weaviate-data:
+    driver: local
+  # elasticsearch-data:
+  #   driver: local

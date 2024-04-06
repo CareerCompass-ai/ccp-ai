@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routes.job_routes import job_router
 from .routes.resume_routes import resume_router
 from .routes.common_routes import common_router
+
 app = FastAPI()
 
 origins = ["*"]
