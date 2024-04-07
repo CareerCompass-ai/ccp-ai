@@ -41,9 +41,6 @@ class ListJobRequest(BaseModel):
     city_name: Optional[str] = None
     country_name: Optional[int] = None
     salary: Optional[str] = None
-    # For vector search: search_type = "vector"
-    # For full-text search: search_type = "fulltext"
-    search_type: Optional[str] = None 
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0

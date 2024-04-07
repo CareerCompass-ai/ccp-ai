@@ -2,13 +2,15 @@ import json
 import constant
 
 from qdrant_client import QdrantClient
+from weaviate import WeaviateClient
 # from elasticsearch import Elasticsearch
 
 from qdrant_client.http.models import PointStruct
 
 class SyncHelper:
-    def __init__(self, qdrant_client: QdrantClient):
+    def __init__(self, qdrant_client: QdrantClient, weaviate_client: WeaviateClient):
         self.qdrant_client = qdrant_client
+        self.weaviate_client = weaviate_client
         # self.es_client = es_client
 
     def update_fields_qdrant(self, collection_name: str, id: int, payload):
