@@ -12,3 +12,19 @@ class AppliedJobsResponse(BaseModel):
 
 class ListAppliedJobsResponse(BaseModel):
     records: List[AppliedJobsResponse] = None
+
+class UpdateSaveJobRequest(BaseModel):
+    candidate_id: int
+    job_id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    type: int #1: save, 2: unsave
+class UpdateSaveJobResponse(BaseModel):
+    message: str
+
+class SavedJobsResponse(BaseModel):
+    job_id: int
+    job_title: str
+
+class ListSavedJobsResponse(BaseModel):
+    records: List[SavedJobsResponse] = None
