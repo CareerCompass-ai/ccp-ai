@@ -6,6 +6,7 @@ from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.resume_minio_repo import ResumeMinioRepository
 from app.repo.resume_repo import ResumeRepository
 from app.dto import resume
+from datetime import datetime
 
 import os, PyPDF2
 from io import BytesIO
@@ -38,10 +39,14 @@ async def upload(
 
         content_url = url.url
 
+        now = datetime.now()
+
         record = resume.ResumeBase(
             candidate_id=candidate_id,
             resume_name=file.filename,
             resume_link=content_url,
+            created_at=now,
+            updated_at=now
         )
 
         if file is not None:
