@@ -16,8 +16,6 @@ class ListAppliedJobsResponse(BaseModel):
 class UpdateSaveJobRequest(BaseModel):
     candidate_id: int
     job_id: int
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
     type: int #1: save, 2: unsave
 class UpdateSaveJobResponse(BaseModel):
     message: str
