@@ -63,7 +63,7 @@ def list_jobs_from_qdrant(
     job_tags: Optional[list[str]] = Query(None, description="Job tags filter"),
     city_name: Optional[str] = Query(None, description="City name filter"),
     country_name: Optional[str] = Query(None, description="Country name filter"),
-    search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'fulltext'"),
+    search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'hybrid'"),
     salary:  Optional[str] = Query(None, description="Salary range (multile range)'")
 ):
     # map query params to req
@@ -83,18 +83,29 @@ def list_jobs_from_qdrant(
             job_tags=job_tags,
             city_name=city_name,
             country_name=country_name,
-            search_type=search_type,
             work_place=work_place,
             salary=salary
         )
 
-        if input is not None:
-            vectors = ai_helper.get_embedding(input)
-            req.vectors = vectors.tolist() if vectors is not None else None
+        if search_type == "vector": # handle vector search
+            if input is not None:
+                vectors = ai_helper.get_embedding(input)
+                req.vectors = vectors.tolist() if vectors is not None else None
 
-        data = job_qdrant_repo.list_jobs(input=req)
+            data = job_qdrant_repo.list_jobs(input=req)
 
-        return data
+            return data
+        elif search_type == "hybrid": # handle hybrid search
+            # data = job_es_repo.list_jobs(input=req)
+
+            return data
+        else:
+            return job.ListJobResponse(
+                count=0,
+                page=req.size,
+                size=req.size,
+                records=list[job.JobAggregate]
+            )
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
