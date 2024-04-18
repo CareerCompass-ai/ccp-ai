@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .routes.admin import admin_router
 from .routes.job_routes import job_router
 from .routes.resume_routes import resume_router
 from .routes.common_routes import common_router
@@ -19,10 +20,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# admin router, for fixing and configurating stuffs
+app.include_router(admin_router)
+
 app.include_router(job_router)
 app.include_router(resume_router)
 app.include_router(candidate_router)
 app.include_router(recruiter_router)
+
 # common router
 app.include_router(common_router)
 
