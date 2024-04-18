@@ -32,6 +32,13 @@ class SyncHelper:
             ]
         )
 
+    def insert_to_weaviate(self, class_name: str, payload):
+        self.weaviate_client
+
+    def update_object_weaviate(self, class_name: str):
+        self.weaviate_client
+
+
     # def upsert_to_es(self, index: str, payload):
     #     self.es_client.index(
     #         index=index,
