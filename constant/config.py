@@ -21,6 +21,8 @@ ES_PORT = os.getenv("ES_PORT")
 
 # HTTP server
 HTTP_PORT = os.getenv("HTTP_PORT")
+HTTP_ADMIN_USER_NAME = os.getenv("HTTP_ADMIN_USER_NAME")
+HTTP_ADMIN_PASSWORD = os.getenv("HTTP_ADMIN_PASSWORD")
 
 # postgres
 DATABASE_URL = os.getenv("DATABASE_URL")
