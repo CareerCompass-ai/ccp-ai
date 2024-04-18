@@ -214,8 +214,10 @@ class JobQdrantRepository:
                                     value=type,
                                 ),
                             )
-                        )
+                    )
                 total_record += self.count_total_record(filter).count
+
+                # TODO: get all records match filter and return the dynamic filters
 
                 hits = List[types.ScoredPoint]
                 if input.vectors is not None:
