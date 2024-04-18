@@ -27,25 +27,23 @@ def list_jobs_applied(
     
 @candidate_router.post("/candidate/update-saved-job", response_model=candidate.UpdateSaveJobResponse)
 def update_saved_job(
-    candidate_id: int = Query(description="Candidate ID"),
-    job_id: int = Query(description="Job ID"),
-    type: int = Query(description="1: save, 2: unsave")
+    req: candidate.UpdateSaveJobRequest
 ):
     try:
         now = datetime.now()
         record = JobSaved(
-            candidate_id=candidate_id,
-            job_id=job_id,
+            candidate_id=req.candidate_id,
+            job_id=req.job_id,
             created_at=now,
             updated_at=now,
         )
 
-        if type == 1:
+        if req.type == 1:
             candidate_repo.create_saved_job(record)
             return candidate.UpdateSaveJobResponse(
                 message="Save job successfully!"
             )
-        elif type == 2:
+        elif req.type == 2:
             candidate_repo.delete_saved_job(record)
             return candidate.UpdateSaveJobResponse(
                 message="Unsave job sucessfully"
