@@ -14,6 +14,9 @@ class WeaviateVDB:
             http_host=constant.SERVER_IP,
             http_port=WeaviateVDB.WEAVIATE_PORT,
             http_secure=False,
+            grpc_host=constant.SERVER_IP,
+            grpc_port=50051,
+            grpc_secure=False,
             auth_credentials=weaviate.auth.AuthApiKey(WeaviateVDB.WEAVIATE_API_KEY),
             headers={
                 "X-OpenAI-Api-Key": WeaviateVDB.OPENAI_API_KEY
