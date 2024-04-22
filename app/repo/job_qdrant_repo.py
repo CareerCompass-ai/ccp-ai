@@ -407,18 +407,20 @@ class JobQdrantRepository:
             
 
             else:
-                hits = self.client.scroll(
+                result = self.client.scroll(
                     collection_name=self.index_name,
                     scroll_filter=filter,
-                    limit=input.size,
+                    # limit=input.size,
                     order_by=models.OrderBy(
                         key="updated_at",
                         direction="desc"
                     ),
-                    with_payload=True
+                    with_payload=True,
                     # with_vectors=False
                 )
-                for item in hits[0]:
+                offset=(input.page - 1 ) * input.size
+                hits = result[0][offset:offset+input.size]
+                for item in hits:
                     if item is not None:
                         payload = item.payload
 
