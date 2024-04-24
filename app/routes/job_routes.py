@@ -31,6 +31,8 @@ from app.dto import application
 
 from app.ai.ai_helper import AI
 
+import constant.ai as constant
+
 job_router = APIRouter(
     prefix="/api",
     tags=['Job']
@@ -159,7 +161,7 @@ async def create(
 
         now = datetime.now()
         
-        common_job_title = ai_helper.get_common_job_title(input=job_title)
+        common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
 
         record = job.JobBase(
             job_title=job_title,
