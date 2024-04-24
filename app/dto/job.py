@@ -22,7 +22,7 @@ class JobBase(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     work_place: Optional[str] = ""
-
+    common_job_title: Optional[str] = ""
 class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]

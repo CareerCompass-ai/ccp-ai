@@ -155,8 +155,11 @@ async def create(
 
         now = datetime.now()
         
+        common_job_title = ai_helper.get_common_job_title(input=job_title)
+
         record = job.JobBase(
             job_title=job_title,
+            common_job_title=common_job_title,
             content_url=content_url,
             is_hiring=is_hiring,
             opened_date=opened_date,
@@ -170,9 +173,9 @@ async def create(
             recruiter_id=recruiter_id,
             hiring_level=hiring_level,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
-
+        print("STOP")
         if file is not None:
             pdf_file = BytesIO(file_content)
 
@@ -183,6 +186,7 @@ async def create(
                 text_content += pdf_reader.pages[page_num].extract_text()
 
             record.content = text_content
+
 
         session.autocommit = False # TODO: remove this?
         with session.begin():
