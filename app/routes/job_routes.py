@@ -111,11 +111,15 @@ def list_jobs_from_qdrant(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @job_router.get("/job", response_model=job.JobAggregate)
-def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
+def get_job_from_qdrant(
+    id: Optional[int] = Query(None, description="Job ID"),
+):
     try:
+        req = job.GetJobRequest(
+            id=id
+        )
         data = job_qdrant_repo.get_job(input=req)
         return data
-
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -155,8 +159,11 @@ async def create(
 
         now = datetime.now()
         
+        common_job_title = ai_helper.get_common_job_title(input=job_title)
+
         record = job.JobBase(
             job_title=job_title,
+            common_job_title=common_job_title,
             content_url=content_url,
             is_hiring=is_hiring,
             opened_date=opened_date,
@@ -170,9 +177,9 @@ async def create(
             recruiter_id=recruiter_id,
             hiring_level=hiring_level,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
-
+        print("STOP")
         if file is not None:
             pdf_file = BytesIO(file_content)
 
@@ -183,6 +190,7 @@ async def create(
                 text_content += pdf_reader.pages[page_num].extract_text()
 
             record.content = text_content
+
 
         session.autocommit = False # TODO: remove this?
         with session.begin():
