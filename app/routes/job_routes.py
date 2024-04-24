@@ -111,11 +111,15 @@ def list_jobs_from_qdrant(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @job_router.get("/job", response_model=job.JobAggregate)
-def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
+def get_job_from_qdrant(
+    id: Optional[int] = Query(None, description="Job ID"),
+):
     try:
+        req = job.GetJobRequest(
+            id=id
+        )
         data = job_qdrant_repo.get_job(input=req)
         return data
-
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
