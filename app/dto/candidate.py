@@ -7,6 +7,16 @@ class AppliedJobsResponse(BaseModel):
     job_id: int
     resume_id: int
     job_title: str
+    content: Optional[str] = ""
+    is_hiring: Optional[bool] = None
+    opened_date: Optional[datetime] = None
+    closed_date: Optional[datetime] = None
+    salary_from: Optional[float] = 0.0
+    salary_to: Optional[float] = 0.0
+    job_type: Optional[str] = ""
+    work_place: Optional[str] = ""
+    company_type: Optional[str] = ""
+    hiring_level: Optional[str] = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -23,6 +33,18 @@ class UpdateSaveJobResponse(BaseModel):
 class SavedJobsResponse(BaseModel):
     job_id: int
     job_title: str
+    content: Optional[str] = ""
+    is_hiring: Optional[bool] = None
+    opened_date: Optional[datetime] = None
+    closed_date: Optional[datetime] = None
+    salary_from: Optional[float] = 0.0
+    salary_to: Optional[float] = 0.0
+    job_type: Optional[str] = ""
+    work_place: Optional[str] = ""
+    company_type: Optional[str] = ""
+    hiring_level: Optional[str] = ""
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 class ListSavedJobsResponse(BaseModel):
     records: List[SavedJobsResponse] = None

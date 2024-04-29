@@ -10,6 +10,7 @@ class Job(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     job_title = Column(String, nullable=True)
+    common_job_title = Column(String, nullable=True)
     content = Column(String, nullable=True)
     content_url = Column(String, nullable=True)
     is_hiring = Column(Boolean, default=True)
