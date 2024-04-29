@@ -3,6 +3,9 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from constant import config
 
+from config.weaviate import WeaviateVDB as weaviate
+
+
 admin_router = APIRouter(
     prefix="/admin/api",
     tags=['Admin']
@@ -26,6 +29,17 @@ async def protected_route(is_authenticated: bool = Depends(authenticate_user)):
     return {"message": "You are authorized to access this resource"}
 
 
-@admin_router.post("/weaviate/create-class-name")
-async def create_weaviate_schema():
-    pass
+@admin_router.post("/weaviate/create-job-class")
+async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
+    client = weaviate.setup_weaviate_connection()
+    
+    try:
+        # client.schema.create_from_config(weaviate.jobClass)
+        # client.collections.create(
+        #     "Job",
+        #     "Job collection",
+        # )
+        client.collections.create_from_dict(weaviate.jobClass)
+        return {"message": "Job class created successfully"}
+    except Exception as e:
+        return {"error": str(e)}
