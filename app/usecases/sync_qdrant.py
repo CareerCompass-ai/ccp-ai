@@ -44,8 +44,11 @@ class SyncUsecase:
                 job_agg.s_content = summarized_content
 
                 self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
+                self.sync_helper.insert_to_weaviate("Job", job_agg)
                 # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
             else:
+                # TODO: Handle update object in weaviate 
+                # NOTE: weaviate uses uuid. We have already included `job_id` in the payload synced to weaviate, so we might get by job_id then update by the job.uuid
                 self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_id, job_agg.model_dump())
                 # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
         else:
@@ -54,6 +57,7 @@ class SyncUsecase:
             job_agg.s_content = summarized_content
 
             self.sync_helper.upsert_to_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
+            self.sync_helper.insert_to_weaviate("Job", job_agg)
             # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
 
     def sync_resume_to_qdrant(self, msg):
