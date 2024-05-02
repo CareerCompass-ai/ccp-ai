@@ -155,9 +155,9 @@ async def create(
 
         url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file.filename))
 
-        os.remove(temp_file_path)
+        presigned_url = job_minio_repo.generate_presigned_url(object_name=url)
 
-        content_url = url.url
+        os.remove(temp_file_path)
 
         now = datetime.now()
         
@@ -166,7 +166,7 @@ async def create(
         record = job.JobBase(
             job_title=job_title,
             common_job_title=common_job_title,
-            content_url=content_url,
+            content_url=presigned_url,
             is_hiring=is_hiring,
             opened_date=opened_date,
             closed_date=closed_date,
