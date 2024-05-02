@@ -7,6 +7,8 @@ from weaviate import WeaviateClient
 
 from qdrant_client.http.models import PointStruct
 
+import constant.config
+
 class SyncHelper:
     def __init__(self, qdrant_client: QdrantClient, weaviate_client: WeaviateClient):
         self.qdrant_client = qdrant_client
@@ -33,10 +35,21 @@ class SyncHelper:
         )
 
     def insert_to_weaviate(self, class_name: str, payload):
-        self.weaviate_client
+        jobCollection = self.weaviate_client.collections.get("Job")
 
-    def update_object_weaviate(self, class_name: str):
-        self.weaviate_client
+        properties = payload.model_dump()
+        properties.pop('id', None)
+        properties["job_id"]=payload.id
+
+        jobCollection.data.insert(
+            properties=properties,
+            # references={
+            #     "hasCategory": str(payload.id)
+            # }
+        )
+
+    # def update_object_weaviate(self, class_name: str):
+    #     self.weaviate_client
 
 
     # def upsert_to_es(self, index: str, payload):
