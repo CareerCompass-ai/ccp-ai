@@ -21,13 +21,13 @@ class JobMinioRepository:
         if self.client.bucket_exists(constant.MINIO_BUCKET_JOB):
             self.client.fput_object(constant.MINIO_BUCKET_JOB, input.file_name, input.temp_path)
             return job.UploadJobMinioResponse(
-                url=constant.MINIO_BUCKET_JOB+"/" + input.file_name
+                url=input.file_name
             )
         else:
             print("Bucket does not exist")
 
-    def generate_presigned_url(self, object_name: str, expiration: int = 3600) -> str:
+    def generate_presigned_url(self, object_name: str) -> str:
         try:
-            return self.client.presigned_put_object(constant.MINIO_BUCKET_JOB, object_name, expires=expiration)
+            return self.client.presigned_put_object(constant.MINIO_BUCKET_JOB, object_name)
         except S3Error as err:
             print(f"Error generating pre-signed URL: {err}")

@@ -155,7 +155,7 @@ async def create(
 
         url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file.filename))
 
-        presigned_url = job_minio_repo.generate_presigned_url(object_name=url)
+        presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
 
         os.remove(temp_file_path)
 
