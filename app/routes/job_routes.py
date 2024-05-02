@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-
+import PyPDF2
 from typing import List, Optional
 import os
 from io import BytesIO
+import uuid
 
-import PyPDF2
 
 from config.postgres import SessionLocal
 from config import postgres
@@ -153,8 +153,7 @@ async def create(
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
 
-        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file.filename))
-
+        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=str(uuid.uuid4())+file.filename))
         presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
 
         os.remove(temp_file_path)
