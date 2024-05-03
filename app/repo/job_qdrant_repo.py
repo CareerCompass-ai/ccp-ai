@@ -225,6 +225,7 @@ class JobQdrantRepository:
                         collection_name=self.index_name,
                         query_vector=input.vectors,
                         query_filter=filter,
+                        limit=input.size,
                         offset=(input.page - 1) * input.size,
                     )
 
@@ -392,6 +393,7 @@ class JobQdrantRepository:
                     collection_name=self.index_name,
                     query_vector=input.vectors,
                     query_filter=filter,
+                    limit=input.size,
                     offset=(input.page - 1) * input.size,
                 )
 

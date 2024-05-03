@@ -17,6 +17,7 @@ from datetime import datetime
 
 # from app.repo.job_es_repo import JobESRepository
 from app.repo.job_qdrant_repo import JobQdrantRepository
+from app.repo.job_weaviate_repo import JobWeaviateRepository
 from app.repo.job_repo import JobRepository 
 from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
@@ -40,6 +41,7 @@ job_router = APIRouter(
 
 # job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
+job_weaviate_repo = JobWeaviateRepository(collection_name="Job")
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 job_repo = JobRepository()
 jobtag_repo = JobTagsRepository()
@@ -98,9 +100,11 @@ def list_jobs_from_qdrant(
 
             return data
         elif search_type == "hybrid": # handle hybrid search
-            # data = job_es_repo.list_jobs(input=req)
+            data = job_weaviate_repo.list_jobs(input=req)
 
             return data
+        # elif search_type == "fulltext": # handle full-text search
+        #     # data = job_es_repo.list_jobs(input=req)
         else:
             return job.ListJobResponse(
                 count=0,

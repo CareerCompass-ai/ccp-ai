@@ -23,6 +23,7 @@ class JobBase(BaseModel):
     updated_at: Optional[datetime] = None
     work_place: Optional[str] = ""
     common_job_title: Optional[str] = ""
+
 class ListJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
@@ -41,6 +42,7 @@ class ListJobRequest(BaseModel):
     city_name: Optional[str] = None
     country_name: Optional[int] = None
     salary: Optional[str] = None
+    alpha: Optional[str] = None
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0
