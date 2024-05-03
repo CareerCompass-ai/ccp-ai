@@ -410,7 +410,7 @@ class JobQdrantRepository:
                 result = self.client.scroll(
                     collection_name=self.index_name,
                     scroll_filter=filter,
-                    # limit=input.size,
+                    limit=total_record,
                     order_by=models.OrderBy(
                         key="updated_at",
                         direction="desc"
