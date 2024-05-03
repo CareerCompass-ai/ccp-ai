@@ -28,6 +28,34 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         work_place=payload["work_place"]
     )
 
+def toJobWeaviateDTO(payload: dict) -> job.JobAggregate:
+    return job.JobAggregate(
+        id=payload.properties["job_id"],
+        job_title=payload.properties["job_title"],
+        content=payload.properties["content"],
+        s_content=payload.properties["s_content"],
+        content_url=payload.properties["content_url"],
+        is_hiring=payload.properties["is_hiring"],
+        opened_date=payload.properties["opened_date"],
+        closed_date=payload.properties["closed_date"],
+        salary_from=payload.properties["salary_from"],
+        salary_to=payload.properties["salary_to"],
+        job_type=payload.properties["job_type"],
+        company_type=payload.properties["company_type"],
+        # created_at=payload.properties["created_at"],
+        # updated_at=payload.properties["updated_at"],
+        recruiter_id=payload.properties["recruiter_id"],  
+        recruiter_name=payload.properties["recruiter_name"],
+        job_tags=payload.properties["job_tags"],
+        address=payload.properties["address"],
+        city_name=payload.properties["city_name"],
+        country_name=payload.properties["country_name"],
+        hiring_level=payload.properties["hiring_level"],
+        applied_count=payload.properties["applied_count"],
+        address_id=payload.properties["address_id"],
+        work_place=payload.properties["work_place"]
+    )
+
 def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
     return resume.ResumeAggregate (
         id=payload["id"],
