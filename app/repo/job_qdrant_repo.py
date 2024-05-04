@@ -34,7 +34,6 @@ class JobQdrantRepository:
                 # If `True` - provide the exact count of points matching the filter.
                 # If `False` - provide the approximate count of points matching the filter. Works faster.
         )
-    
     def reduce_ranges(self, temp_range):
         if not temp_range:
             return []
@@ -216,6 +215,7 @@ class JobQdrantRepository:
                                 ),
                             )
                     )
+                total_record += self.count_total_record(filter).count
 
                 # TODO: get all records match filter and return the dynamic filters
 
@@ -385,6 +385,7 @@ class JobQdrantRepository:
                             ),
                         )
                     )
+            total_record += self.count_total_record(filter).count
 
             hits = List[types.ScoredPoint]
             if input.vectors is not None:
@@ -411,7 +412,8 @@ class JobQdrantRepository:
                 result = self.client.scroll(
                     collection_name=self.index_name,
                     scroll_filter=filter,
-                    limit=total_record,
+                    # limit=total_record,
+                    limit=input.size,
                     order_by=models.OrderBy(
                         key="updated_at",
                         direction="desc"
@@ -429,8 +431,6 @@ class JobQdrantRepository:
             del hits
             del filter
 
-        total_record += self.count_total_record(filter).count
-        
         return job.ListJobResponse(
             count=total_record,
             page=input.page,
