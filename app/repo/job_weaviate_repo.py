@@ -1,4 +1,5 @@
 from typing import Optional
+from weaviate.classes.query import MetadataQuery
 
 from config.weaviate import WeaviateVDB
 
@@ -22,7 +23,8 @@ class JobWeaviateRepository:
         res = job_collection.query.hybrid(
             query=input.input,
             alpha=input.alpha,
-            limit=input.size
+            limit=input.size,
+            return_metadata=MetadataQuery(score=True, explain_score=True),
         )
 
         records = []
