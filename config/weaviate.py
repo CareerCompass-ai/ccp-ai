@@ -49,7 +49,7 @@ class WeaviateVDB:
         "moduleConfig": {
             "qna-openai": {
             "model": "gpt-3.5-turbo-instruct",
-            "maxTokens": 16385,
+            "maxTokens": 2048,
             "temperature": 0.0,
             "topP": 1,
             "frequencyPenalty": 0.0,
