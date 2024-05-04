@@ -69,7 +69,8 @@ def list_jobs_from_qdrant(
     country_name: Optional[str] = Query(None, description="Country name filter"),
     search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'hybrid'"),
     salary:  Optional[str] = Query(None, description="Salary range (multile range)"),
-    is_hiring:  Optional[bool] = Query(True, description="Is hiring")
+    is_hiring:  Optional[bool] = Query(True, description="Is hiring"),
+    alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)")
 ):
     # map query params to req
     try:
@@ -91,6 +92,7 @@ def list_jobs_from_qdrant(
             work_place=work_place,
             salary=salary,
             is_hiring=is_hiring,
+            alpha=alpha
         )
 
         if search_type == "vector": # handle vector search

@@ -2,6 +2,7 @@ from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from constant import config
+from ..dto.admin import DeleteClassRequest
 
 from config.weaviate import WeaviateVDB as weaviate
 
@@ -32,7 +33,7 @@ async def protected_route(is_authenticated: bool = Depends(authenticate_user)):
 @admin_router.post("/weaviate/create-job-class")
 async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
     client = weaviate.setup_weaviate_connection()
-    
+
     try:
         # client.schema.create_from_config(weaviate.jobClass)
         # client.collections.create(
@@ -41,5 +42,25 @@ async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
         # )
         client.collections.create_from_dict(weaviate.jobClass)
         return {"message": "Job class created successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+    
+@admin_router.post("/weaviate/create-jobqna-class")
+async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
+    client = weaviate.setup_weaviate_connection()
+
+    try:
+        client.collections.create_from_dict(weaviate.jobQnAClass)
+        return {"message": "JobQnA class created successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+    
+@admin_router.delete("/weaviate/class")
+async def delete_class(payload: DeleteClassRequest, is_authenticated: bool = Depends(authenticate_user)):
+    client = weaviate.setup_weaviate_connection()
+
+    try:
+        client.collections.delete(payload.collection_name)
+        return {"message": "JobQnA class created successfully"}
     except Exception as e:
         return {"error": str(e)}

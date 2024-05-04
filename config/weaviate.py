@@ -19,7 +19,14 @@ class WeaviateVDB:
                 "dimensions": 1536,
                 "type": "text",
             },
-            "generative-openai": {}
+            "generative-openai": {
+                "model": "gpt-3.5-turbo",  
+                # "temperatureProperty":  NOTE: all are optional
+                # "maxTokensProperty":
+                # "frequencyPenaltyProperty": 
+                # "presencePenaltyProperty": 
+                # "topPProperty":
+            },
         },
         # "properties": [
         # # {
@@ -42,6 +49,35 @@ class WeaviateVDB:
         # ],
     }
 
+    jobQnAClass = {
+        "class": "JobQnA",
+        "description": "Job Collection for Question and Answer",
+        "vectorizer": "text2vec-openai",
+        "moduleConfig": {
+            "qna-openai": {
+            "model": "gpt-3.5-turbo-instruct",
+            "maxTokens": 2048,
+            "temperature": 0.0,
+            "topP": 1,
+            "frequencyPenalty": 0.0,
+            "presencePenalty": 0.0
+            },
+            "text2vec-openai": {
+                "model": "text-embedding-3-small",
+                "dimensions": 1536,
+                "type": "text",
+            },
+        },
+        "properties": [
+            {
+            "dataType": [
+                "text"
+            ],
+            "description": "Content that will be vectorized",
+            "name": "s_content"
+            }
+        ]
+    }
 
     @staticmethod
     def setup_weaviate_connection() -> weaviate.WeaviateClient:

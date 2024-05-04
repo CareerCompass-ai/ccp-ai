@@ -43,7 +43,7 @@ class ListJobRequest(BaseModel):
     city_name: Optional[str] = None
     country_name: Optional[int] = None
     salary: Optional[str] = None
-    alpha: Optional[str] = None
+    alpha: Optional[float] = None
     is_hiring: Optional[bool] = None
 
 class JobAggregate(JobBase):

@@ -35,13 +35,13 @@ class SyncHelper:
         )
 
     def insert_to_weaviate(self, class_name: str, payload):
-        jobCollection = self.weaviate_client.collections.get("Job")
+        collection = self.weaviate_client.collections.get(class_name)
 
         properties = payload.model_dump()
         properties.pop('id', None)
         properties["job_id"]=payload.id
 
-        jobCollection.data.insert(
+        collection.data.insert(
             properties=properties,
             # references={
             #     "hasCategory": str(payload.id)
