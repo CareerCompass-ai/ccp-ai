@@ -243,12 +243,13 @@ class JobQdrantRepository:
                         collection_name=self.index_name,
                         scroll_filter=filter,
                         limit=input.size,
-                        # offset=(input.page - 1) * input.size,
+                        offset=(input.page - 1) * input.size,
+                        # TODO: Handle order_by
                         # start_from=(input.page - 1) * input.size,
-                        order_by=models.OrderBy(
-                            key="updated_at",
-                            direction="desc"
-                        ),
+                        # order_by=models.OrderBy(
+                        #     key="updated_at",
+                        #     direction="desc"
+                        # ),
                         with_payload=True
                         # with_vectors=False
                     )
@@ -414,20 +415,27 @@ class JobQdrantRepository:
                     scroll_filter=filter,
                     # limit=total_record,
                     limit=input.size,
-                    order_by=models.OrderBy(
-                        key="updated_at",
-                        direction="desc"
-                    ),
+                    offset=(input.page - 1) * input.size,
+                    # TODO: Handle order_by
+                    # order_by=models.OrderBy(
+                    #     key="updated_at",
+                    #     direction="desc"
+                    # ),
                     with_payload=True,
                     # with_vectors=False
                 )
-                offset=(input.page - 1 ) * input.size
-                hits = result[0][offset:offset+input.size]
-                for item in hits:
+                for item in result[0]:
                     if item is not None:
                         payload = item.payload
 
-                        records.append(mapper.toJobDTO(payload))   
+                        records.append(mapper.toJobDTO(payload))
+                # offset=(input.page - 1 ) * input.size
+                # hits = result[0][offset:offset+input.size]
+                # for item in hits:
+                #     if item is not None:
+                #         payload = item.payload
+
+                #         records.append(mapper.toJobDTO(payload))   
             del hits
             del filter
 
