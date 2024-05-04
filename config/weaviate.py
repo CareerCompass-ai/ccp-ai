@@ -48,7 +48,7 @@ class WeaviateVDB:
         "vectorizer": "text2vec-openai",
         "moduleConfig": {
             "qna-openai": {
-            "model": "gpt-3.5-turbo-0125",
+            "model": "gpt-3.5-turbo-instruct",
             "maxTokens": 16385,
             "temperature": 0.0,
             "topP": 1,
