@@ -386,6 +386,17 @@ class JobQdrantRepository:
                             ),
                         )
                     )
+
+            if input.is_hiring is not None:
+                filter.should.append(
+                    models.FieldCondition(
+                        key="is_hiring",
+                        match=models.MatchValue(
+                            value=input.is_hiring,
+                        ),
+                    )
+                )
+
             total_record += self.count_total_record(filter).count
 
             hits = List[types.ScoredPoint]

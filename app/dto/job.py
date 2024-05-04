@@ -1,6 +1,6 @@
 from fastapi import UploadFile, File, Form
 from typing import List, Optional
-from pydantic import BaseModel, EmailStr, ValidationError
+from pydantic import BaseModel, Field, EmailStr, ValidationError
 from datetime import datetime
 
 class JobBase(BaseModel):
@@ -44,6 +44,7 @@ class ListJobRequest(BaseModel):
     country_name: Optional[int] = None
     salary: Optional[str] = None
     alpha: Optional[str] = None
+    is_hiring: Optional[bool] = None
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0
