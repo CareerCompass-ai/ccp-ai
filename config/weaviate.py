@@ -42,6 +42,30 @@ class WeaviateVDB:
         # ],
     }
 
+    jobQnAClass = {
+        "class": "JobQnA",
+        "description": "Job Collection for Question and Answer",
+        "vectorizer": "text2vec-openai",
+        "moduleConfig": {
+            "qna-openai": {
+            "model": "gpt-3.5-turbo-0125",
+            "maxTokens": 16385,
+            "temperature": 0.0,
+            "topP": 1,
+            "frequencyPenalty": 0.0,
+            "presencePenalty": 0.0
+            }
+        },
+        "properties": [
+            {
+            "dataType": [
+                "text"
+            ],
+            "description": "Content that will be vectorized",
+            "name": "s_content"
+            }
+        ]
+    }
 
     @staticmethod
     def setup_weaviate_connection() -> weaviate.WeaviateClient:
