@@ -54,7 +54,12 @@ class WeaviateVDB:
             "topP": 1,
             "frequencyPenalty": 0.0,
             "presencePenalty": 0.0
-            }
+            },
+            "text2vec-openai": {
+                "model": "text-embedding-3-small",
+                "dimensions": 1536,
+                "type": "text",
+            },
         },
         "properties": [
             {

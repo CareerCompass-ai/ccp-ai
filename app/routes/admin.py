@@ -2,6 +2,7 @@ from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from constant import config
+from ..dto.admin import DeleteClassRequest
 
 from config.weaviate import WeaviateVDB as weaviate
 
@@ -50,6 +51,16 @@ async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
 
     try:
         client.collections.create_from_dict(weaviate.jobQnAClass)
+        return {"message": "JobQnA class created successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+    
+@admin_router.delete("/weaviate/class")
+async def delete_class(payload: DeleteClassRequest, is_authenticated: bool = Depends(authenticate_user)):
+    client = weaviate.setup_weaviate_connection()
+
+    try:
+        client.collections.delete(payload.collection_name)
         return {"message": "JobQnA class created successfully"}
     except Exception as e:
         return {"error": str(e)}
