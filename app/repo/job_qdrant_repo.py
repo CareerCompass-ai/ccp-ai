@@ -424,7 +424,6 @@ class JobQdrantRepository:
                 result = self.client.scroll(
                     collection_name=self.index_name,
                     scroll_filter=filter,
-                    # limit=total_record,
                     limit=input.size,
                     offset=(input.page - 1) * input.size,
                     # TODO: Handle order_by

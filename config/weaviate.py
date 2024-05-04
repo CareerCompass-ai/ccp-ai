@@ -19,7 +19,14 @@ class WeaviateVDB:
                 "dimensions": 1536,
                 "type": "text",
             },
-            "generative-openai": {}
+            "generative-openai": {
+                "model": "gpt-3.5-turbo",  
+                # "temperatureProperty":  NOTE: all are optional
+                # "maxTokensProperty":
+                # "frequencyPenaltyProperty": 
+                # "presencePenaltyProperty": 
+                # "topPProperty":
+            },
         },
         # "properties": [
         # # {
