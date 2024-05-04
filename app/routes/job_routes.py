@@ -128,6 +128,11 @@ def get_job_from_qdrant(
         req = job.GetJobRequest(
             id=id
         )
+
+        # TODO: check whether this user is save or applied to this job or not
+        # Step 1: Get resume_ids by user_id
+        # Step 2: Query to check
+
         data = job_qdrant_repo.get_job(input=req)
         return data
     except Exception as e:
