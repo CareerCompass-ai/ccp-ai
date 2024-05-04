@@ -55,6 +55,8 @@ class JobAggregate(JobBase):
     job_tags: list[str] = ""
     recruiter_id: Optional[int] = 0
     recruiter_name: Optional[str] = ""
+    is_applied: Optional[bool] = False
+    is_saved: Optional[bool] = False
 
 class ListJobResponse(BaseModel):
     count: int
@@ -64,6 +66,7 @@ class ListJobResponse(BaseModel):
 
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
+    user_id: Optional[int] = None
 
 class CreateJobPostRequest(BaseModel):
     file: UploadFile = File(...)
