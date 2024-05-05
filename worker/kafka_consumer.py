@@ -18,7 +18,7 @@ class KafkaConsumerWrapper:
         self.sync = SyncUsecase()
 
     def handle_topic_job(self, msg):
-        self.sync.sync_job_to_qdrant_and_es(msg)
+        self.sync.sync_job_to_qdrant_and_weaviate(msg)
 
     def handle_topic_resume(self, msg):
         self.sync.sync_resume_to_qdrant(msg)

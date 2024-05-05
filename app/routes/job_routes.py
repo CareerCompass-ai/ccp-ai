@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-
+import PyPDF2
 from typing import List, Optional
 import os
 from io import BytesIO
+import uuid
 
-import PyPDF2
 
 from config.postgres import SessionLocal
 from config import postgres
@@ -17,6 +17,7 @@ from datetime import datetime
 
 # from app.repo.job_es_repo import JobESRepository
 from app.repo.job_qdrant_repo import JobQdrantRepository
+from app.repo.job_weaviate_repo import JobWeaviateRepository
 from app.repo.job_repo import JobRepository 
 from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
@@ -31,6 +32,8 @@ from app.dto import application
 
 from app.ai.ai_helper import AI
 
+import constant.ai as constant
+
 job_router = APIRouter(
     prefix="/api",
     tags=['Job']
@@ -38,6 +41,7 @@ job_router = APIRouter(
 
 # job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
+job_weaviate_repo = JobWeaviateRepository(collection_name="Job")
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 job_repo = JobRepository()
 jobtag_repo = JobTagsRepository()
@@ -53,18 +57,19 @@ def list_jobs_from_qdrant(
     input: Optional[str] = Query(None, description="Input text for vector search"),
     job_type: Optional[str] = Query(None, description="Job type filter"),
     company_type: Optional[str] = Query(None, description="Company type filter"),
-    location: Optional[str] = Query(None, description="Location filter"),
     last_updated: Optional[str] = Query(None, description="Last updated filter"),
     salary_from: Optional[float] = Query(None, description="Minimum salary filter"),
     salary_to: Optional[float] = Query(None, description="Maximum salary filter"),
-    hiring_level: Optional[list[str]] = Query(None, description="Hiring level filter"),
-    work_place: Optional[list[str]] = Query(None, description="Work place filter"),    
+    hiring_level: Optional[str] = Query(None, description="Hiring level filter"),
+    work_place: Optional[str] = Query(None, description="Work place filter"),    
     applied_count: Optional[int] = Query(None, description="Applied count filter"),
-    job_tags: Optional[list[str]] = Query(None, description="Job tags filter"),
+    job_tags: Optional[str] = Query(None, description="Job tags filter"),
     city_name: Optional[str] = Query(None, description="City name filter"),
     country_name: Optional[str] = Query(None, description="Country name filter"),
     search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'hybrid'"),
-    salary:  Optional[str] = Query(None, description="Salary range (multile range)'")
+    salary:  Optional[str] = Query(None, description="Salary range (multile range)"),
+    is_hiring:  Optional[bool] = Query(True, description="Is hiring"),
+    alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)"),
 ):
     # map query params to req
     try:
@@ -74,7 +79,6 @@ def list_jobs_from_qdrant(
             input=input,
             job_type=job_type,
             company_type=company_type,
-            location=location,
             last_updated=last_updated,
             salary_from=salary_from,
             salary_to=salary_to,
@@ -84,10 +88,14 @@ def list_jobs_from_qdrant(
             city_name=city_name,
             country_name=country_name,
             work_place=work_place,
-            salary=salary
+            salary=salary,
+            is_hiring=is_hiring,
+            alpha=alpha,
         )
 
         if search_type == "vector": # handle vector search
+            req.latest_job_id = job_repo.get_latest_job().id
+
             if input is not None:
                 vectors = ai_helper.get_embedding(input)
                 req.vectors = vectors.tolist() if vectors is not None else None
@@ -96,9 +104,11 @@ def list_jobs_from_qdrant(
 
             return data
         elif search_type == "hybrid": # handle hybrid search
-            # data = job_es_repo.list_jobs(input=req)
+            data = job_weaviate_repo.list_jobs(input=req)
 
             return data
+        # elif search_type == "fulltext": # handle full-text search
+        #     # data = job_es_repo.list_jobs(input=req)
         else:
             return job.ListJobResponse(
                 count=0,
@@ -111,11 +121,20 @@ def list_jobs_from_qdrant(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @job_router.get("/job", response_model=job.JobAggregate)
-def get_job_from_qdrant(req: Optional[job.GetJobRequest]):
+def get_job_from_qdrant(
+    id: Optional[int] = Query(None, description="Job ID"),
+):
     try:
+        req = job.GetJobRequest(
+            id=id
+        )
+
+        # TODO: check whether this user is save or applied to this job or not
+        # Step 1: Get resume_ids by user_id
+        # Step 2: Query to check
+
         data = job_qdrant_repo.get_job(input=req)
         return data
-
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -147,17 +166,19 @@ async def create(
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
 
-        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file.filename))
+        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=str(uuid.uuid4())+"-"+file.filename))
+        presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
 
         os.remove(temp_file_path)
 
-        content_url = url.url
-
         now = datetime.now()
         
+        common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
+
         record = job.JobBase(
             job_title=job_title,
-            content_url=content_url,
+            common_job_title=common_job_title,
+            content_url=presigned_url,
             is_hiring=is_hiring,
             opened_date=opened_date,
             closed_date=closed_date,
@@ -170,9 +191,9 @@ async def create(
             recruiter_id=recruiter_id,
             hiring_level=hiring_level,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
-
+        print("STOP")
         if file is not None:
             pdf_file = BytesIO(file_content)
 
@@ -183,6 +204,7 @@ async def create(
                 text_content += pdf_reader.pages[page_num].extract_text()
 
             record.content = text_content
+
 
         session.autocommit = False # TODO: remove this?
         with session.begin():
