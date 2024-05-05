@@ -66,7 +66,6 @@ class ListJobResponse(BaseModel):
 
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
-    user_id: Optional[int] = None
 
 class CreateJobPostRequest(BaseModel):
     file: UploadFile = File(...)
