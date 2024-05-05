@@ -44,6 +44,7 @@ class ListJobRequest(BaseModel):
     salary: Optional[str] = None
     alpha: Optional[float] = None
     is_hiring: Optional[bool] = None
+    latest_job_id: Optional[int] = None
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0
