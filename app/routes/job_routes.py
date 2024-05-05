@@ -23,6 +23,8 @@ from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.job_minio_repo import JobMinioRepository
 from app.repo.application_repo import ApplicationRepository
+from app.repo.resume_repo import ResumeRepository
+from app.repo.candidate_repo import CandidateRepository
 
 from models.ccp_application import Application
 
@@ -47,6 +49,8 @@ job_repo = JobRepository()
 jobtag_repo = JobTagsRepository()
 job_minio_repo = JobMinioRepository()
 application_repo = ApplicationRepository()
+resume_repo = ResumeRepository()
+candidate_repo = CandidateRepository()
 
 ai_helper = AI()
 
@@ -122,18 +126,32 @@ def list_jobs_from_qdrant(
     
 @job_router.get("/job", response_model=job.JobAggregate)
 def get_job_from_qdrant(
-    id: Optional[int] = Query(None, description="Job ID"),
+    id: int = Query(None, description="Job ID"),
+    user_id: Optional[int] = Query(None, description="User ID"),
 ):
     try:
         req = job.GetJobRequest(
-            id=id
+            id=id,
         )
 
-        # TODO: check whether this user is save or applied to this job or not
-        # Step 1: Get resume_ids by user_id
-        # Step 2: Query to check
-
         data = job_qdrant_repo.get_job(input=req)
+
+        # Check whether this user applied to this job or not
+        resumes = resume_repo.get_by_user_id(user_id)
+        resume_ids = []
+        for resume in resumes:
+            resume_ids.append(resume.id)
+        applications = application_repo.list_by_resume_ids(resume_ids)
+
+        # Check whether this user saved this job or not
+        job_saved = candidate_repo.get_job_saved_by_candidate_id(user_id)
+
+        if len(applications) > 0:
+            data.is_applied = True
+
+        if job_saved is not None:
+            data.is_saved = True
+
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -193,7 +211,7 @@ async def create(
             created_at=now,
             updated_at=now,
         )
-        print("STOP")
+
         if file is not None:
             pdf_file = BytesIO(file_content)
 

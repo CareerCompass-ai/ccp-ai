@@ -20,4 +20,7 @@ class ResumeRepository:
             self.db.commit()
             self.db.refresh(resume_instance)
             return resume_instance
-
+        
+    def get_by_user_id(self, user_id) -> List[Resume]:
+        result = self.db.query(Resume).filter(Resume.candidate_id == user_id).all()
+        return result
