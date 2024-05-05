@@ -125,17 +125,6 @@ class JobQdrantRepository:
                             )
                         )
 
-                if input.location is not None:
-                    filter.must.append(
-                        models.FieldCondition(
-                            key="location", # FIXME: fix this
-                            match=models.MatchValue(
-                                value=input.location
-                            )
-                        )
-                    )
-                
-
                 if input.company_type is not None:
                     input.company_type = input.company_type.split(',')
 
@@ -243,13 +232,11 @@ class JobQdrantRepository:
                         collection_name=self.index_name,
                         scroll_filter=filter,
                         limit=input.size,
-                        offset=(input.page - 1) * input.size,
-                        # TODO: Handle order_by
-                        # start_from=(input.page - 1) * input.size,
-                        # order_by=models.OrderBy(
-                        #     key="updated_at",
-                        #     direction="desc"
-                        # ),
+                        order_by=models.OrderBy(
+                            key="id",
+                            direction="desc",
+                            start_from=input.latest_job_id - (input.page * input.size - input.size)
+                        ),
                         with_payload=True
                         # with_vectors=False
                     )
@@ -268,63 +255,55 @@ class JobQdrantRepository:
                 filter.should = []
             if filter.must_not is None:
                 filter.must_not = []
+
             if input.job_tags is not None :
-                pass
+                input.job_tags = input.job_tags.split(',')
+                filter.must.append(
+                    models.FieldCondition(
+                        key="job_tags",
+                        match=models.MatchAny(
+                            any=input.job_tags,
+                        ),
+                    )
+                )
 
             if input.hiring_level is not None:
-                input.hiring_level = input.hiring_level[0].split(',')
-
-                for level in input.hiring_level:
-                    filter.should.append(
-                            models.FieldCondition(
-                                key="hiring_level",
-                                match=models.MatchValue(
-                                    value=level,
-                                ),
-                            )
-                        )
+                input.hiring_level = input.hiring_level.split(',')
+                filter.should.append(
+                    models.FieldCondition(
+                        key="hiring_level",
+                        match=models.MatchAny(
+                            any=input.hiring_level,
+                        ),
+                    )
+                )
 
             if input.job_type is not None:
                 input.job_type = input.job_type.split(',')
-                for job_type in input.job_type:
-                    filter.should.append(
-                        models.FieldCondition(
-                            key="job_type",
-                            match=models.MatchValue(
-                                value=job_type,
-                            ),
-                        )
-                    )
-
-            if input.location is not None:
                 filter.must.append(
                     models.FieldCondition(
-                        key="location", # FIXME: fix this
-                        match=models.MatchValue(
-                            value=input.location
-                        )
+                        key="job_type",
+                        match=models.MatchAny(
+                            any=input.job_type,
+                        ),
                     )
                 )
-            
 
             if input.company_type is not None:
                 input.company_type = input.company_type.split(',')
-
-                for type in input.company_type:
-                    filter.should.append(
-                        models.FieldCondition(
-                            key="company_type",
-                            match=models.MatchValue(
-                                value=type,
-                            ),
-                        )
+                filter.must.append(
+                    models.FieldCondition(
+                        key="company_type",
+                        match=models.MatchAny(
+                            any=input.company_type,
+                        ),
                     )
+                )
 
             # FIXME: fix this
             if input.last_updated is not None:
                 filter.must.append(
                     models.FieldCondition(
-
                         key="updated_at",
                         range=models.Range(
                             lte=input.last_updated
@@ -354,41 +333,40 @@ class JobQdrantRepository:
                 )
 
             if input.work_place is not None:
-                input.work_place = input.work_place[0].split(',')
-                for level in input.work_place:
-                    filter.should.append(
-                            models.FieldCondition(
-                                key="work_place",
-                                match=models.MatchValue(
-                                    value=level,
-                                ),
-                            )
-                        )
-                    
-            if input.city_name is not None:
-                for type in input.city_name:
-                    filter.should.append(
-                        models.FieldCondition(
-                            key="city_name",
-                            match=models.MatchValue(
-                                value=type,
-                            ),
-                        )
+                input.work_place = input.work_place.split(',')
+                filter.must.append(
+                    models.FieldCondition(
+                        key="work_place",
+                        match=models.MatchAny(
+                            any=input.work_place,
+                        ),
                     )
+                )
+                
+            if input.city_name is not None:
+                input.city_name = input.city_name.split(',')
+                filter.must.append(
+                    models.FieldCondition(
+                        key="city_name",
+                        match=models.MatchAny(
+                            any=input.city_name,
+                        ),
+                    )
+                )
 
             if input.country_name is not None:
-                for type in input.country_name:
-                    filter.should.append(
-                        models.FieldCondition(
-                            key="country_name",
-                            match=models.MatchValue(
-                                value=type,
-                            ),
-                        )
+                input.country_name = input.country_name.split(',')
+                filter.must.append(
+                    models.FieldCondition(
+                        key="country_name",
+                        match=models.MatchAny(
+                            any=input.country_name,
+                        ),
                     )
+                )
 
             if input.is_hiring is not None:
-                filter.should.append(
+                filter.must.append(
                     models.FieldCondition(
                         key="is_hiring",
                         match=models.MatchValue(
@@ -425,12 +403,11 @@ class JobQdrantRepository:
                     collection_name=self.index_name,
                     scroll_filter=filter,
                     limit=input.size,
-                    offset=(input.page - 1) * input.size,
-                    # TODO: Handle order_by
-                    # order_by=models.OrderBy(
-                    #     key="updated_at",
-                    #     direction="desc"
-                    # ),
+                    order_by=models.OrderBy(
+                        key="id",
+                        direction="desc",
+                        start_from=input.latest_job_id - (input.page * input.size - input.size)
+                    ),
                     with_payload=True,
                     # with_vectors=False
                 )

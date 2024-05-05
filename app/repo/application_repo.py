@@ -23,3 +23,12 @@ class ApplicationRepository:
         session.refresh(record)
 
         return record
+    
+    def list_by_resume_ids(self, resume_ids: list[int]) -> list[Application]:
+        applications = (
+            self.db.query(Application).
+            filter(Application.resume_id.in_(resume_ids)).
+            all()
+        )
+        
+        return applications

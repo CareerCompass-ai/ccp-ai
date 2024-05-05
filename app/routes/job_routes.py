@@ -23,6 +23,8 @@ from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.job_minio_repo import JobMinioRepository
 from app.repo.application_repo import ApplicationRepository
+from app.repo.resume_repo import ResumeRepository
+from app.repo.candidate_repo import CandidateRepository
 
 from models.ccp_application import Application
 
@@ -47,6 +49,8 @@ job_repo = JobRepository()
 jobtag_repo = JobTagsRepository()
 job_minio_repo = JobMinioRepository()
 application_repo = ApplicationRepository()
+resume_repo = ResumeRepository()
+candidate_repo = CandidateRepository()
 
 ai_helper = AI()
 
@@ -57,20 +61,19 @@ def list_jobs_from_qdrant(
     input: Optional[str] = Query(None, description="Input text for vector search"),
     job_type: Optional[str] = Query(None, description="Job type filter"),
     company_type: Optional[str] = Query(None, description="Company type filter"),
-    location: Optional[str] = Query(None, description="Location filter"),
     last_updated: Optional[str] = Query(None, description="Last updated filter"),
     salary_from: Optional[float] = Query(None, description="Minimum salary filter"),
     salary_to: Optional[float] = Query(None, description="Maximum salary filter"),
-    hiring_level: Optional[list[str]] = Query(None, description="Hiring level filter"),
-    work_place: Optional[list[str]] = Query(None, description="Work place filter"),    
+    hiring_level: Optional[str] = Query(None, description="Hiring level filter"),
+    work_place: Optional[str] = Query(None, description="Work place filter"),    
     applied_count: Optional[int] = Query(None, description="Applied count filter"),
-    job_tags: Optional[list[str]] = Query(None, description="Job tags filter"),
+    job_tags: Optional[str] = Query(None, description="Job tags filter"),
     city_name: Optional[str] = Query(None, description="City name filter"),
     country_name: Optional[str] = Query(None, description="Country name filter"),
     search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'hybrid'"),
     salary:  Optional[str] = Query(None, description="Salary range (multile range)"),
     is_hiring:  Optional[bool] = Query(True, description="Is hiring"),
-    alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)")
+    alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)"),
 ):
     # map query params to req
     try:
@@ -80,7 +83,6 @@ def list_jobs_from_qdrant(
             input=input,
             job_type=job_type,
             company_type=company_type,
-            location=location,
             last_updated=last_updated,
             salary_from=salary_from,
             salary_to=salary_to,
@@ -92,10 +94,12 @@ def list_jobs_from_qdrant(
             work_place=work_place,
             salary=salary,
             is_hiring=is_hiring,
-            alpha=alpha
+            alpha=alpha,
         )
 
         if search_type == "vector": # handle vector search
+            req.latest_job_id = job_repo.get_latest_job().id
+
             if input is not None:
                 vectors = ai_helper.get_embedding(input)
                 req.vectors = vectors.tolist() if vectors is not None else None
@@ -122,18 +126,32 @@ def list_jobs_from_qdrant(
     
 @job_router.get("/job", response_model=job.JobAggregate)
 def get_job_from_qdrant(
-    id: Optional[int] = Query(None, description="Job ID"),
+    id: int = Query(None, description="Job ID"),
+    user_id: Optional[int] = Query(None, description="User ID"),
 ):
     try:
         req = job.GetJobRequest(
-            id=id
+            id=id,
         )
 
-        # TODO: check whether this user is save or applied to this job or not
-        # Step 1: Get resume_ids by user_id
-        # Step 2: Query to check
-
         data = job_qdrant_repo.get_job(input=req)
+
+        # Check whether this user applied to this job or not
+        resumes = resume_repo.get_by_user_id(user_id)
+        resume_ids = []
+        for resume in resumes:
+            resume_ids.append(resume.id)
+        applications = application_repo.list_by_resume_ids(resume_ids)
+
+        # Check whether this user saved this job or not
+        job_saved = candidate_repo.get_job_saved_by_candidate_id(user_id)
+
+        if len(applications) > 0:
+            data.is_applied = True
+
+        if job_saved is not None:
+            data.is_saved = True
+
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -193,7 +211,7 @@ async def create(
             created_at=now,
             updated_at=now,
         )
-        print("STOP")
+
         if file is not None:
             pdf_file = BytesIO(file_content)
 

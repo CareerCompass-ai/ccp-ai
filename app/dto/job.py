@@ -31,20 +31,20 @@ class ListJobRequest(BaseModel):
     input: Optional[str] = None
     job_type: Optional[str] = None
     company_type: Optional[str] = None
-    location: Optional[str] = None
     last_updated: Optional[str] = None
     vectors: Optional[list[float]] = None
     salary_from: Optional[float] = None
     salary_to: Optional[float] = None
-    hiring_level: Optional[list[str]] = None
-    work_place: Optional[list[str]] = None
+    hiring_level: Optional[str] = None
+    work_place: Optional[str] = None
     applied_count: Optional[int] = None
-    job_tags: Optional[list[str]] = None
+    job_tags: Optional[str] = None
     city_name: Optional[str] = None
-    country_name: Optional[int] = None
+    country_name: Optional[str] = None
     salary: Optional[str] = None
     alpha: Optional[float] = None
     is_hiring: Optional[bool] = None
+    latest_job_id: Optional[int] = None
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0
@@ -66,7 +66,6 @@ class ListJobResponse(BaseModel):
 
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
-    user_id: Optional[int] = None
 
 class CreateJobPostRequest(BaseModel):
     file: UploadFile = File(...)
