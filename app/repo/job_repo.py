@@ -1,6 +1,8 @@
-from config.postgres import SessionLocal
-from sqlalchemy.orm import Session
 from typing import Optional
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
+
+from config.postgres import SessionLocal
 from models.ccp_job import Job
 from app.dto import job
 
@@ -28,3 +30,6 @@ class JobRepository:
 
             self.db.commit()
             self.db.refresh(record)
+
+    def get_latest_job(self) -> Optional[Job]:
+        return self.db.query(Job).order_by(desc(Job.updated_at)).first()

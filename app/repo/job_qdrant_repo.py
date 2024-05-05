@@ -232,13 +232,11 @@ class JobQdrantRepository:
                         collection_name=self.index_name,
                         scroll_filter=filter,
                         limit=input.size,
-                        offset=(input.page - 1) * input.size,
-                        # TODO: Handle order_by
-                        # start_from=(input.page - 1) * input.size,
-                        # order_by=models.OrderBy(
-                        #     key="updated_at",
-                        #     direction="desc"
-                        # ),
+                        order_by=models.OrderBy(
+                            key="id",
+                            direction="desc",
+                            start_from=input.latest_job_id - (input.page * input.size - input.size)
+                        ),
                         with_payload=True
                         # with_vectors=False
                     )
@@ -405,12 +403,11 @@ class JobQdrantRepository:
                     collection_name=self.index_name,
                     scroll_filter=filter,
                     limit=input.size,
-                    offset=(input.page - 1) * input.size,
-                    # TODO: Handle order_by
-                    # order_by=models.OrderBy(
-                    #     key="updated_at",
-                    #     direction="desc"
-                    # ),
+                    order_by=models.OrderBy(
+                        key="id",
+                        direction="desc",
+                        start_from=input.latest_job_id - (input.page * input.size - input.size)
+                    ),
                     with_payload=True,
                     # with_vectors=False
                 )

@@ -93,9 +93,9 @@ def list_jobs_from_qdrant(
             alpha=alpha,
         )
 
-        # get latest id
-
         if search_type == "vector": # handle vector search
+            req.latest_job_id = job_repo.get_latest_job().id
+
             if input is not None:
                 vectors = ai_helper.get_embedding(input)
                 req.vectors = vectors.tolist() if vectors is not None else None
