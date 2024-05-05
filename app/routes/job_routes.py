@@ -57,20 +57,19 @@ def list_jobs_from_qdrant(
     input: Optional[str] = Query(None, description="Input text for vector search"),
     job_type: Optional[str] = Query(None, description="Job type filter"),
     company_type: Optional[str] = Query(None, description="Company type filter"),
-    location: Optional[str] = Query(None, description="Location filter"),
     last_updated: Optional[str] = Query(None, description="Last updated filter"),
     salary_from: Optional[float] = Query(None, description="Minimum salary filter"),
     salary_to: Optional[float] = Query(None, description="Maximum salary filter"),
-    hiring_level: Optional[list[str]] = Query(None, description="Hiring level filter"),
-    work_place: Optional[list[str]] = Query(None, description="Work place filter"),    
+    hiring_level: Optional[str] = Query(None, description="Hiring level filter"),
+    work_place: Optional[str] = Query(None, description="Work place filter"),    
     applied_count: Optional[int] = Query(None, description="Applied count filter"),
-    job_tags: Optional[list[str]] = Query(None, description="Job tags filter"),
+    job_tags: Optional[str] = Query(None, description="Job tags filter"),
     city_name: Optional[str] = Query(None, description="City name filter"),
     country_name: Optional[str] = Query(None, description="Country name filter"),
     search_type: Optional[str] = Query(None, description="Search type: 'vector' or 'hybrid'"),
     salary:  Optional[str] = Query(None, description="Salary range (multile range)"),
     is_hiring:  Optional[bool] = Query(True, description="Is hiring"),
-    alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)")
+    alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)"),
 ):
     # map query params to req
     try:
@@ -80,7 +79,6 @@ def list_jobs_from_qdrant(
             input=input,
             job_type=job_type,
             company_type=company_type,
-            location=location,
             last_updated=last_updated,
             salary_from=salary_from,
             salary_to=salary_to,
@@ -92,8 +90,10 @@ def list_jobs_from_qdrant(
             work_place=work_place,
             salary=salary,
             is_hiring=is_hiring,
-            alpha=alpha
+            alpha=alpha,
         )
+
+        # get latest id
 
         if search_type == "vector": # handle vector search
             if input is not None:
