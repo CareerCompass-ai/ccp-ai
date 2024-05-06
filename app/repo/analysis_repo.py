@@ -112,28 +112,27 @@ class AnalysisRepository:
 
     def get_top_recruiters_job_posting (self, top_number, time_from, time_to) -> List[analysis.GetTopRecruiterJobPosting]:
         if time_from != 'None' and time_to != 'None':
-            records = self.db.query(Job.recruiter_id, User.first_name + ' ' + User.last_name, func.count(Job.id).label('post_count')) \
+            records = self.db.query(Job.recruiter_id, func.concat(User.first_name, ' ', User.last_name).label('full_name'), func.count(Job.id).label('post_count')) \
                             .join(User, Job.recruiter_id == User.id) \
-                            .filter(and_(Job.created_at >= time_from,Job.created_at <= time_to)) \
-                            .group_by(Job.recruiter_id) \
+                            .filter(and_(Job.created_at >= time_from, Job.created_at <= time_to)) \
+                            .group_by(Job.recruiter_id, 'full_name') \
                             .order_by(desc('post_count')) \
                             .limit(top_number) \
                             .all()
         else:
-            records = self.db.query(Job.recruiter_id, User.first_name + ' ' + User.last_name, func.count(Job.id).label('post_count')) \
+            records = self.db.query(Job.recruiter_id, func.concat(User.first_name, ' ', User.last_name).label('full_name'), func.count(Job.id).label('post_count')) \
                             .join(User, Job.recruiter_id == User.id) \
-                            .group_by(Job.recruiter_id) \
-                            .order_by(desc('post_count')) \
+                            .group_by(Job.recruiter_id, 'full_name') \
+                            .order_by(func.desc('post_count')) \
                             .limit(top_number) \
                             .all()
         data = []
         for item in records:
             data.append(
                 analysis.GetTopRecruiterJobPosting(
-                    recruiter_id=item.tag_name,
-                    full_name=item.first_name + ' ' + item.last_name,
+                    recruiter_id=item.recruiter_id,
+                    full_name=item.full_name,
                     count=item.post_count
                 )
             )
-        
-        return data  
+        return data

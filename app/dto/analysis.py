@@ -27,7 +27,7 @@ class GetNumberOfAllNewUser(BaseModel):
 
 
 class GetNumberOfJobStatus(BaseModel):
-    status: str
+    status: bool
     count: int
 
 
