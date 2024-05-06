@@ -31,9 +31,9 @@ class AnalysisRepository:
         return data
     
     def get_top_skills (self, top_number) -> List[analysis.GetTopSkillResponse]:
-        records = self.db.query(Tag.tag_name, func.count(Tag.id).label('skill_count')) \
+        records = self.db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
                         .join(JobTag, Tag.id == JobTag.tag_id) \
-                        .group_by(JobTag.tag_id) \
+                        .group_by(Tag.id, Tag.tag_name) \
                         .order_by(desc('skill_count')) \
                         .limit(top_number) \
                         .all()
@@ -41,7 +41,8 @@ class AnalysisRepository:
         for item in records:
             data.append(
                 analysis.GetTopSkillResponse(
-                    job_title=item.tag_name,
+                    id=item.id,
+                    skill=item.tag_name,
                     count=item.skill_count
                 )
             )

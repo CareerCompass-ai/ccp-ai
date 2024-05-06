@@ -9,6 +9,7 @@ class GetTopJobTitlesResponse(BaseModel):
 
 class GetTopSkillResponse(BaseModel):
     skill: str
+    id: int
     count: int
 
 class GetNumberOfCompanyTypeResponse(BaseModel):

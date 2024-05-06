@@ -25,3 +25,14 @@ def list_top_job_titles(
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+
+@analysis_router.get("/analysis/top-skills", response_model=List[analysis.GetTopSkillResponse])
+def list_top_skills(
+    top_number: int = Query(None, description="Top number of skills")
+):
+    try:
+        data = analysis_repo.get_top_skills(top_number=top_number)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
