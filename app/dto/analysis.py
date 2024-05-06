@@ -6,3 +6,8 @@ from datetime import datetime
 class GetTopJobTitlesResponse(BaseModel):
     job_title: str
     count: int
+
+class GetTopSkillResponse(BaseModel):
+    skill: str
+    count: int
+
