@@ -22,3 +22,9 @@ class GetNumberOfNewUser(BaseModel):
 class GetNumberOfJobStatus(BaseModel):
     status: str
     count: int
+
+
+class GetTopRecruiterJobPosting(BaseModel):
+    recruiter_id: int
+    full_name: str
+    count: int

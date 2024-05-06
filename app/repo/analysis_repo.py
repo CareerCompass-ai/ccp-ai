@@ -108,4 +108,23 @@ class AnalysisRepository:
         
         return data
     
-    
+
+    def get_top_recruiters_job_posting (self, top_number, time_from, time_to) -> List[analysis.GetTopRecruiterJobPosting]:
+        records = self.db.query(Job.recruiter_id, User.first_name + ' ' + User.last_name, func.count(Job.id).label('post_count')) \
+                        .join(User, Job.recruiter_id == User.id) \
+                        .filter(Job.created_at >= time_from and Job.created_at <= time_to ) \
+                        .group_by(Job.recruiter_id) \
+                        .order_by(desc('post_count')) \
+                        .limit(top_number) \
+                        .all()
+        data = []
+        for item in records:
+            data.append(
+                analysis.GetTopRecruiterJobPosting(
+                    recruiter_id=item.tag_name,
+                    full_name=item.first_name + ' ' + item.last_name,
+                    count=item.post_count
+                )
+            )
+        
+        return data  
