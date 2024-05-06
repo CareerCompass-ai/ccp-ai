@@ -76,3 +76,18 @@ class AnalysisRepository:
             )
         
         return data
+    
+    def get_all_number_of_user(self) -> List[analysis.GetNumberOfNewUser]:
+
+        records = self.db.query(User.role, User.created_at) \
+                        .all()
+        data = []
+        for item in records:
+            data.append(
+                analysis.GetNumberOfNewUser(
+                    role=item.role,
+                    created_at=item.created_at
+                )
+            )
+        
+        return data
