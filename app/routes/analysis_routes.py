@@ -38,9 +38,29 @@ def list_top_skills(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @analysis_router.get("/analysis/job-company-type", response_model=List[analysis.GetNumberOfCompanyTypeResponse])
-def list_top_skills():
+def get_number_of_company_type():
     try:
         data = analysis_repo.number_of_company_type()
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/new-user-in-time-range", response_model=List[analysis.GetNumberOfNewUser])
+def list_new_user_in_time_range(
+    time_from: str = Query(None, description="Start time to calculate number of new users"),
+    time_to: str = Query(None, description="End time to calculate number of new users")
+):
+    try:
+        data = analysis_repo.get_number_of_new_user(time_from=time_from, time_to=time_to)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/count-user-by-role", response_model=List[analysis.GetNumberOfAllNewUser])
+def count_new_user_by_role(
+):
+    try:
+        data = analysis_repo.count_all_number_of_user_by_role()
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

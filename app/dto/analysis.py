@@ -17,8 +17,14 @@ class GetNumberOfCompanyTypeResponse(BaseModel):
     count: int
 
 class GetNumberOfNewUser(BaseModel):
+    id: int
     role: str
     created_at: datetime
+
+class GetNumberOfAllNewUser(BaseModel):
+    role: str
+    count: int
+
 
 class GetNumberOfJobStatus(BaseModel):
     status: str

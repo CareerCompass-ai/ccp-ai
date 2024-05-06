@@ -2,7 +2,7 @@ from typing import List
 
 from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract, desc
+from sqlalchemy import func, extract, desc, and_
 from models.ccp_job import Job
 from models.ccp_jobtag import JobTag
 from app.dto import analysis
@@ -64,13 +64,14 @@ class AnalysisRepository:
     
     def get_number_of_new_user(self, time_from, time_to) -> List[analysis.GetNumberOfNewUser]:
 
-        records = self.db.query(User.role, User.created_at) \
-                        .filter(User.created_at >= time_from and User.created_at <= time_to ) \
+        records = self.db.query(User.id, User.role, User.created_at) \
+                        .filter(and_(User.created_at >= time_from,User.created_at <= time_to )) \
                         .all()
         data = []
         for item in records:
             data.append(
                 analysis.GetNumberOfNewUser(
+                    id=item.id,
                     role=item.role,
                     created_at=item.created_at
                 )
@@ -78,16 +79,15 @@ class AnalysisRepository:
         
         return data
     
-    def get_all_number_of_user(self) -> List[analysis.GetNumberOfNewUser]:
+    def count_all_number_of_user_by_role(self) -> List[analysis.GetNumberOfAllNewUser]:
 
-        records = self.db.query(User.role, User.created_at) \
-                        .all()
+        records = self.db.query(User.role, func.count(User.id).label('user_count')).group_by(User.role).all()
         data = []
         for item in records:
             data.append(
-                analysis.GetNumberOfNewUser(
+                analysis.GetNumberOfAllNewUser(
                     role=item.role,
-                    created_at=item.created_at
+                    count=item.user_count
                 )
             )
         
@@ -111,13 +111,21 @@ class AnalysisRepository:
     
 
     def get_top_recruiters_job_posting (self, top_number, time_from, time_to) -> List[analysis.GetTopRecruiterJobPosting]:
-        records = self.db.query(Job.recruiter_id, User.first_name + ' ' + User.last_name, func.count(Job.id).label('post_count')) \
-                        .join(User, Job.recruiter_id == User.id) \
-                        .filter(Job.created_at >= time_from and Job.created_at <= time_to ) \
-                        .group_by(Job.recruiter_id) \
-                        .order_by(desc('post_count')) \
-                        .limit(top_number) \
-                        .all()
+        if time_from != 'None' and time_to != 'None':
+            records = self.db.query(Job.recruiter_id, User.first_name + ' ' + User.last_name, func.count(Job.id).label('post_count')) \
+                            .join(User, Job.recruiter_id == User.id) \
+                            .filter(and_(Job.created_at >= time_from,Job.created_at <= time_to)) \
+                            .group_by(Job.recruiter_id) \
+                            .order_by(desc('post_count')) \
+                            .limit(top_number) \
+                            .all()
+        else:
+            records = self.db.query(Job.recruiter_id, User.first_name + ' ' + User.last_name, func.count(Job.id).label('post_count')) \
+                            .join(User, Job.recruiter_id == User.id) \
+                            .group_by(Job.recruiter_id) \
+                            .order_by(desc('post_count')) \
+                            .limit(top_number) \
+                            .all()
         data = []
         for item in records:
             data.append(
