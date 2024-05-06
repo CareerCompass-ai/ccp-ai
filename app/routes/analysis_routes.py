@@ -64,3 +64,24 @@ def count_new_user_by_role(
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/job-status", response_model=List[analysis.GetNumberOfJobStatus])
+def percentage_of_different_job_status(
+):
+    try:
+        data = analysis_repo.percentage_of_different_job_status()
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@analysis_router.get("/analysis/top-recruiter-by-job-posting", response_model=List[analysis.GetTopRecruiterJobPosting])
+def get_top_recruiters_job_posting(
+    top_number: int = Query(None, description="Top number of recruiter"),
+    time_from: str = Query(None, description="Start time to find out the top recruiter"),
+    time_to: str = Query(None, description="End time to find out the top recruiter")
+):
+    try:
+        data = analysis_repo.get_top_recruiters_job_posting(top_number, time_from, time_to)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
