@@ -91,3 +91,19 @@ class AnalysisRepository:
             )
         
         return data
+
+    def percentage_of_different_job_status(self) -> List[analysis.GetNumberOfJobStatus]:
+
+        records = self.db.query(Job.is_hiring, func.count(Job.id).label('status_count')) \
+                        .group_by(Job.is_hiring) \
+                        .all()
+        data = []
+        for item in records:
+            data.append(
+                analysis.GetNumberOfJobStatus(
+                    status=item.is_hiring,
+                    count=item.status_count
+                )
+            )
+        
+        return data
