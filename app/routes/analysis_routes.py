@@ -36,3 +36,11 @@ def list_top_skills(
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/job-company-type", response_model=List[analysis.GetNumberOfCompanyTypeResponse])
+def list_top_skills():
+    try:
+        data = analysis_repo.number_of_company_type()
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
