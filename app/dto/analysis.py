@@ -11,3 +11,6 @@ class GetTopSkillResponse(BaseModel):
     skill: str
     count: int
 
+class GetNumberOfCompanyTypeResponse(BaseModel):
+    company_type: str
+    count: int

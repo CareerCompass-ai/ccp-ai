@@ -48,4 +48,16 @@ class AnalysisRepository:
         
         return data        
     
+    def number_of_company_type (self) -> List[analysis.GetNumberOfCompanyTypeResponse]:
+        records = self.db.query(Job.company_type, func.count(Job.id).label('company_type_count')).group_by(Job.company_type).all()
+        data = []
+        for item in records:
+            data.append(
+                analysis.GetNumberOfCompanyTypeResponse(
+                    company_type=item.company_type,
+                    count = item.company_type_count
+                )
+            )    
+
+        return data
     
