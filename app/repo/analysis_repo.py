@@ -61,3 +61,18 @@ class AnalysisRepository:
 
         return data
     
+    def get_number_of_new_user(self, time_from, time_to) -> List[analysis.GetNumberOfNewUser]:
+
+        records = self.db.query(User.role, User.created_at) \
+                        .filter(User.created_at >= time_from and User.created_at <= time_to ) \
+                        .all()
+        data = []
+        for item in records:
+            data.append(
+                analysis.GetNumberOfNewUser(
+                    role=item.role,
+                    created_at=item.created_at
+                )
+            )
+        
+        return data

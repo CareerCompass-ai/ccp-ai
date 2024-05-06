@@ -14,3 +14,7 @@ class GetTopSkillResponse(BaseModel):
 class GetNumberOfCompanyTypeResponse(BaseModel):
     company_type: str
     count: int
+
+class GetNumberOfNewUser(BaseModel):
+    role: str
+    created_at: datetime
