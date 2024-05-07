@@ -33,6 +33,36 @@ class AnalysisRepository:
             )
         
         return data
+    
+    def get_top_leader_salaries(self, limit=5, hiring_level=None, order=1) -> List[analysis.GetTopJobTitlesSalaryResponse]:
+
+        query = self.db.query(Job.id, Job.job_title, Job.job_type, Job.company_type, Job.work_place, func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).label('average_salary'))
+
+        if hiring_level is not None:
+            query = query.filter(Job.hiring_level == hiring_level)
+
+        if order == 1:
+            query = query.order_by(func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).desc())
+        elif order == 2:
+            query = query.order_by(func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).asc())
+
+        query = query.limit(limit)
+
+        results = query.all()
+        
+        data = []
+        for item in results:
+            data.append (
+                analysis.GetTopJobTitlesSalaryResponse(
+                    id=item.id,
+                    job_title=item.job_title,
+                    job_type=item.job_type,
+                    company_type=item.company_type,
+                    work_place=item.work_place,
+                    salary=item.average_salary
+                )
+            )
+        return data
 
         
     

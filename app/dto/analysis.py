@@ -6,3 +6,11 @@ from datetime import datetime
 class GetTopJobTitlesResponse(BaseModel):
     job_title: str
     record: int
+
+class GetTopJobTitlesSalaryResponse(BaseModel):
+    id: int
+    job_title: str
+    job_type: str
+    company_type: str
+    work_place: str
+    salary: float
