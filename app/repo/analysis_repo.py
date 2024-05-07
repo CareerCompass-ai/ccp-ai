@@ -11,7 +11,7 @@ class AnalysisRepository:
     def __init__(self):
         self.db = SessionLocal()
 
-    def get_top_job_titles(self, month=None, year=None) -> List[analysis.GetTopJobTitlesResponse]:
+    def get_top_job_titles(self, month=None, year=None) -> analysis.ListTopJobTitlesResponse:
 
         query = self.db.query(Job.common_job_title, func.count(Job.id).label('job_count'))
 
@@ -29,13 +29,13 @@ class AnalysisRepository:
             data.append(
                 analysis.GetTopJobTitlesResponse(
                     job_title=item.common_job_title,
-                    record=item.job_count
+                    count=item.job_count
                 )
             )
         
-        return data
+        return analysis.ListTopJobTitlesResponse (records=data)
     
-    def get_top_leader_salaries(self, limit=5, hiring_level=None, order=1) -> List[analysis.GetTopJobTitlesSalaryResponse]:
+    def get_top_leader_salaries(self, limit=5, hiring_level=None, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
 
         query = self.db.query(Job.id, Job.job_title, Job.job_type, Job.company_type, Job.work_place, func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).label('average_salary'))
 
@@ -63,9 +63,9 @@ class AnalysisRepository:
                     salary=item.average_salary
                 )
             )
-        return data
+        return analysis.ListTopJobTitlesSalaryResponse(records=data)
     
-    def get_most_applied_job_titles(self, month=None, year=None) -> List[analysis.GetTopAppliedJobTitlesResponse]:
+    def get_most_applied_job_titles(self, month=None, year=None) -> analysis.ListTopAppliedJobTitlesResponse:
 
         query = self.db.query(Job.common_job_title, func.count().label('job_count')) \
                     .join(Application, Job.id == Application.job_id)
@@ -85,10 +85,10 @@ class AnalysisRepository:
             data.append (
                 analysis.GetTopAppliedJobTitlesResponse (
                     job_title=item.common_job_title,
-                    record=item.job_count
+                    count=item.job_count
                 )
             )
-        return data
+        return analysis.ListTopAppliedJobTitlesResponse(records=data)
 
         
     

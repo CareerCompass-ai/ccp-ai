@@ -5,7 +5,10 @@ from datetime import datetime
 
 class GetTopJobTitlesResponse(BaseModel):
     job_title: str
-    record: int
+    count: int
+
+class ListTopJobTitlesResponse(BaseModel):
+    records: List[GetTopJobTitlesResponse]
 
 class GetTopJobTitlesSalaryResponse(BaseModel):
     id: int
@@ -15,6 +18,12 @@ class GetTopJobTitlesSalaryResponse(BaseModel):
     work_place: str
     salary: float
 
+class ListTopJobTitlesSalaryResponse(BaseModel):
+    records: List[GetTopJobTitlesSalaryResponse]
+
 class GetTopAppliedJobTitlesResponse(BaseModel):
     job_title: str
-    record: int
+    count: int
+
+class ListTopAppliedJobTitlesResponse(BaseModel):
+    records: List[GetTopAppliedJobTitlesResponse]
