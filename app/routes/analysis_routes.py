@@ -38,3 +38,15 @@ def list_top_job_titles_salary(
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+#6
+@analysis_router.get("/analysis/top-applied-job-titles", response_model=List[analysis.GetTopAppliedJobTitlesResponse])
+def list_top_applied_job_titles(
+    month: int = Query(None, description="Month"),
+    year: int = Query(None, description="Year"),
+):
+    try:
+        data = analysis_repo.get_most_applied_job_titles(month=month, year=year)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

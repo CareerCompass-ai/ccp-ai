@@ -14,3 +14,7 @@ class GetTopJobTitlesSalaryResponse(BaseModel):
     company_type: str
     work_place: str
     salary: float
+
+class GetTopAppliedJobTitlesResponse(BaseModel):
+    job_title: str
+    record: int

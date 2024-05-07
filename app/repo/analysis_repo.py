@@ -4,6 +4,7 @@ from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from models.ccp_job import Job
+from models.ccp_application import Application
 from app.dto import analysis
 
 class AnalysisRepository:
@@ -60,6 +61,31 @@ class AnalysisRepository:
                     company_type=item.company_type,
                     work_place=item.work_place,
                     salary=item.average_salary
+                )
+            )
+        return data
+    
+    def get_most_applied_job_titles(self, month=None, year=None) -> List[analysis.GetTopAppliedJobTitlesResponse]:
+
+        query = self.db.query(Job.common_job_title, func.count().label('job_count')) \
+                    .join(Application, Job.id == Application.job_id)
+
+        if month is not None:
+            query = query.filter(extract('month', Application.updated_at) == month)
+        if year is not None:
+            query = query.filter(extract('year', Application.updated_at) == year)
+
+        query = query.group_by(Job.common_job_title) \
+                    .order_by(func.count().desc())
+
+        results = query.all()
+
+        data = []
+        for item in results:
+            data.append (
+                analysis.GetTopAppliedJobTitlesResponse (
+                    job_title=item.common_job_title,
+                    record=item.job_count
                 )
             )
         return data
