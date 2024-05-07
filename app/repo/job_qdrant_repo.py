@@ -41,10 +41,14 @@ class JobQdrantRepository:
     def update_dynamic_filters(self, hits, dynamic_filters):
         for item in hits:
             payload = item.payload
-            dynamic_filters['hiring_levels'][payload["hiring_level"]] += 1
-            dynamic_filters['job_types'][payload["job_type"]] += 1
-            dynamic_filters['work_places'][payload["work_place"]] += 1
-            dynamic_filters['company_types'][payload["company_type"]] += 1
+            if "hiring_level" in payload:
+                dynamic_filters['hiring_levels'][payload["hiring_level"]] += 1
+            if "job_type" in payload:
+                dynamic_filters['job_types'][payload["job_type"]] += 1
+            if "work_place" in payload:
+                dynamic_filters['work_places'][payload["work_place"]] += 1
+            if "company_type" in payload:
+                dynamic_filters['company_types'][payload["company_type"]] += 1
 
     def build_dynamic_filters(self, dynamic_filters):
         hiring_levels_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['hiring_levels'].items()]
