@@ -3,39 +3,60 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, EmailStr, ValidationError
 from datetime import datetime
 
-class GetTopJobTitlesResponse(BaseModel):
+class TopJobTitlesResponse(BaseModel):
     job_title: str
     count: int
 
-class GetTopSkillResponse(BaseModel):
+class GetTopJobTitlesResponse(BaseModel):
+    data: List[TopJobTitlesResponse]
+
+class TopSkillResponse(BaseModel):
     skill: str
     id: int
     count: int
 
-class GetNumberOfCompanyTypeResponse(BaseModel):
+class GetTopSkillResponse(BaseModel):
+    data: List[TopSkillResponse]
+
+class NumberOfCompanyTypeResponse(BaseModel):
     company_type: str
     count: int
 
-class GetNumberOfNewUser(BaseModel):
+class GetNumberOfCompanyTypeResponse(BaseModel):
+    data: List[NumberOfCompanyTypeResponse]
+
+class NumberOfNewUser(BaseModel):
     id: int
     role: str
     created_at: datetime
+class GetNumberOfNewUser(BaseModel):
+    data: List[NumberOfNewUser]
 
-class GetNumberOfAllNewUser(BaseModel):
+class NumberOfAllNewUser(BaseModel):
     role: str
     count: int
 
+class GetNumberOfAllNewUser(BaseModel):
+    data: List[NumberOfAllNewUser]
 
-class GetNumberOfJobStatus(BaseModel):
+
+class NumberOfJobStatus(BaseModel):
     status: bool
     count: int
+class GetNumberOfJobStatus(BaseModel):
+    data: List[NumberOfJobStatus]
 
-
-class GetTopRecruiterJobPosting(BaseModel):
+class TopRecruiterJobPosting(BaseModel):
     recruiter_id: int
     full_name: str
     count: int
 
-class GetTopViewedJob(BaseModel):
+class GetTopRecruiterJobPosting(BaseModel):
+    data: List[TopRecruiterJobPosting]
+
+
+class TopViewedJob(BaseModel):
     job_title: str
     count: int
+class GetTopViewedJob(BaseModel):
+    data: List[TopViewedJob]

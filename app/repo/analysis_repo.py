@@ -13,7 +13,7 @@ class AnalysisRepository:
     def __init__(self):
         self.db = SessionLocal()
 
-    def get_top_job_titles(self, month, year) -> List[analysis.GetTopJobTitlesResponse]:
+    def get_top_job_titles(self, month, year) -> analysis.GetTopJobTitlesResponse:
 
         records = self.db.query(Job.common_job_title, func.count(Job.id).label('job_count')) \
                         .filter(extract('month', Job.updated_at ) == month ) \
@@ -23,15 +23,15 @@ class AnalysisRepository:
         data = []
         for item in records:
             data.append(
-                analysis.GetTopJobTitlesResponse(
+                analysis.TopJobTitlesResponse(
                     job_title=item.common_job_title,
                     count=item.job_count
                 )
             )
         
-        return data
+        return analysis.GetTopJobTitlesResponse(data=data)
     
-    def get_top_skills (self, top_number) -> List[analysis.GetTopSkillResponse]:
+    def get_top_skills (self, top_number) -> analysis.GetTopSkillResponse:
         records = self.db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
                         .join(JobTag, Tag.id == JobTag.tag_id) \
                         .group_by(Tag.id, Tag.tag_name) \
@@ -41,29 +41,29 @@ class AnalysisRepository:
         data = []
         for item in records:
             data.append(
-                analysis.GetTopSkillResponse(
+                analysis.TopSkillResponse(
                     id=item.id,
                     skill=item.tag_name,
                     count=item.skill_count
                 )
             )
         
-        return data        
+        return analysis.GetTopSkillResponse(data=data)        
     
-    def number_of_company_type (self) -> List[analysis.GetNumberOfCompanyTypeResponse]:
+    def number_of_company_type (self) -> analysis.GetNumberOfCompanyTypeResponse:
         records = self.db.query(Job.company_type, func.count(Job.id).label('company_type_count')).group_by(Job.company_type).all()
         data = []
         for item in records:
             data.append(
-                analysis.GetNumberOfCompanyTypeResponse(
+                analysis.NumberOfCompanyTypeResponse(
                     company_type=item.company_type,
                     count = item.company_type_count
                 )
             )    
 
-        return data
+        return analysis.GetNumberOfCompanyTypeResponse(data=data)
     
-    def get_number_of_new_user(self, time_from, time_to) -> List[analysis.GetNumberOfNewUser]:
+    def get_number_of_new_user(self, time_from, time_to) -> analysis.GetNumberOfNewUser:
 
         records = self.db.query(User.id, User.role, User.created_at) \
                         .filter(and_(User.created_at >= time_from,User.created_at <= time_to )) \
@@ -71,30 +71,30 @@ class AnalysisRepository:
         data = []
         for item in records:
             data.append(
-                analysis.GetNumberOfNewUser(
+                analysis.NumberOfNewUser(
                     id=item.id,
                     role=item.role,
                     created_at=item.created_at
                 )
             )
         
-        return data
+        return analysis.GetNumberOfNewUser(data=data)
     
-    def count_all_number_of_user_by_role(self) -> List[analysis.GetNumberOfAllNewUser]:
+    def count_all_number_of_user_by_role(self) -> analysis.GetNumberOfAllNewUser:
 
         records = self.db.query(User.role, func.count(User.id).label('user_count')).group_by(User.role).all()
         data = []
         for item in records:
             data.append(
-                analysis.GetNumberOfAllNewUser(
+                analysis.NumberOfAllNewUser(
                     role=item.role,
                     count=item.user_count
                 )
             )
         
-        return data
+        return analysis.GetNumberOfAllNewUser(data=data)
 
-    def percentage_of_different_job_status(self) -> List[analysis.GetNumberOfJobStatus]:
+    def percentage_of_different_job_status(self) -> analysis.GetNumberOfJobStatus:
 
         records = self.db.query(Job.is_hiring, func.count(Job.id).label('status_count')) \
                         .group_by(Job.is_hiring) \
@@ -102,16 +102,16 @@ class AnalysisRepository:
         data = []
         for item in records:
             data.append(
-                analysis.GetNumberOfJobStatus(
+                analysis.NumberOfJobStatus(
                     status=item.is_hiring,
                     count=item.status_count
                 )
             )
         
-        return data
+        return analysis.GetNumberOfJobStatus(data=data)
     
 
-    def get_top_recruiters_job_posting (self, top_number, time_from, time_to) -> List[analysis.GetTopRecruiterJobPosting]:
+    def get_top_recruiters_job_posting (self, top_number, time_from, time_to) -> analysis.GetTopRecruiterJobPosting:
         if time_from != 'None' and time_to != 'None':
             records = self.db.query(Job.recruiter_id, func.concat(User.first_name, ' ', User.last_name).label('full_name'), func.count(Job.id).label('post_count')) \
                             .join(User, Job.recruiter_id == User.id) \
@@ -130,15 +130,15 @@ class AnalysisRepository:
         data = []
         for item in records:
             data.append(
-                analysis.GetTopRecruiterJobPosting(
+                analysis.TopRecruiterJobPosting(
                     recruiter_id=item.recruiter_id,
                     full_name=item.full_name,
                     count=item.post_count
                 )
             )
-        return data
+        return analysis.GetTopRecruiterJobPosting(data=data)
     
-    def get_top_viewed_jobs (self, top_number, time_from, time_to) -> List[analysis.GetTopViewedJob]:
+    def get_top_viewed_jobs (self, top_number, time_from, time_to) -> analysis.GetTopViewedJob:
         if time_from != 'None' and time_to != 'None':
             records = self.db.query(Job.common_job_title, func.count(Job.id).label('viewed_count')) \
                             .join(ViewedJob, ViewedJob.job_id == Job.id) \
@@ -157,11 +157,11 @@ class AnalysisRepository:
         data = []
         for item in records:
             data.append(
-                analysis.GetTopViewedJob(
+                analysis.TopViewedJob(
                     job_title=item.common_job_title,
                     count=item.viewed_count
                 )
             )
-        return data
+        return analysis.GetTopViewedJob(data=data)
     
     
