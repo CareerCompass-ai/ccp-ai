@@ -8,7 +8,7 @@ class GetTopJobTitlesResponse(BaseModel):
     count: int
 
 class ListTopJobTitlesResponse(BaseModel):
-    records: List[GetTopJobTitlesResponse]
+    data: List[GetTopJobTitlesResponse]
 
 class GetTopJobTitlesSalaryResponse(BaseModel):
     id: int
@@ -19,11 +19,11 @@ class GetTopJobTitlesSalaryResponse(BaseModel):
     salary: float
 
 class ListTopJobTitlesSalaryResponse(BaseModel):
-    records: List[GetTopJobTitlesSalaryResponse]
+    data: List[GetTopJobTitlesSalaryResponse]
 
 class GetTopAppliedJobTitlesResponse(BaseModel):
     job_title: str
     count: int
 
 class ListTopAppliedJobTitlesResponse(BaseModel):
-    records: List[GetTopAppliedJobTitlesResponse]
+    data: List[GetTopAppliedJobTitlesResponse]

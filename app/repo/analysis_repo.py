@@ -33,7 +33,7 @@ class AnalysisRepository:
                 )
             )
         
-        return analysis.ListTopJobTitlesResponse (records=data)
+        return analysis.ListTopJobTitlesResponse (data=data)
     
     def get_top_leader_salaries(self, limit=5, hiring_level=None, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
 
@@ -63,7 +63,7 @@ class AnalysisRepository:
                     salary=item.average_salary
                 )
             )
-        return analysis.ListTopJobTitlesSalaryResponse(records=data)
+        return analysis.ListTopJobTitlesSalaryResponse(data=data)
     
     def get_most_applied_job_titles(self, month=None, year=None) -> analysis.ListTopAppliedJobTitlesResponse:
 
@@ -88,7 +88,7 @@ class AnalysisRepository:
                     count=item.job_count
                 )
             )
-        return analysis.ListTopAppliedJobTitlesResponse(records=data)
+        return analysis.ListTopAppliedJobTitlesResponse(data=data)
 
         
     
