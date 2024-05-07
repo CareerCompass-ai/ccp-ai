@@ -7,8 +7,26 @@ class TopJobTitlesResponse(BaseModel):
     job_title: str
     count: int
 
-class GetTopJobTitlesResponse(BaseModel):
+class ListTopJobTitlesResponse(BaseModel):
     data: List[TopJobTitlesResponse]
+
+class GetTopJobTitlesSalaryResponse(BaseModel):
+    id: int
+    job_title: str
+    job_type: str
+    company_type: str
+    work_place: str
+    salary: float
+
+class ListTopJobTitlesSalaryResponse(BaseModel):
+    data: List[GetTopJobTitlesSalaryResponse]
+
+class GetTopAppliedJobTitlesResponse(BaseModel):
+    job_title: str
+    count: int
+
+class ListTopAppliedJobTitlesResponse(BaseModel):
+    data: List[GetTopAppliedJobTitlesResponse]
 
 class TopSkillResponse(BaseModel):
     skill: str
@@ -39,7 +57,6 @@ class NumberOfAllNewUser(BaseModel):
 class GetNumberOfAllNewUser(BaseModel):
     data: List[NumberOfAllNewUser]
 
-
 class NumberOfJobStatus(BaseModel):
     status: bool
     count: int
@@ -54,9 +71,9 @@ class TopRecruiterJobPosting(BaseModel):
 class GetTopRecruiterJobPosting(BaseModel):
     data: List[TopRecruiterJobPosting]
 
-
 class TopViewedJob(BaseModel):
     job_title: str
     count: int
+
 class GetTopViewedJob(BaseModel):
     data: List[TopViewedJob]
