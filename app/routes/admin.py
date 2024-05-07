@@ -1,10 +1,15 @@
 from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
+from app.ai.ai_helper import AI
 from constant import config
-from ..dto.admin import DeleteClassRequest
+from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest
+from app.usecases.sync_helper import SyncHelper
+
+from app.repo.aggregate import Aggregate
 
 from config.weaviate import WeaviateVDB as weaviate
+from config.qdrant import QdrantVDB as qdrant
 
 
 admin_router = APIRouter(
@@ -13,6 +18,12 @@ admin_router = APIRouter(
 )
 
 security = HTTPBasic()
+
+agg_repo = Aggregate()
+ai_helper = AI()
+qdrant_client = qdrant.setup_qdrant_connection()
+weaviate_client = weaviate.setup_weaviate_connection()
+sync_helper = SyncHelper(qdrant_client=qdrant_client, weaviate_client=weaviate_client)
 
 def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
     correct_username = config.HTTP_ADMIN_USER_NAME
@@ -64,3 +75,19 @@ async def delete_class(payload: DeleteClassRequest, is_authenticated: bool = Dep
         return {"message": "JobQnA class created successfully"}
     except Exception as e:
         return {"error": str(e)}
+    
+@admin_router.post("/manual-sync-job")
+async def manual_sync_job(req: ManualSyncJobRequest, is_authenticated: bool = Depends(authenticate_user)):
+    try:
+        for id in req.ids:
+            job_agg = agg_repo.get_job(id)
+            summarized_content = ai_helper.get_job_summarized(job_agg.content)
+            vector = ai_helper.get_embedding(summarized_content)
+            job_agg.s_content = summarized_content
+            
+            sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
+
+        return {"message": "ok"}
+    except Exception as e:
+        return {"error": str(e)}
+    
