@@ -35,3 +35,8 @@ class GetTopRecruiterJobPosting(BaseModel):
     recruiter_id: int
     full_name: str
     count: int
+
+class GetTopViewedJob(BaseModel):
+    job_id: int
+    job_title: str
+    count: int
