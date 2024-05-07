@@ -37,6 +37,5 @@ class GetTopRecruiterJobPosting(BaseModel):
     count: int
 
 class GetTopViewedJob(BaseModel):
-    job_id: int
     job_title: str
     count: int

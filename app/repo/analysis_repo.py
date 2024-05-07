@@ -140,17 +140,17 @@ class AnalysisRepository:
     
     def get_top_viewed_jobs (self, top_number, time_from, time_to) -> List[analysis.GetTopViewedJob]:
         if time_from != 'None' and time_to != 'None':
-            records = self.db.query(Job.id, Job.common_job_title, func.concat(Job.id).label('viewed_count')) \
+            records = self.db.query(Job.common_job_title, func.count(Job.id).label('viewed_count')) \
                             .join(ViewedJob, ViewedJob.job_id == Job.id) \
-                            .filter(and_(ViewedJob.viewed_datetime >= time_from, ViewedJob.viewed_datetime <= time_to)) \
-                            .group_by(Job.id, Job.common_job_title) \
+                            .filter(and_(ViewedJob.view_datetime >= time_from, ViewedJob.view_datetime <= time_to)) \
+                            .group_by(Job.common_job_title) \
                             .order_by(desc('viewed_count')) \
                             .limit(top_number) \
                             .all()
         else:
-            records = self.db.query(Job.id, Job.common_job_title, func.concat(Job.id).label('viewed_count')) \
+            records = self.db.query(Job.common_job_title, func.count(Job.id).label('viewed_count')) \
                             .join(ViewedJob, ViewedJob.job_id == Job.id) \
-                            .group_by(Job.id, Job.common_job_title) \
+                            .group_by(Job.common_job_title) \
                             .order_by(desc('viewed_count')) \
                             .limit(top_number) \
                             .all()
@@ -158,7 +158,6 @@ class AnalysisRepository:
         for item in records:
             data.append(
                 analysis.GetTopViewedJob(
-                    job_id=item.id,
                     job_title=item.common_job_title,
                     count=item.viewed_count
                 )

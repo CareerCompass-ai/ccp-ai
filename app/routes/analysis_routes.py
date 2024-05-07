@@ -85,3 +85,15 @@ def get_top_recruiters_job_posting(
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/top-viewed-job", response_model=List[analysis.GetTopViewedJob])
+def get_top_viewed_jobs(
+    top_number: int = Query(None, description="Top number of highest viewed jobs"),
+    time_from: str = Query(None, description="Start time of time to get the viewed jobs"),
+    time_to: str = Query(None, description="End time of time to get the viewed jobs")
+):
+    try:
+        data = analysis_repo.get_top_viewed_jobs(top_number, time_from, time_to)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
