@@ -10,6 +10,8 @@ from app.dto import analysis
 from models.ccp_tag import Tag
 from models.ccp_user import User
 from models.ccp_viewedjob import ViewedJob
+from models.ccp_candidate import Candidate
+
 class AnalysisRepository:
     def __init__(self):
         self.db = SessionLocal()
@@ -230,3 +232,23 @@ class AnalysisRepository:
             )
         
         return analysis.GetTopViewedJob(data=data)
+    
+    def get_top_work_titles(self, top_number=10) -> analysis.ListTopWorkTitlesResponse:
+        query = self.db.query(User.work_title, func.count(Candidate.id).label('candidate_count')) \
+            .join(Candidate, User.id == Candidate.id) \
+            .group_by(User.work_title).order_by(func.count(Candidate.id).desc()).limit(top_number)
+        
+        records = query.all()
+        data = []
+
+        for item in records:
+            data.append (
+                analysis.TopWorkTitlesResponse (
+                    work_title=item.work_title,
+                    count=item.candidate_count
+                )
+            )
+        
+        return analysis.ListTopWorkTitlesResponse (data=data)
+
+        
