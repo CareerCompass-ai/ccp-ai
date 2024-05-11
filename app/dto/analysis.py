@@ -77,3 +77,10 @@ class TopViewedJob(BaseModel):
 
 class GetTopViewedJob(BaseModel):
     data: List[TopViewedJob]
+
+class TopWorkTitlesResponse(BaseModel):
+    work_title: str
+    count: int
+
+class ListTopWorkTitlesResponse(BaseModel):
+    data: List[TopWorkTitlesResponse]
