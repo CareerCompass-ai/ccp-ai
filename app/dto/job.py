@@ -63,17 +63,17 @@ class DynamicFilterCommonField(BaseModel):
     count: Optional[int]
 
 class DynamicFilters(BaseModel):
-    hiring_levels: List[DynamicFilterCommonField]
-    job_types: List[DynamicFilterCommonField]
-    work_places: List[DynamicFilterCommonField]
-    company_types: List[DynamicFilterCommonField]
+    hiring_levels: List[DynamicFilterCommonField] = []
+    job_types: List[DynamicFilterCommonField] = []
+    work_places: List[DynamicFilterCommonField] = []
+    company_types: List[DynamicFilterCommonField] = []
 
 class ListJobResponse(BaseModel):
     count: int
     page: int
     size: int
     records: List[JobAggregate]
-    dynamic_filters: DynamicFilters
+    dynamic_filters: DynamicFilters = DynamicFilters()
 
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
