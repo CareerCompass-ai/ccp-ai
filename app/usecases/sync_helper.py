@@ -3,6 +3,7 @@ import constant
 
 from qdrant_client import QdrantClient
 from weaviate import WeaviateClient
+from weaviate.classes.query import Filter
 # from elasticsearch import Elasticsearch
 
 from qdrant_client.http.models import PointStruct
@@ -47,6 +48,30 @@ class SyncHelper:
             #     "hasCategory": str(payload.id)
             # }
         )
+
+    def replace_object_weaviate(self, class_name: str, payload):
+        collection = self.weaviate_client.collections.get(class_name)
+
+        properties = payload.model_dump()
+        record = collection.query.fetch_objects(
+            filters=Filter.by_property("job_id").equal(payload.id)
+        )
+
+        properties.pop('id', None)
+        properties["job_id"]=payload.id
+        collection.data.replace(record.objects[0].uuid, properties=properties)
+
+    def update_object_properties_weaviate(self, class_name: str, payload):
+        collection = self.weaviate_client.collections.get(class_name)
+
+        properties = payload.model_dump()
+        record = collection.query.fetch_objects(
+            filters=Filter.by_property("job_id").equal(properties.id)
+        )
+
+        properties.pop('id', None)
+        properties["job_id"]=payload.id
+        collection.data.update(record.objects[0].uuid, properties=properties)
 
     # def update_object_weaviate(self, class_name: str):
     #     self.weaviate_client
