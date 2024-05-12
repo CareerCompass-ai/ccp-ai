@@ -7,6 +7,7 @@ from typing import Optional
 from datetime import datetime
 from app.dto import candidate
 from models.ccp_job_saved import JobSaved
+from models.ccp_viewedjob import ViewedJob
 
 candidate_router = APIRouter(
     prefix="/api",
@@ -60,5 +61,37 @@ def list_jobs_saved(
     try: 
         data = candidate_repo.get_saved_jobs(candidate_id)
         return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@candidate_router.post("/candidate/view-job", response_model=candidate.JobViewdResponse)
+def view_job(
+    req: candidate.CreateJobViewedRequest
+):
+    try:    
+        check = candidate_repo.check_viewed_job(candidate_id=req.candidate_id, job_id=req.job_id)
+        if check is not None:
+            return candidate.JobViewdResponse (
+                message="You have seen this job",
+                job_id=check.job_id,
+                candidate_id=check.candidate_id,
+                time=check.time
+            )
+        else:
+            now = datetime.now()
+            record = ViewedJob(
+                candidate_id = req.candidate_id,
+                job_id = req.job_id,
+                view_datetime = now,
+                created_at = now,
+                updated_at = now
+            )
+            candidate_repo.create_viewd_job(record=record)
+            return candidate.JobViewdResponse (
+                message="View job sucessfully!",
+                job_id=record.job_id,
+                candidate_id=record.candidate_id,
+                time=record.view_datetime
+            )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

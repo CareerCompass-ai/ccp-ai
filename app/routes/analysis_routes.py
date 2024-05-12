@@ -148,7 +148,7 @@ def get_change_of_job_salary_by_time(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @analysis_router.get("/analysis/number-jobs-by-city", response_model=analysis.ListNumberofJobsByCityResponse)
-def get_change_of_job_salary_by_time(
+def get_number_of_job__by_city(
     country: str = Query(None, description="Country name"),
     job_title: str = Query(None, description="Common job title"),
     level: str = Query(None, description="Hiring level"),

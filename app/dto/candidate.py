@@ -48,3 +48,13 @@ class SavedJobsResponse(BaseModel):
 
 class ListSavedJobsResponse(BaseModel):
     records: List[SavedJobsResponse] = None
+
+class CreateJobViewedRequest(BaseModel):
+    job_id: int
+    candidate_id: int
+
+class JobViewdResponse(BaseModel):
+    message: Optional[str] = ""
+    job_id: Optional[int] = None
+    candidate_id: Optional[int] = None
+    time: Optional[datetime] = None
