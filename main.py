@@ -15,5 +15,5 @@ if __name__ == "__main__":
     consumer_thread.start()
 
     # Start HTTP server in the main thread
-    uvicorn.run("app.server:app", host="127.0.0.1", port=int(cfg.HTTP_PORT), reload=True)
-    print(f"CCP-AI is running on HOST [127.0.0.1] PORT [{cfg.HTTP_PORT}]")
+    uvicorn.run("app.server:app", host="0.0.0.0", port=int(cfg.HTTP_PORT), reload=True)
+    print(f"CCP-AI is running on HOST [0.0.0.0] PORT [{cfg.HTTP_PORT}]")
