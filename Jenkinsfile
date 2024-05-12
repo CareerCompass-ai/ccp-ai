@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the repository
-                git branch: 'main', url: 'https://github.com/htnphu/ccp-ai', credentialsId: "3fa56d00-f0ea-4a01-a6ce-ece2c0ed41c3"
+                git branch: 'main', url: 'https://github.com/htnphu/ccp-ai', credentialsId: "e50f6530-329d-4173-b164-5c601e6f4ad0"
             }
         }
         
