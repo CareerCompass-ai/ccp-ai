@@ -30,7 +30,7 @@ jobs:
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
       - name: Push Docker Image to Registry
         run: |
-          docker tag ccp-ai ${{ secrets.DOCKER_REGISTRY }}/ccp-ai:latest
+          docker tag ccp-ai:latest ${{ secrets.DOCKER_REGISTRY }}/ccp-ai:latest
           docker push ${{ secrets.DOCKER_REGISTRY }}/ccp-ai:latest
 
   deploy:
