@@ -6,6 +6,8 @@ from app.repo.analysis_repo import AnalysisRepository
 
 from  typing import List
 
+from datetime import datetime
+
 import constant.common as constant
 
 analysis_router = APIRouter(
@@ -129,6 +131,18 @@ def list_top_work_titles(
 ):
     try:
         data = analysis_repo.get_top_work_titles(top_number=top_number)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/salary-change-by-time", response_model=analysis.ListChangeJobSalaryResponse)
+def get_change_of_job_salary_by_time(
+    time_from: str = Query(None, description="Start month"),
+    time_to: str = Query(None, description="End month"),
+    level: str = Query(None, description="Hiring level"),
+):
+    try:        
+        data = analysis_repo.get_change_job_salary_by_time(time_from=time_from, time_to=time_to, level=level)
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

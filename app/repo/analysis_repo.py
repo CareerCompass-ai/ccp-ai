@@ -251,4 +251,36 @@ class AnalysisRepository:
         
         return analysis.ListTopWorkTitlesResponse (data=data)
 
+    def get_change_job_salary_by_time(self, time_from, time_to, level) -> analysis.ListChangeJobSalaryResponse:
+        query = self.db.query (
+            func.date_trunc('month', Job.updated_at).label('month'),
+            Job.common_job_title,
+            func.avg((Job.salary_from + Job.salary_to) / 2).label('salary')
+        ).filter (
+            Job.updated_at.between(time_from, time_to))
+
+        if level is not None:
+            query = query.filter(Job.hiring_level == level)
         
+        query = query.group_by (
+            func.date_trunc('month', Job.updated_at),
+            Job.common_job_title
+        ).order_by (
+            func.date_trunc('month', Job.updated_at),
+            Job.common_job_title
+        )
+
+        records = query.all()
+
+        data = []
+
+        for item in records:
+            data.append (
+                analysis.ChangeJobSalaryResponse (
+                    time=item.month,
+                    job_title=item.common_job_title,
+                    salary=item.salary
+                )
+            )
+        
+        return analysis.ListChangeJobSalaryResponse(data=data)
