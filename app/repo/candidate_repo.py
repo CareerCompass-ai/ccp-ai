@@ -5,7 +5,10 @@ from models.ccp_resume import Resume
 from models.ccp_application import Application
 from models.ccp_job_saved import JobSaved
 from models.ccp_job import Job
+from models.ccp_viewedjob import ViewedJob
+
 from app.dto import candidate
+
 class CandidateRepository:
     def __init__(self):
         self.db = SessionLocal()
@@ -85,3 +88,24 @@ class CandidateRepository:
         return candidate.ListSavedJobsResponse(
             records=records
         )
+    
+    # TODO: Refactor this file
+    def get_job_saved_by_candidate_id(self, user_id) -> JobSaved:
+        result = self.db.query(JobSaved).filter(JobSaved.candidate_id==user_id).first()
+        
+        return result
+    
+    def check_viewed_job(self, candidate_id, job_id) -> candidate.JobViewdResponse:
+        result = self.db.query(ViewedJob).filter(ViewedJob.candidate_id == candidate_id, ViewedJob.job_id == job_id).first()
+        if result is not None:
+            return candidate.JobViewdResponse (
+                job_id=result.job_id,
+                candidate_id=result.candidate_id,
+                time=result.view_datetime
+            )
+        return result
+
+    def create_viewd_job(self, record: ViewedJob) -> ViewedJob:
+        self.db.add(record)
+        self.db.commit()
+        return record

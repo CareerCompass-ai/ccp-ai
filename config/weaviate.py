@@ -1,4 +1,5 @@
 import weaviate
+from weaviate.classes.init import AdditionalConfig, Timeout
 import constant.config as constant
 import constant.ai as ai_constant
 
@@ -89,6 +90,9 @@ class WeaviateVDB:
             grpc_port=50051,
             grpc_secure=False,
             auth_credentials=weaviate.auth.AuthApiKey(WeaviateVDB.WEAVIATE_API_KEY),
+            additional_config=AdditionalConfig(
+                timeout=Timeout(init=60)
+            ),
             headers={
                 "X-OpenAI-Api-Key": ai_constant.OPENAI_API_KEY
             }
