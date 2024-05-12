@@ -6,7 +6,7 @@ pipeline {
             steps {
                 // Install Python if it's not already installed
                 // sh 'sudo apt-get update && sudo apt-get install -y python3'
-                sh 'python --version'
+                // sh 'python --version'
             }
         }
         
@@ -20,7 +20,7 @@ pipeline {
         stage('Build') {
             steps {
                 // Display Python version
-                sh 'python --version'
+                // sh 'python --version'
                 // Install Python dependencies using pip
                 // sh 'pip install -r ./pkg/requirements.txt'
                 sh 'docker build -t ccp-ai .'
