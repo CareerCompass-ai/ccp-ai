@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3'
-            args '-u root' // This ensures that the Docker container runs as root
-        }
-    }
+    agent any
     
     stages {
         stage('Install Python') {
