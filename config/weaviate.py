@@ -6,7 +6,78 @@ class WeaviateVDB:
     WEAVIATE_URL = constant.WEAVIATE_URL
     WEAVIATE_PORT = constant.WEAVIATE_PORT
     WEAVIATE_API_KEY = constant.WEAVIATE_API_KEY
-    OPENAI_API_KEY = ai_constant.OPENAI_API_KEY
+
+    jobClass = {
+        "class": "Job",
+        "vectorizer": "text2vec-openai",
+        "vectorIndexConfig": {
+            "distance": "cosine",
+        },
+        "moduleConfig": {
+            "text2vec-openai": {
+                "model": "text-embedding-3-small",
+                "dimensions": 1536,
+                "type": "text",
+            },
+            "generative-openai": {
+                "model": "gpt-3.5-turbo",  
+                # "temperatureProperty":  NOTE: all are optional
+                # "maxTokensProperty":
+                # "frequencyPenaltyProperty": 
+                # "presencePenaltyProperty": 
+                # "topPProperty":
+            },
+        },
+        # "properties": [
+        # # {
+        # #     "name": "title",
+        # #     "dataType": ["text"]
+        # # },
+        # # {
+        # #     "name": "chunk",
+        # #     "dataType": ["text"]
+        # # },
+        # # {
+        # #     "name": "chunk_no",
+        # #     "dataType": ["int"]
+        # # },
+        # # {
+        # #     "name": "url",
+        # #     "dataType": ["text"],
+        # #     "tokenization": "field"
+        # # },
+        # ],
+    }
+
+    jobQnAClass = {
+        "class": "JobQnA",
+        "description": "Job Collection for Question and Answer",
+        "vectorizer": "text2vec-openai",
+        "moduleConfig": {
+            "qna-openai": {
+            "model": "gpt-3.5-turbo-instruct",
+            "maxTokens": 2048,
+            "temperature": 0.0,
+            "topP": 1,
+            "frequencyPenalty": 0.0,
+            "presencePenalty": 0.0
+            },
+            "text2vec-openai": {
+                "model": "text-embedding-3-small",
+                "dimensions": 1536,
+                "type": "text",
+            },
+        },
+        "properties": [
+            {
+            "dataType": [
+                "text"
+            ],
+            "description": "Content that will be vectorized",
+            "name": "s_content"
+            }
+        ]
+    }
 
     @staticmethod
     def setup_weaviate_connection() -> weaviate.WeaviateClient:
@@ -19,6 +90,6 @@ class WeaviateVDB:
             grpc_secure=False,
             auth_credentials=weaviate.auth.AuthApiKey(WeaviateVDB.WEAVIATE_API_KEY),
             headers={
-                "X-OpenAI-Api-Key": WeaviateVDB.OPENAI_API_KEY
+                "X-OpenAI-Api-Key": ai_constant.OPENAI_API_KEY
             }
         )

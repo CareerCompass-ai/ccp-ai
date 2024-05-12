@@ -14,7 +14,8 @@ class CandidateRepository:
         return self.db.query(Candidate).filter(Candidate.id == id).first()
     
     def get_applied_jobs(self, id) -> candidate.ListAppliedJobsResponse:
-        applications = self.db.query(Application.job_id, Application.resume_id, Job.job_title, Application.created_at, Application.updated_at)\
+        applications = self.db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
+                                     Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Application.created_at, Application.updated_at)\
             .join(Resume, Application.resume_id == Resume.id)\
             .join(Job, Application.job_id == Job.id)\
             .filter(Resume.candidate_id == id)\
@@ -27,6 +28,16 @@ class CandidateRepository:
                     job_id=app.job_id,
                     resume_id=app.resume_id,
                     job_title=app.job_title,
+                    content=app.content,
+                    is_hiring=app.is_hiring,
+                    opened_date=app.opened_date,
+                    closed_date=app.closed_date,
+                    salary_from=app.salary_from,
+                    salary_to=app.salary_to,
+                    job_type=app.job_type,
+                    work_place=app.work_place,
+                    company_type=app.company_type,
+                    hiring_level=app.hiring_level,
                     created_at=app.created_at,
                     updated_at=app.updated_at
                 )
@@ -45,7 +56,8 @@ class CandidateRepository:
         self.db.commit()
 
     def get_saved_jobs(self, id) -> candidate.ListSavedJobsResponse:
-        jobs = self.db.query(JobSaved.job_id, Job.job_title, JobSaved.created_at)\
+        jobs = self.db.query(JobSaved.job_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
+                             Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, JobSaved.created_at, JobSaved.updated_at)\
             .join(JobSaved, Job.id == JobSaved.job_id)\
             .filter(JobSaved.candidate_id == id)\
             .order_by(JobSaved.created_at.desc())\
@@ -56,6 +68,18 @@ class CandidateRepository:
                 candidate.SavedJobsResponse(
                     job_id=job.job_id,
                     job_title=job.job_title,
+                    content=job.content,
+                    is_hiring=job.is_hiring,
+                    opened_date=job.opened_date,
+                    closed_date=job.closed_date,
+                    salary_from=job.salary_from,
+                    salary_to=job.salary_to,
+                    job_type=job.job_type,
+                    work_place=job.work_place,
+                    company_type=job.company_type,
+                    hiring_level=job.hiring_level,
+                    created_at=job.created_at,
+                    updated_at=job.updated_at
                 )
             )
         return candidate.ListSavedJobsResponse(
