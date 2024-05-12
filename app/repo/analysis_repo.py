@@ -11,6 +11,9 @@ from models.ccp_tag import Tag
 from models.ccp_user import User
 from models.ccp_viewedjob import ViewedJob
 from models.ccp_candidate import Candidate
+from models.ccp_city import City
+from models.ccp_country import Country
+from models.ccp_address import Address
 
 class AnalysisRepository:
     def __init__(self):
@@ -284,3 +287,45 @@ class AnalysisRepository:
             )
         
         return analysis.ListChangeJobSalaryResponse(data=data)
+
+    def get_number_jobs_by_city(self, country, job_title, level) -> analysis.ListNumberofJobsByCityResponse:
+        query = self.db.query(
+            City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
+        ).join(
+            Address, Job.address_id == Address.id
+        ).join(
+            City, Address.city_id == City.id
+        ).join(
+            Country, City.country_id == Country.id
+        ).filter(
+            Country.country_name.like(country)
+        )
+
+        if job_title is not None:
+            query = query.filter(Job.common_job_title.like(job_title))
+        
+        if level is not None:
+            query = query.filter(Job.hiring_level.like(level))
+
+        query = query.group_by(
+            City.city_name, Country.country_name
+        ).order_by(
+            func.count(Job.id).desc()
+        )
+
+        records = query.all()
+        data = []
+
+        for item in records:
+            data.append(
+                analysis.NumberofJobsByCityResponse(
+                    city=item.city_name,
+                    count=item.job_number
+                )
+            )
+        return analysis.ListNumberofJobsByCityResponse(
+            country=records[0][1],
+            data=data
+        )
+
+        

@@ -92,3 +92,11 @@ class ChangeJobSalaryResponse(BaseModel):
 
 class ListChangeJobSalaryResponse(BaseModel):
     data: List[ChangeJobSalaryResponse]
+
+class NumberofJobsByCityResponse(BaseModel):
+    city: str
+    count: int
+
+class ListNumberofJobsByCityResponse(BaseModel):
+    country: str
+    data: List[NumberofJobsByCityResponse]
