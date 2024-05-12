@@ -70,14 +70,7 @@ def view_job(
 ):
     try:    
         check = candidate_repo.check_viewed_job(candidate_id=req.candidate_id, job_id=req.job_id)
-        if check is not None:
-            return candidate.JobViewdResponse (
-                message="You have seen this job",
-                job_id=check.job_id,
-                candidate_id=check.candidate_id,
-                time=check.time
-            )
-        else:
+        if check is None:
             now = datetime.now()
             record = ViewedJob(
                 candidate_id = req.candidate_id,
@@ -87,11 +80,9 @@ def view_job(
                 updated_at = now
             )
             candidate_repo.create_viewd_job(record=record)
-            return candidate.JobViewdResponse (
-                message="View job sucessfully!",
-                job_id=record.job_id,
-                candidate_id=record.candidate_id,
-                time=record.view_datetime
-            )
+            
+        return candidate.JobViewdResponse (
+            message="OK",
+        )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
