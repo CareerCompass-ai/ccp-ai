@@ -1,11 +1,17 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3'
+            args '-u root' // This ensures that the Docker container runs as root
+        }
+    }
     
     stages {
         stage('Install Python') {
             steps {
                 // Install Python if it's not already installed
-                sh 'sudo apt-get update && apt-get install -y python3'
+                // sh 'sudo apt-get update && apt-get install -y python3'
+                sh 'python --version'
             }
         }
         
