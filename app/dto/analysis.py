@@ -84,3 +84,11 @@ class TopWorkTitlesResponse(BaseModel):
 
 class ListTopWorkTitlesResponse(BaseModel):
     data: List[TopWorkTitlesResponse]
+
+class ChangeJobSalaryResponse(BaseModel):
+    time: datetime
+    job_title: str
+    salary: float
+
+class ListChangeJobSalaryResponse(BaseModel):
+    data: List[ChangeJobSalaryResponse]
