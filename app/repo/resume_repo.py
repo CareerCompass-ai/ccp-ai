@@ -13,7 +13,7 @@ class ResumeRepository:
         result = self.db.query(Resume).filter(Resume.id == id).first()
         return result
     
-    async def post_resume(self, db:Session, input: Optional[resume.ResumeBase]):
+    async def post_resume(self, input: Optional[resume.ResumeBase]):
         if input:
             resume_instance = Resume(**input.model_dump())
             resume_instance.id = None
@@ -21,7 +21,7 @@ class ResumeRepository:
             self.db.commit()
             self.db.refresh(resume_instance)
 
-            db.close()
+            self.db.close()
             return resume_instance
         
     async def get_by_user_id(self, user_id) -> List[Resume]:

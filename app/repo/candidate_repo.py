@@ -17,7 +17,7 @@ class CandidateRepository:
     def get_by_id(self, id):
         return self.db.query(Candidate).filter(Candidate.id == id).first()
     
-    def get_applied_jobs(self, db:Session, id) -> candidate.ListAppliedJobsResponse:
+    def get_applied_jobs(self, id) -> candidate.ListAppliedJobsResponse:
         applications = self.db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                                      Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Application.created_at, Application.updated_at)\
             .join(Resume, Application.resume_id == Resume.id)\
