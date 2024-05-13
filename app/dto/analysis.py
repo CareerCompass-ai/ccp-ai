@@ -77,3 +77,26 @@ class TopViewedJob(BaseModel):
 
 class GetTopViewedJob(BaseModel):
     data: List[TopViewedJob]
+
+class TopWorkTitlesResponse(BaseModel):
+    work_title: str
+    count: int
+
+class ListTopWorkTitlesResponse(BaseModel):
+    data: List[TopWorkTitlesResponse]
+
+class ChangeJobSalaryResponse(BaseModel):
+    time: datetime
+    job_title: str
+    salary: float
+
+class ListChangeJobSalaryResponse(BaseModel):
+    data: List[ChangeJobSalaryResponse]
+
+class NumberofJobsByCityResponse(BaseModel):
+    city: str
+    count: int
+
+class ListNumberofJobsByCityResponse(BaseModel):
+    country: str
+    data: List[NumberofJobsByCityResponse]

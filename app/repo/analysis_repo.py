@@ -10,6 +10,11 @@ from app.dto import analysis
 from models.ccp_tag import Tag
 from models.ccp_user import User
 from models.ccp_viewedjob import ViewedJob
+from models.ccp_candidate import Candidate
+from models.ccp_city import City
+from models.ccp_country import Country
+from models.ccp_address import Address
+
 class AnalysisRepository:
     def __init__(self):
         self.db = SessionLocal()
@@ -230,3 +235,97 @@ class AnalysisRepository:
             )
         
         return analysis.GetTopViewedJob(data=data)
+    
+    def get_top_work_titles(self, top_number=10) -> analysis.ListTopWorkTitlesResponse:
+        query = self.db.query(User.work_title, func.count(Candidate.id).label('candidate_count')) \
+            .join(Candidate, User.id == Candidate.id) \
+            .group_by(User.work_title).order_by(func.count(Candidate.id).desc()).limit(top_number)
+        
+        records = query.all()
+        data = []
+
+        for item in records:
+            data.append (
+                analysis.TopWorkTitlesResponse (
+                    work_title=item.work_title,
+                    count=item.candidate_count
+                )
+            )
+        
+        return analysis.ListTopWorkTitlesResponse (data=data)
+
+    def get_change_job_salary_by_time(self, time_from, time_to, level) -> analysis.ListChangeJobSalaryResponse:
+        query = self.db.query (
+            func.date_trunc('month', Job.updated_at).label('month'),
+            Job.common_job_title,
+            func.avg((Job.salary_from + Job.salary_to) / 2).label('salary')
+        ).filter (
+            Job.updated_at.between(time_from, time_to))
+
+        if level is not None:
+            query = query.filter(Job.hiring_level == level)
+        
+        query = query.group_by (
+            func.date_trunc('month', Job.updated_at),
+            Job.common_job_title
+        ).order_by (
+            func.date_trunc('month', Job.updated_at),
+            Job.common_job_title
+        )
+
+        records = query.all()
+
+        data = []
+
+        for item in records:
+            data.append (
+                analysis.ChangeJobSalaryResponse (
+                    time=item.month,
+                    job_title=item.common_job_title,
+                    salary=item.salary
+                )
+            )
+        
+        return analysis.ListChangeJobSalaryResponse(data=data)
+
+    def get_number_jobs_by_city(self, country, job_title, level) -> analysis.ListNumberofJobsByCityResponse:
+        query = self.db.query(
+            City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
+        ).join(
+            Address, Job.address_id == Address.id
+        ).join(
+            City, Address.city_id == City.id
+        ).join(
+            Country, City.country_id == Country.id
+        ).filter(
+            Country.country_name.like(country)
+        )
+
+        if job_title is not None:
+            query = query.filter(Job.common_job_title.like(job_title))
+        
+        if level is not None:
+            query = query.filter(Job.hiring_level.like(level))
+
+        query = query.group_by(
+            City.city_name, Country.country_name
+        ).order_by(
+            func.count(Job.id).desc()
+        )
+
+        records = query.all()
+        data = []
+
+        for item in records:
+            data.append(
+                analysis.NumberofJobsByCityResponse(
+                    city=item.city_name,
+                    count=item.job_number
+                )
+            )
+        return analysis.ListNumberofJobsByCityResponse(
+            country=records[0][1],
+            data=data
+        )
+
+        

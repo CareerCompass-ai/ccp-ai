@@ -6,6 +6,8 @@ from app.repo.analysis_repo import AnalysisRepository
 
 from  typing import List
 
+from datetime import datetime
+
 import constant.common as constant
 
 analysis_router = APIRouter(
@@ -119,6 +121,40 @@ def get_top_viewed_jobs(
 ):
     try:
         data = analysis_repo.get_top_viewed_jobs(top_number, time_from, time_to)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@analysis_router.get("/analysis/top-work-titles", response_model=analysis.ListTopWorkTitlesResponse)
+def list_top_work_titles(
+    top_number: int = Query(None, description="Top number"),
+):
+    try:
+        data = analysis_repo.get_top_work_titles(top_number=top_number)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/salary-change-by-time", response_model=analysis.ListChangeJobSalaryResponse)
+def get_change_of_job_salary_by_time(
+    time_from: str = Query(None, description="Start month"),
+    time_to: str = Query(None, description="End month"),
+    level: str = Query(None, description="Hiring level"),
+):
+    try:        
+        data = analysis_repo.get_change_job_salary_by_time(time_from=time_from, time_to=time_to, level=level)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@analysis_router.get("/analysis/number-jobs-by-city", response_model=analysis.ListNumberofJobsByCityResponse)
+def get_number_of_job__by_city(
+    country: str = Query(None, description="Country name"),
+    job_title: str = Query(None, description="Common job title"),
+    level: str = Query(None, description="Hiring level"),
+):
+    try:        
+        data = analysis_repo.get_number_jobs_by_city(job_title=job_title, country=country, level=level)
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
