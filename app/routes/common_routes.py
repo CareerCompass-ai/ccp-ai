@@ -16,9 +16,9 @@ common_router = APIRouter(
 tag_repo = TagRepository()
 
 @common_router.get("/common/types", response_model=common.ListCommonTypes)
-async def list_common_types(db: Session = Depends(PostgresDB.get_db)):
+async def list_common_types():
     try:
-        tags = await tag_repo.list_tag(db)
+        tags = await tag_repo.list_tag()
 
         data = common.ListCommonTypes(
             tag=tags,
