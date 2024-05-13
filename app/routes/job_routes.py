@@ -130,7 +130,6 @@ async def list_jobs_from_qdrant(
 async def get_job_from_qdrant(
     id: int = Query(None, description="Job ID"),
     user_id: Optional[int] = Query(None, description="User ID"),
-    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         req = job.GetJobRequest(
@@ -140,14 +139,14 @@ async def get_job_from_qdrant(
         data = job_qdrant_repo.get_job(input=req)
 
         # Check whether this user applied to this job or not
-        resumes = await resume_repo.get_by_user_id(db, user_id)
+        resumes = await resume_repo.get_by_user_id(user_id)
         resume_ids = []
         for resume in resumes:
             resume_ids.append(resume.id)
-        applications = await application_repo.list_by_resume_ids(db, resume_ids=resume_ids, job_id=id)
+        applications = await application_repo.list_by_resume_ids(resume_ids=resume_ids, job_id=id)
 
         # Check whether this user saved this job or not
-        job_saved = await candidate_repo.get_job_saved_by_candidate_id(db, user_id=user_id, job_id=req.id)
+        job_saved = await candidate_repo.get_job_saved_by_candidate_id(user_id=user_id, job_id=req.id)
 
         if len(applications) > 0:
             data.is_applied = True

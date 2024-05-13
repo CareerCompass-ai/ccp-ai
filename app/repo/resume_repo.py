@@ -24,8 +24,8 @@ class ResumeRepository:
             db.close()
             return resume_instance
         
-    async def get_by_user_id(self, db:Session, user_id) -> List[Resume]:
+    async def get_by_user_id(self, user_id) -> List[Resume]:
         result = self.db.query(Resume).filter(Resume.candidate_id == user_id).all()
 
-        db.close()
+        self.db.close()
         return result
