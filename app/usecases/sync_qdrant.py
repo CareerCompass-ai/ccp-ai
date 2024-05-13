@@ -53,6 +53,8 @@ class SyncUsecase:
             else:
                 # TODO: Handle update object fields in weaviate 
                 # NOTE: weaviate uses uuid. We have already included `job_id` in the payload synced to weaviate, so we might get by job_id then update by the job.uuid
+                if hasattr(job_agg, "s_content"):
+                    delattr(job_agg, "s_content")
                 self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_id, job_agg.model_dump())
                 self.sync_helper.replace_object_weaviate("Job", job_agg)
                 # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
