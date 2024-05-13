@@ -27,7 +27,6 @@ resume_repo = ResumeRepository()
 async def upload(
     candidate_id: str = Form(None),
     file: UploadFile = File(None),
-    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         file_content = await file.read()
@@ -65,7 +64,7 @@ async def upload(
 
             record.content = text_content
 
-        await resume_repo.post_resume(db, input=record)
+        await resume_repo.post_resume(input=record)
 
         return resume.CreateResumePostResponse
     except Exception:
