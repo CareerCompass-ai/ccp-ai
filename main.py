@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # Create a thread for Kafka consumer and set it as a daemon thread
     consumer_thread = threading.Thread(target=start_consumer, daemon=True)
 
-    # Start the Kafka consumer thread
+    #Start the Kafka consumer thread
     consumer_thread.start()
 
     # Start HTTP server in the main thread

@@ -6,7 +6,9 @@ from app.repo.candidate_repo import CandidateRepository
 from typing import Optional
 from datetime import datetime
 from app.dto import candidate
+from config.postgres import PostgresDB
 from models.ccp_job_saved import JobSaved
+from models.ccp_viewedjob import ViewedJob
 
 candidate_router = APIRouter(
     prefix="/api",
@@ -60,5 +62,28 @@ def list_jobs_saved(
     try: 
         data = candidate_repo.get_saved_jobs(candidate_id)
         return data
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@candidate_router.post("/candidate/view-job", response_model=candidate.JobViewdResponse)
+def view_job(
+    req: candidate.CreateJobViewedRequest
+):
+    try:    
+        check = candidate_repo.check_viewed_job(candidate_id=req.candidate_id, job_id=req.job_id)
+        if check is None:
+            now = datetime.now()
+            record = ViewedJob(
+                candidate_id = req.candidate_id,
+                job_id = req.job_id,
+                view_datetime = now,
+                created_at = now,
+                updated_at = now
+            )
+            candidate_repo.create_viewd_job(record=record)
+            
+        return candidate.JobViewdResponse (
+            message="OK",
+        )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

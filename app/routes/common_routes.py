@@ -1,9 +1,11 @@
 from fastapi import status, HTTPException, Depends, APIRouter
+from sqlalchemy.orm import Session
 
 from app.dto import common
 
 from app.repo.tag_repo import TagRepository 
 
+from config.postgres import PostgresDB
 import constant.common as constant
 
 common_router = APIRouter(
@@ -14,9 +16,9 @@ common_router = APIRouter(
 tag_repo = TagRepository()
 
 @common_router.get("/common/types", response_model=common.ListCommonTypes)
-def list_common_types():
+async def list_common_types():
     try:
-        tags = tag_repo.list_tag()
+        tags = await tag_repo.list_tag()
 
         data = common.ListCommonTypes(
             tag=tags,

@@ -58,15 +58,25 @@ class JobAggregate(JobBase):
     is_applied: Optional[bool] = False
     is_saved: Optional[bool] = False
 
+class DynamicFilterCommonField(BaseModel):
+    name: Optional[str]
+    count: Optional[int]
+
+class DynamicFilters(BaseModel):
+    hiring_levels: List[DynamicFilterCommonField] = []
+    job_types: List[DynamicFilterCommonField] = []
+    work_places: List[DynamicFilterCommonField] = []
+    company_types: List[DynamicFilterCommonField] = []
+
 class ListJobResponse(BaseModel):
     count: int
     page: int
     size: int
     records: List[JobAggregate]
+    dynamic_filters: DynamicFilters = DynamicFilters()
 
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
-    user_id: Optional[int] = None
 
 class CreateJobPostRequest(BaseModel):
     file: UploadFile = File(...)

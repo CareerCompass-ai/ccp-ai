@@ -38,6 +38,7 @@ class SyncUsecase:
             old_content = str(payload['before']['content'])
             new_content = str(payload['after']['content'])
 
+            # save money
             if hashlib.md5(old_content.encode()).hexdigest() != hashlib.md5(new_content.encode()).hexdigest():
                 summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
                 vector = self.ai_helper.get_embedding(summarized_content)
@@ -48,10 +49,14 @@ class SyncUsecase:
                 # self.sync_helper.insert_to_weaviate("Job", job_agg)
                 # self.sync_helper.insert_to_weaviate("JobQnA", job_agg)
                 # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
+                self.sync_helper.replace_object_weaviate("Job", job_agg)
             else:
                 # TODO: Handle update object fields in weaviate 
                 # NOTE: weaviate uses uuid. We have already included `job_id` in the payload synced to weaviate, so we might get by job_id then update by the job.uuid
+                if hasattr(job_agg, "s_content"):
+                    delattr(job_agg, "s_content")
                 self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_JOB_SEARCH, job_id, job_agg.model_dump())
+                self.sync_helper.replace_object_weaviate("Job", job_agg)
                 # self.sync_helper.upsert_to_es(constant.ES_INDEX_JOB_SEARCH, job_agg)
         else:
             summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
@@ -89,6 +94,8 @@ class SyncUsecase:
         payload = application.ListJobResponse(
             applied_jobs=jobs_id_list
         )
+
         record = payload.model_dump()
         self.sync_helper.update_fields_qdrant(constant.QDRANT_INDEX_RESUME_SEARCH, resume_id, record)
+        self.sync_helper.update_object_properties_weaviate("Resume", record)
         # TODO: Handle update object fields in weaviate 

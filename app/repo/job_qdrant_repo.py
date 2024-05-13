@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Optional
 
 from qdrant_client.conversions import common_types as types
@@ -6,6 +7,8 @@ from config.qdrant import QdrantVDB
 
 from app.dto import job
 from app.dto import mapper
+import constant
+import constant.common
 
 class JobQdrantRepository:
     def __init__(self, index_name: str):
@@ -34,6 +37,32 @@ class JobQdrantRepository:
                 # If `True` - provide the exact count of points matching the filter.
                 # If `False` - provide the approximate count of points matching the filter. Works faster.
         )
+    
+    def update_dynamic_filters(self, hits, dynamic_filters):
+        for item in hits:
+            payload = item.payload
+            if "hiring_level" in payload:
+                dynamic_filters['hiring_levels'][payload["hiring_level"]] += 1
+            if "job_type" in payload:
+                dynamic_filters['job_types'][payload["job_type"]] += 1
+            if "work_place" in payload:
+                dynamic_filters['work_places'][payload["work_place"]] += 1
+            if "company_type" in payload:
+                dynamic_filters['company_types'][payload["company_type"]] += 1
+
+    def build_dynamic_filters(self, dynamic_filters):
+        hiring_levels_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['hiring_levels'].items()]
+        job_types_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['job_types'].items()]
+        work_places_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['work_places'].items()]
+        company_types_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['company_types'].items()]
+
+        return job.DynamicFilters(
+            hiring_levels=hiring_levels_list,
+            job_types=job_types_list,
+            work_places=work_places_list,
+            company_types=company_types_list
+        )
+
     def reduce_ranges(self, temp_range):
         if not temp_range:
             return []
@@ -74,6 +103,12 @@ class JobQdrantRepository:
         if input.size >= 100:
             input.size = 100
         total_record = 0
+        dynamic_filters = {
+            'hiring_levels': defaultdict(int),
+            'job_types': defaultdict(int),
+            'work_places': defaultdict(int),
+            'company_types': defaultdict(int),
+        }
         
         temp_range = []
         records = []
@@ -269,7 +304,7 @@ class JobQdrantRepository:
 
             if input.hiring_level is not None:
                 input.hiring_level = input.hiring_level.split(',')
-                filter.should.append(
+                filter.must.append(
                     models.FieldCondition(
                         key="hiring_level",
                         match=models.MatchAny(
@@ -288,6 +323,7 @@ class JobQdrantRepository:
                         ),
                     )
                 )
+            
 
             if input.company_type is not None:
                 input.company_type = input.company_type.split(',')
@@ -387,6 +423,8 @@ class JobQdrantRepository:
                     offset=(input.page - 1) * input.size,
                 )
 
+                # TODO: Handle empty result -> will be panicked
+
                 for item in hits:
                     score = item.score
                     payload = item.payload
@@ -396,7 +434,15 @@ class JobQdrantRepository:
 
                     records.append(result)  
                     del result
-            
+
+                hits = self.client.search(
+                    collection_name=self.index_name,
+                    query_vector=input.vectors,
+                    query_filter=filter,
+                    limit=total_record,
+                    offset=(input.page - 1) * input.size,
+                )
+                self.update_dynamic_filters(hits, dynamic_filters)
 
             else:
                 result = self.client.scroll(
@@ -411,24 +457,37 @@ class JobQdrantRepository:
                     with_payload=True,
                     # with_vectors=False
                 )
+
+                # TODO: Handle empty result -> will be panicked
+                
                 for item in result[0]:
                     if item is not None:
                         payload = item.payload
 
                         records.append(mapper.toJobDTO(payload))
-                # offset=(input.page - 1 ) * input.size
-                # hits = result[0][offset:offset+input.size]
-                # for item in hits:
-                #     if item is not None:
-                #         payload = item.payload
 
-                #         records.append(mapper.toJobDTO(payload))   
+                result = self.client.scroll(
+                    collection_name=self.index_name,
+                    scroll_filter=filter,
+                    limit=total_record,
+                    with_payload=True,
+                    # with_vectors=False
+                )
+                self.update_dynamic_filters(result[0], dynamic_filters)
+
             del hits
             del filter
+
+        dynamic_filters['hiring_levels'] = dict(dynamic_filters['hiring_levels'])
+        dynamic_filters['job_types'] = dict(dynamic_filters['job_types'])
+        dynamic_filters['work_places'] = dict(dynamic_filters['work_places'])
+        dynamic_filters['company_types'] = dict(dynamic_filters['company_types'])
+        dynamic_filters_obj = self.build_dynamic_filters(dynamic_filters)
 
         return job.ListJobResponse(
             count=total_record,
             page=input.page,
             size=input.size,
-            records=records
+            records=records,
+            dynamic_filters=dynamic_filters_obj
         )

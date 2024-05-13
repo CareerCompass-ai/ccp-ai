@@ -1,11 +1,15 @@
 from config.postgres import SessionLocal
+from sqlalchemy.orm import Session
 
 from models.ccp_candidate import Candidate
 from models.ccp_resume import Resume
 from models.ccp_application import Application
 from models.ccp_job_saved import JobSaved
 from models.ccp_job import Job
+from models.ccp_viewedjob import ViewedJob
+
 from app.dto import candidate
+
 class CandidateRepository:
     def __init__(self):
         self.db = SessionLocal()
@@ -42,6 +46,8 @@ class CandidateRepository:
                     updated_at=app.updated_at
                 )
             )
+
+        self.db.close()
         return candidate.ListAppliedJobsResponse(
             records=records
         )
@@ -82,6 +88,36 @@ class CandidateRepository:
                     updated_at=job.updated_at
                 )
             )
+
+        self.db.close()
+        
         return candidate.ListSavedJobsResponse(
             records=records
         )
+    
+    # TODO: Refactor this file
+    async def get_job_saved_by_candidate_id(self, user_id, job_id) -> JobSaved:
+        result = self.db.query(JobSaved).filter(JobSaved.candidate_id==user_id, JobSaved.job_id==job_id).first()
+        
+        self.db.close()
+        return result
+    
+    def check_viewed_job(self, candidate_id, job_id) -> candidate.JobViewdResponse:
+        result = self.db.query(ViewedJob).filter(ViewedJob.candidate_id == candidate_id, ViewedJob.job_id == job_id).first()
+        if result is not None:
+            return candidate.JobViewdResponse (
+                job_id=result.job_id,
+                candidate_id=result.candidate_id,
+                time=result.view_datetime
+            )
+        
+        self.db.close()
+
+        return result
+
+    def create_viewd_job(self, record: ViewedJob) -> ViewedJob:
+        self.db.add(record)
+        self.db.commit()
+
+        self.db.close()
+        return record

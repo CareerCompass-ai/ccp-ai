@@ -11,7 +11,11 @@ class JobRepository:
         self.db = SessionLocal()
 
     def get_by_id(self, id):
-        return self.db.query(Job).filter(Job.id == id).first()
+        data = self.db.query(Job).filter(Job.id == id).first()
+
+        self.db.close()
+
+        return data
     
     def create(self, session: Session, record: Optional[job.JobBase]) -> Optional[Job]:
         if record:

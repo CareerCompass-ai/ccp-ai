@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Optional
 from weaviate.classes.query import MetadataQuery
 
@@ -20,11 +21,44 @@ class JobWeaviateRepository:
         if input.size >= 100:
             input.size = 100
 
+        # res = job_collection.query.hybrid(
+        #     query=input.input,
+        #     alpha=input.alpha,
+        #     limit=input.size,
+        #     return_metadata=MetadataQuery(score=True, explain_score=True),
+        # )
+
+        # records = []
+        # for o in res.objects:
+        #     records.append(mapper.toJobWeaviateDTO(o))
+
+        
+
+        # return job.ListJobResponse(
+        #     count=len(records), # FIXME: count total record by input and filters
+        #     page=1,
+        #     size=input.size,
+        #     records=records,
+        # )
+    
+        filter_conditions = []
+        if input.company_type:
+            company_types = input.company_type.split(',')
+            for company_type in company_types:
+                filter_conditions.append({
+                    "key": "company_type",
+                    "operator": "Equal",
+                    "valueString": company_type
+                })
+
         res = job_collection.query.hybrid(
             query=input.input,
             alpha=input.alpha,
             limit=input.size,
             return_metadata=MetadataQuery(score=True, explain_score=True),
+            # filters=filter_conditions,
+            query_properties=["content"]
+            # fusion_type=
         )
 
         records = []
@@ -32,8 +66,8 @@ class JobWeaviateRepository:
             records.append(mapper.toJobWeaviateDTO(o))
 
         return job.ListJobResponse(
-            count=len(records), # FIXME: count total record by input and filters
+            count=len(records),
             page=1,
-            size=100,
-            records=records
+            size=input.size,
+            records=records,
         )
