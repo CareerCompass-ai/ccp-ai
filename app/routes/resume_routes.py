@@ -1,15 +1,18 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from datetime import datetime
+import os, PyPDF2
+from io import BytesIO
+
 from config.qdrant import QdrantVDB as qdrant
+from config.postgres import PostgresDB
 
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.resume_minio_repo import ResumeMinioRepository
 from app.repo.resume_repo import ResumeRepository
 from app.dto import resume
-from datetime import datetime
-
-import os, PyPDF2
-from io import BytesIO
 
 resume_router = APIRouter(
     prefix="/api",
@@ -24,6 +27,7 @@ resume_repo = ResumeRepository()
 async def upload(
     candidate_id: str = Form(None),
     file: UploadFile = File(None),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         file_content = await file.read()
@@ -61,7 +65,7 @@ async def upload(
 
             record.content = text_content
 
-        resume_repo.post_resume(input=record)
+        await resume_repo.post_resume(db, input=record)
 
         return resume.CreateResumePostResponse
     except Exception:

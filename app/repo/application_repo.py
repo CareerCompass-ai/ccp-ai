@@ -17,18 +17,19 @@ class ApplicationRepository:
         
         return [job_id for (job_id,) in job_ids]
     
-    def create(self, session: Session, record: Application) -> Application:
+    async def create(self, session: Session, record: Application) -> Application:
         session.add(record)
         session.flush()
         session.refresh(record)
 
         return record
     
-    def list_by_resume_ids(self, resume_ids: list[int], job_id: int) -> list[Application]:
+    async def list_by_resume_ids(self, db:Session, resume_ids: list[int], job_id: int) -> list[Application]:
         applications = (
             self.db.query(Application).
             filter(Application.resume_id.in_(resume_ids), Application.job_id == job_id).
             all()
         )
 
+        db.close()
         return applications

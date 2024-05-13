@@ -35,6 +35,8 @@ from app.dto import application
 from app.ai.ai_helper import AI
 
 import constant.ai as constant
+from config.postgres import PostgresDB
+
 
 job_router = APIRouter(
     prefix="/api",
@@ -55,7 +57,7 @@ candidate_repo = CandidateRepository()
 ai_helper = AI()
 
 @job_router.get("/jobs", response_model=job.ListJobResponse)
-def list_jobs_from_qdrant(
+async def list_jobs_from_qdrant(
     page: Optional[int] = Query(None, description="Page number"),
     size: Optional[int] = Query(None, description="Page size"),
     input: Optional[str] = Query(None, description="Input text for vector search"),
@@ -125,9 +127,10 @@ def list_jobs_from_qdrant(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     
 @job_router.get("/job", response_model=job.JobAggregate)
-def get_job_from_qdrant(
+async def get_job_from_qdrant(
     id: int = Query(None, description="Job ID"),
     user_id: Optional[int] = Query(None, description="User ID"),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         req = job.GetJobRequest(
@@ -137,14 +140,14 @@ def get_job_from_qdrant(
         data = job_qdrant_repo.get_job(input=req)
 
         # Check whether this user applied to this job or not
-        resumes = resume_repo.get_by_user_id(user_id)
+        resumes = await resume_repo.get_by_user_id(db, user_id)
         resume_ids = []
         for resume in resumes:
             resume_ids.append(resume.id)
-        applications = application_repo.list_by_resume_ids(resume_ids=resume_ids, job_id=id)
+        applications = await application_repo.list_by_resume_ids(db, resume_ids=resume_ids, job_id=id)
 
         # Check whether this user saved this job or not
-        job_saved = candidate_repo.get_job_saved_by_candidate_id(user_id=user_id, job_id=req.id)
+        job_saved = await candidate_repo.get_job_saved_by_candidate_id(db, user_id=user_id, job_id=req.id)
 
         if len(applications) > 0:
             data.is_applied = True
@@ -250,7 +253,7 @@ async def create(
             file.file.close()
 
 @job_router.get("/job/{id}/resumes", response_model=resume.ListResumeResponse)
-def list_resumes_from_qdrant(
+async def list_resumes_from_qdrant(
         id: int = Path(..., title="Job ID"),
         page: Optional[int] = Query(None, description="Page numeber"),
         size: Optional[int] = Query(None, description="Page size")
@@ -268,7 +271,7 @@ def list_resumes_from_qdrant(
     
 
 @job_router.post("/job/apply", response_model=job.ApplyJobResponse)
-def apply(
+async def apply(
         req: Optional[job.ApplyJobRequest], 
         session: Session = Depends(postgres.PostgresDB.get_db)
     ):
@@ -285,7 +288,7 @@ def apply(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                application_repo.create(session, record)
+                await application_repo.create(session, record)
 
                 return job.ApplyJobResponse()
             
@@ -301,7 +304,7 @@ def apply(
     
 
 @job_router.post("/job/close", response_model=job.CloseJobResponse)
-def apply(
+async def apply(
         req: Optional[job.CloseJobRequest], 
         session: Session = Depends(postgres.PostgresDB.get_db)
     ):
@@ -327,8 +330,3 @@ def apply(
             
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-
-@job_router.get("/qdrant/health-check")
-async def root():
-    return {"message": "Good"}
