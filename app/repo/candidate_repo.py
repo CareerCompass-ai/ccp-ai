@@ -90,8 +90,8 @@ class CandidateRepository:
         )
     
     # TODO: Refactor this file
-    def get_job_saved_by_candidate_id(self, user_id) -> JobSaved:
-        result = self.db.query(JobSaved).filter(JobSaved.candidate_id==user_id).first()
+    def get_job_saved_by_candidate_id(self, user_id, job_id) -> JobSaved:
+        result = self.db.query(JobSaved).filter(JobSaved.candidate_id==user_id, JobSaved.job_id==job_id).first()
         
         return result
     

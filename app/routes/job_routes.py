@@ -141,10 +141,10 @@ def get_job_from_qdrant(
         resume_ids = []
         for resume in resumes:
             resume_ids.append(resume.id)
-        applications = application_repo.list_by_resume_ids(resume_ids)
+        applications = application_repo.list_by_resume_ids(resume_ids=resume_ids, job_id=id)
 
         # Check whether this user saved this job or not
-        job_saved = candidate_repo.get_job_saved_by_candidate_id(user_id)
+        job_saved = candidate_repo.get_job_saved_by_candidate_id(user_id=user_id, job_id=req.id)
 
         if len(applications) > 0:
             data.is_applied = True

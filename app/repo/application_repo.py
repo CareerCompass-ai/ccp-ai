@@ -24,11 +24,11 @@ class ApplicationRepository:
 
         return record
     
-    def list_by_resume_ids(self, resume_ids: list[int]) -> list[Application]:
+    def list_by_resume_ids(self, resume_ids: list[int], job_id: int) -> list[Application]:
         applications = (
             self.db.query(Application).
-            filter(Application.resume_id.in_(resume_ids)).
+            filter(Application.resume_id.in_(resume_ids), Application.job_id == job_id).
             all()
         )
-        
+
         return applications
