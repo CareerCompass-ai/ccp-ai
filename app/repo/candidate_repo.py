@@ -1,4 +1,5 @@
 from config.postgres import SessionLocal
+from sqlalchemy.orm import Session
 
 from models.ccp_candidate import Candidate
 from models.ccp_resume import Resume
@@ -16,7 +17,7 @@ class CandidateRepository:
     def get_by_id(self, id):
         return self.db.query(Candidate).filter(Candidate.id == id).first()
     
-    def get_applied_jobs(self, id) -> candidate.ListAppliedJobsResponse:
+    def get_applied_jobs(self, db:Session, id) -> candidate.ListAppliedJobsResponse:
         applications = self.db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                                      Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Application.created_at, Application.updated_at)\
             .join(Resume, Application.resume_id == Resume.id)\
@@ -45,6 +46,8 @@ class CandidateRepository:
                     updated_at=app.updated_at
                 )
             )
+
+        self.db.close()
         return candidate.ListAppliedJobsResponse(
             records=records
         )
@@ -85,14 +88,18 @@ class CandidateRepository:
                     updated_at=job.updated_at
                 )
             )
+
+        self.db.close()
+        
         return candidate.ListSavedJobsResponse(
             records=records
         )
     
     # TODO: Refactor this file
-    def get_job_saved_by_candidate_id(self, user_id, job_id) -> JobSaved:
+    async def get_job_saved_by_candidate_id(self, user_id, job_id) -> JobSaved:
         result = self.db.query(JobSaved).filter(JobSaved.candidate_id==user_id, JobSaved.job_id==job_id).first()
         
+        self.db.close()
         return result
     
     def check_viewed_job(self, candidate_id, job_id) -> candidate.JobViewdResponse:
@@ -103,9 +110,14 @@ class CandidateRepository:
                 candidate_id=result.candidate_id,
                 time=result.view_datetime
             )
+        
+        self.db.close()
+
         return result
 
     def create_viewd_job(self, record: ViewedJob) -> ViewedJob:
         self.db.add(record)
         self.db.commit()
+
+        self.db.close()
         return record

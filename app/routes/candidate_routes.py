@@ -6,6 +6,7 @@ from app.repo.candidate_repo import CandidateRepository
 from typing import Optional
 from datetime import datetime
 from app.dto import candidate
+from config.postgres import PostgresDB
 from models.ccp_job_saved import JobSaved
 from models.ccp_viewedjob import ViewedJob
 
@@ -19,9 +20,10 @@ candidate_repo = CandidateRepository()
 @candidate_router.get("/candidate/applied", response_model=candidate.ListAppliedJobsResponse)
 def list_jobs_applied(
         candidate_id: Optional[int] = Query(None, description="Candidate/User ID"),
+        db: Session = Depends(PostgresDB.get_db)
     ):
     try:
-        data = candidate_repo.get_applied_jobs(candidate_id)
+        data = candidate_repo.get_applied_jobs(db, candidate_id)
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
