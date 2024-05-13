@@ -13,7 +13,7 @@ class TagRepository:
     def get_by_id(self, id):
         return self.db.query(Tag).filter(Tag.id == id).first()
 
-    def list_tag(self) -> List[Tag]:
+    async def list_tag(self, db:Session) -> List[Tag]:
         records = self.db.query(Tag).all()
 
         tags = []
@@ -23,5 +23,7 @@ class TagRepository:
                 tag_name=item.tag_name, 
             )
             tags.append(tag_aggregate)
+
+        db.close()
 
         return tags

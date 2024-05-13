@@ -1,6 +1,6 @@
 from typing import List
 
-from config.postgres import SessionLocal
+from config.postgres import SessionLocal, thread_local_session
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract, desc, and_
 from models.ccp_job import Job
@@ -18,8 +18,9 @@ from models.ccp_address import Address
 class AnalysisRepository:
     def __init__(self):
         self.db = SessionLocal()
+        # self.thread_local_session = thread_local_session()
 
-    def get_top_job_titles(self, month=None, year=None) -> analysis.ListTopJobTitlesResponse:
+    async def get_top_job_titles(self, db:Session, month=None, year=None) -> analysis.ListTopJobTitlesResponse:
         query = self.db.query(Job.common_job_title, func.count(Job.id).label('job_count'))
 
         if month is not None:
@@ -40,9 +41,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+        
         return analysis.ListTopJobTitlesResponse (data=data)
     
-    def get_top_leader_salaries(self, limit=5, hiring_level=None, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
+    async def get_top_leader_salaries(self, db:Session, limit=5, hiring_level=None, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
         query = self.db.query(Job.id, Job.job_title, Job.job_type, Job.company_type, Job.work_place, func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).label('average_salary'))
 
         if hiring_level is not None:
@@ -70,9 +73,11 @@ class AnalysisRepository:
                 )
             )
 
+        db.close()
+
         return analysis.ListTopJobTitlesSalaryResponse(data=data)
     
-    def get_most_applied_job_titles(self, month=None, year=None) -> analysis.ListTopAppliedJobTitlesResponse:
+    async def get_most_applied_job_titles(self, db:Session, month=None, year=None) -> analysis.ListTopAppliedJobTitlesResponse:
         query = self.db.query(Job.common_job_title, func.count().label('job_count')) \
                     .join(Application, Job.id == Application.job_id)
 
@@ -95,9 +100,11 @@ class AnalysisRepository:
                 )
             )
 
+        db.close()
+    
         return analysis.ListTopAppliedJobTitlesResponse(data=data)
     
-    def get_top_skills (self, top_number) -> analysis.GetTopSkillResponse:
+    async def get_top_skills (self, db:Session, top_number:int) -> analysis.GetTopSkillResponse:
         records = self.db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
                         .join(JobTag, Tag.id == JobTag.tag_id) \
                         .group_by(Tag.id, Tag.tag_name) \
@@ -115,9 +122,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.GetTopSkillResponse(data=data)        
     
-    def number_of_company_type (self) -> analysis.GetNumberOfCompanyTypeResponse:
+    async def number_of_company_type (self, db:Session) -> analysis.GetNumberOfCompanyTypeResponse:
         records = self.db.query(Job.company_type, func.count(Job.id).label('company_type_count')).group_by(Job.company_type).all()
         
         data = []
@@ -129,9 +138,11 @@ class AnalysisRepository:
                 )
             )    
 
+        db.close()
+
         return analysis.GetNumberOfCompanyTypeResponse(data=data)
     
-    def get_number_of_new_user(self, time_from, time_to) -> analysis.GetNumberOfNewUser:
+    async def get_number_of_new_user(self, db:Session, time_from, time_to) -> analysis.GetNumberOfNewUser:
         records = self.db.query(User.id, User.role, User.created_at) \
                         .filter(and_(User.created_at >= time_from,User.created_at <= time_to )) \
                         .all()
@@ -146,9 +157,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.GetNumberOfNewUser(data=data)
     
-    def count_all_number_of_user_by_role(self) -> analysis.GetNumberOfAllNewUser:
+    async def count_all_number_of_user_by_role(self, db:Session) -> analysis.GetNumberOfAllNewUser:
         records = self.db.query(User.role, func.count(User.id).label('user_count')).group_by(User.role).all()
         
         data = []
@@ -160,9 +173,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.GetNumberOfAllNewUser(data=data)
 
-    def percentage_of_different_job_status(self) -> analysis.GetNumberOfJobStatus:
+    async def percentage_of_different_job_status(self, db:Session) -> analysis.GetNumberOfJobStatus:
         records = self.db.query(Job.is_hiring, func.count(Job.id).label('status_count')) \
                         .group_by(Job.is_hiring) \
                         .all()
@@ -176,10 +191,12 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.GetNumberOfJobStatus(data=data)
     
 
-    def get_top_recruiters_job_posting (self, top_number, time_from, time_to) -> analysis.GetTopRecruiterJobPosting:
+    async def get_top_recruiters_job_posting (self, db:Session, top_number, time_from, time_to) -> analysis.GetTopRecruiterJobPosting:
         if time_from != 'None' and time_to != 'None':
             records = self.db.query(Job.recruiter_id, func.concat(User.first_name, ' ', User.last_name).label('full_name'), func.count(Job.id).label('post_count')) \
                             .join(User, Job.recruiter_id == User.id) \
@@ -206,9 +223,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.GetTopRecruiterJobPosting(data=data)
     
-    def get_top_viewed_jobs (self, top_number, time_from, time_to) -> analysis.GetTopViewedJob:
+    async def get_top_viewed_jobs (self, db:Session, top_number, time_from, time_to) -> analysis.GetTopViewedJob:
         if time_from != 'None' and time_to != 'None':
             records = self.db.query(Job.common_job_title, func.count(Job.id).label('viewed_count')) \
                             .join(ViewedJob, ViewedJob.job_id == Job.id) \
@@ -234,9 +253,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.GetTopViewedJob(data=data)
     
-    def get_top_work_titles(self, top_number=10) -> analysis.ListTopWorkTitlesResponse:
+    async def get_top_work_titles(self, db:Session, top_number=10) -> analysis.ListTopWorkTitlesResponse:
         query = self.db.query(User.work_title, func.count(Candidate.id).label('candidate_count')) \
             .join(Candidate, User.id == Candidate.id) \
             .group_by(User.work_title).order_by(func.count(Candidate.id).desc()).limit(top_number)
@@ -252,9 +273,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.ListTopWorkTitlesResponse (data=data)
 
-    def get_change_job_salary_by_time(self, time_from, time_to, level) -> analysis.ListChangeJobSalaryResponse:
+    async def get_change_job_salary_by_time(self, db:Session, time_from, time_to, level) -> analysis.ListChangeJobSalaryResponse:
         query = self.db.query (
             func.date_trunc('month', Job.updated_at).label('month'),
             Job.common_job_title,
@@ -286,9 +309,11 @@ class AnalysisRepository:
                 )
             )
         
+        db.close()
+
         return analysis.ListChangeJobSalaryResponse(data=data)
 
-    def get_number_jobs_by_city(self, country, job_title, level) -> analysis.ListNumberofJobsByCityResponse:
+    async def get_number_jobs_by_city(self, db:Session, country, job_title, level) -> analysis.ListNumberofJobsByCityResponse:
         query = self.db.query(
             City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
         ).join(
@@ -323,9 +348,10 @@ class AnalysisRepository:
                     count=item.job_number
                 )
             )
+        
+        db.close()
+
         return analysis.ListNumberofJobsByCityResponse(
             country=records[0][1],
             data=data
         )
-
-        

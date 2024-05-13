@@ -1,4 +1,5 @@
 from config.postgres import SessionLocal
+from sqlalchemy.orm import Session
 
 from models.ccp_resume import Resume
 from app.dto import resume
@@ -12,15 +13,19 @@ class ResumeRepository:
         result = self.db.query(Resume).filter(Resume.id == id).first()
         return result
     
-    def post_resume(self, input: Optional[resume.ResumeBase]):
+    async def post_resume(self, db:Session, input: Optional[resume.ResumeBase]):
         if input:
             resume_instance = Resume(**input.model_dump())
             resume_instance.id = None
             self.db.add(resume_instance)
             self.db.commit()
             self.db.refresh(resume_instance)
+
+            db.close()
             return resume_instance
         
-    def get_by_user_id(self, user_id) -> List[Resume]:
+    async def get_by_user_id(self, db:Session, user_id) -> List[Resume]:
         result = self.db.query(Resume).filter(Resume.candidate_id == user_id).all()
+
+        db.close()
         return result
