@@ -3,9 +3,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.repo.candidate_repo import CandidateRepository
+from app.repo.resume_repo import ResumeRepository
 from typing import Optional
 from datetime import datetime
 from app.dto import candidate
+from app.dto import resume
 from config.postgres import PostgresDB
 from models.ccp_job_saved import JobSaved
 from models.ccp_viewedjob import ViewedJob
@@ -16,6 +18,7 @@ candidate_router = APIRouter(
 )
 
 candidate_repo = CandidateRepository()
+resume_repo = ResumeRepository()
 
 @candidate_router.get("/candidate/applied", response_model=candidate.ListAppliedJobsResponse)
 def list_jobs_applied(
@@ -87,3 +90,24 @@ def view_job(
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@candidate_router.get("/resumes", response_model=resume.GetResumesOfCandidateResponse)
+async def list_resume_of_candidate(
+    candidate_id: Optional[int] = Query(None, description="Candidate ID"),
+):
+    try:
+        data = await resume_repo.get_by_user_id(candidate_id)
+
+        resume_records = [resume.ResumeBase(
+            id=res.id,
+            candidate_id=res.candidate_id,
+            # content=res.content,
+            resume_link=res.resume_link,
+            resume_name=res.resume_name,
+            created_at=res.created_at,
+            updated_at=res.updated_at
+        ) for res in data]
+
+        return resume.GetResumesOfCandidateResponse(records=resume_records)
+    except Exception:
+        return {"message": "There was an error listing resumes of a candidate"}
