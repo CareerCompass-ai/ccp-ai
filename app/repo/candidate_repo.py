@@ -117,10 +117,3 @@ class CandidateRepository:
         self.db.close()
 
         return result
-
-    def create_viewd_job(self, record: ViewedJob) -> ViewedJob:
-        self.db.add(record)
-        self.db.commit()
-
-        self.db.close()
-        return record
