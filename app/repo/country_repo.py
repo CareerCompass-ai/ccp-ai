@@ -25,4 +25,7 @@ class CountryRepository:
                 updated_at=item.updated_at
             )
             country_aggregates.append(country_aggregate)
+
+        self.db.close()
+        
         return country_aggregates

@@ -6,7 +6,7 @@ class RecruiterRepository:
     def __init__(self):
         self.db = SessionLocal()
         
-    def get_jobs_posted(self, id) -> recruiter.ListJobsPostedResponse:
+    async def get_jobs_posted(self, id) -> recruiter.ListJobsPostedResponse:
         result =  self.db.query(Job.id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                                 Job.salary_from, Job.salary_to, Job.job_type, Job.work_place,
                                  Job.company_type, Job.hiring_level, Job.created_at, Job.updated_at, Job.applied_count).filter(Job.recruiter_id == id).all()
@@ -31,6 +31,8 @@ class RecruiterRepository:
                     applied_count=job.applied_count
                 )
             )
+
+        self.db.close()
         
         return recruiter.ListJobsPostedResponse (records=record)
         
