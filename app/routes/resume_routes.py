@@ -74,25 +74,3 @@ async def upload(
     finally:
         if file is not None:
             file.file.close()
-
-
-@resume_router.get("/resumes", response_model=resume.GetResumesOfCandidateResponse)
-async def list_resume_of_candidate(
-    user_id: Optional[int] = Query(None, description="User ID"),
-):
-    try:
-        data = await resume_repo.get_by_user_id(user_id)
-
-        resume_records = [resume.ResumeBase(
-            id=res.id,
-            candidate_id=res.candidate_id,
-            # content=res.content,
-            resume_link=res.resume_link,
-            resume_name=res.resume_name,
-            created_at=res.created_at,
-            updated_at=res.updated_at
-        ) for res in data]
-
-        return resume.GetResumesOfCandidateResponse(records=resume_records)
-    except Exception:
-        return {"message": "There was an error listing resumes of a candidate"}
