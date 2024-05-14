@@ -14,7 +14,7 @@ class CityRepository:
 
         return self.db.query(City).where(City.id == id).first()
     
-    def get_countries(self, db: Session) -> List[City]:
+    def get_cities(self, db: Session) -> List[City]:
         cities = db.query(City).all()
         city_aggregates = []
         for item in cities:
@@ -26,4 +26,7 @@ class CityRepository:
                 updated_at=item.updated_at
             )
             city_aggregates.append(city_aggregate)
+        
+        self.db.close()
+        
         return city_aggregates

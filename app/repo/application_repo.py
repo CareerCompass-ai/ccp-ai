@@ -32,4 +32,5 @@ class ApplicationRepository:
         )
 
         self.db.close()
+        
         return applications

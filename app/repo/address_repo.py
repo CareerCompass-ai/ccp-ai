@@ -25,4 +25,7 @@ class AddressRepository:
                 updated_at=item.updated_at
             )
             address_aggregates.append(address_aggregate)
+
+        self.db.close()
+        
         return address_aggregates
