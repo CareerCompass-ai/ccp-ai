@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from datetime import datetime
 import os, PyPDF2
+import uuid
 from io import BytesIO
 
 from config.qdrant import QdrantVDB as qdrant
@@ -37,18 +38,18 @@ async def upload(
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
         
-        url = resume_minio_repo.upload_resume_to_minio(input=resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=file.filename))
+        url = resume_minio_repo.upload_resume_to_minio(input=resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=str(uuid.uuid4())+"-"+file.filename))
+        presigned_url = resume_minio_repo.generate_presigned_url(object_name=str(url))
 
         os.remove(temp_file_path)
 
-        content_url = url.url
 
         now = datetime.now()
 
         record = resume.ResumeBase(
             candidate_id=candidate_id,
             resume_name=file.filename,
-            resume_link=content_url,
+            resume_link=presigned_url,
             created_at=now,
             updated_at=now
         )
@@ -74,25 +75,3 @@ async def upload(
     finally:
         if file is not None:
             file.file.close()
-
-
-@resume_router.get("/resumes", response_model=resume.GetResumesOfCandidateResponse)
-async def list_resume_of_candidate(
-    user_id: Optional[int] = Query(None, description="User ID"),
-):
-    try:
-        data = await resume_repo.get_by_user_id(user_id)
-
-        resume_records = [resume.ResumeBase(
-            id=res.id,
-            candidate_id=res.candidate_id,
-            # content=res.content,
-            resume_link=res.resume_link,
-            resume_name=res.resume_name,
-            created_at=res.created_at,
-            updated_at=res.updated_at
-        ) for res in data]
-
-        return resume.GetResumesOfCandidateResponse(records=resume_records)
-    except Exception:
-        return {"message": "There was an error listing resumes of a candidate"}
