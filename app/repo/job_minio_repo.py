@@ -31,3 +31,9 @@ class JobMinioRepository:
             return self.client.presigned_put_object(constant.MINIO_BUCKET_JOB, object_name)
         except S3Error as err:
             print(f"Error generating pre-signed URL: {err}")
+
+    def remove_job_from_minio(self, file_name):
+        if self.client.bucket_exists(constant.MINIO_BUCKET_JOB):
+            self.client.remove_object(constant.MINIO_BUCKET_JOB, str(file_name))
+        else:
+            print("Bucket does not exist")

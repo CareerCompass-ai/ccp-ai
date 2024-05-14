@@ -24,6 +24,7 @@ class JobBase(BaseModel):
     work_place: Optional[str] = ""
     common_job_title: Optional[str] = ""
     recruiter_id: Optional[int] = None
+    file_name: Optional[str] = None
 
 class ListJobRequest(BaseModel):
     page: Optional[int]

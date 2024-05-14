@@ -186,7 +186,10 @@ async def create(
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
 
-        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=str(uuid.uuid4())+"-"+file.filename))
+        #Generate file name
+        file_name  = str(uuid.uuid4())+"-"+file.filename
+
+        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file_name))
         presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
 
         os.remove(temp_file_path)
@@ -210,6 +213,7 @@ async def create(
             address_id=address_id,
             recruiter_id=recruiter_id,
             hiring_level=hiring_level,
+            file_name=file_name,
             created_at=now,
             updated_at=now,
         )
@@ -327,5 +331,98 @@ async def apply(
                 session.rollback()
                 raise e
             
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@job_router.put("/job/update")
+async def update_job(
+    job_id: int,
+    job_title: str = Form(None),
+    opened_date: str = Form(None) ,
+    closed_date: str = Form(None) ,
+    salary_from: str = Form(None) ,
+    salary_to: str = Form(None) ,
+    job_type: str = Form(None) ,
+    company_type: str = Form(None) ,
+    address_id: str = Form(None) ,
+    hiring_level: str = Form(None), 
+    work_place: str = Form(None) ,
+    tags: str = Form(None),
+    file: UploadFile = File(None),
+    session: Session = Depends(postgres.PostgresDB.get_db),
+):
+    try:
+        
+        if tags is not None:
+            #Remove jobtags
+            jobtag_repo.delete_jobtags(job_id=job_id)
+            #Update jobtags
+            tags = tags.split(',')
+            for tag_id in tags:
+                jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
+
+        data = job_repo.get_by_id(job_id)
+        now = datetime.now()
+
+        props = {
+            "job_title": job_title,
+            "opened_date": opened_date,
+            "closed_date": closed_date,
+            "salary_from": salary_from,
+            "salary_to": salary_to,
+            "job_type": job_type,
+            "company_type": company_type,
+            "address_id": address_id,
+            "hiring_level": hiring_level,
+            "work_place": work_place,
+            "updated_at": now
+        }
+
+        if file is not None:
+            #Get file name
+            file_name = job_repo.get_file_name(job_id)
+
+            #Delete file in minio
+            job_minio_repo.remove_job_from_minio(file_name=file_name)
+
+
+            file_content = await file.read()
+
+            temp_dir = os.path.dirname(os.path.abspath(__file__))
+
+            temp_file_path = os.path.join(temp_dir, file.filename)
+            with open(temp_file_path, "wb") as temp_file:
+                temp_file.write(file_content)
+
+            #Generate file name
+            new_file_name  = str(uuid.uuid4())+"-"+file.filename
+
+            url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=new_file_name))
+            presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
+
+            os.remove(temp_file_path)
+
+            #Get content from pdf
+            pdf_file = BytesIO(file_content)
+
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+
+            text_content = ""
+            for page_num in range(len(pdf_reader.pages)):
+                text_content += pdf_reader.pages[page_num].extract_text()
+
+            props["content"] = text_content
+            props["content_url"] = presigned_url
+            props["file_name"] = new_file_name
+        
+        session.autocommit = False # TODO: remove this?
+        with session.begin():
+            try:
+                job_repo.update_with_map(data, props)
+
+            except SQLAlchemyError as e:
+                session.rollback()
+                raise e
+        
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

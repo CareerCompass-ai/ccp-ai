@@ -37,3 +37,10 @@ class JobRepository:
 
     def get_latest_job(self) -> Optional[Job]:
         return self.db.query(Job).order_by(desc(Job.updated_at)).first()
+    
+    def get_file_name(self, job_id: int):
+        data = self.db.query(Job.file_name).filter(Job.id == job_id).first()
+
+        self.db.close()
+
+        return data
