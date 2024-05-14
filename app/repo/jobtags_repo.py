@@ -52,3 +52,7 @@ class JobTagsRepository:
         session.refresh(record)  
 
         return record
+
+    def delete_jobtags(self, job_id: int):
+        self.db.query(JobTag).filter(JobTag.job_id == job_id).delete()
+        self.db.commit()

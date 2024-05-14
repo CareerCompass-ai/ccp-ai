@@ -37,8 +37,11 @@ async def upload(
         temp_file_path = os.path.join(temp_dir, file.filename)
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
-        
-        url = resume_minio_repo.upload_resume_to_minio(input=resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=str(uuid.uuid4())+"-"+file.filename))
+
+        #Generate file name
+        file_name = str(uuid.uuid4())+"-"+file.filename
+
+        url = resume_minio_repo.upload_resume_to_minio(input=resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=file_name))
         presigned_url = resume_minio_repo.generate_presigned_url(object_name=str(url))
 
         os.remove(temp_file_path)
@@ -48,7 +51,7 @@ async def upload(
 
         record = resume.ResumeBase(
             candidate_id=candidate_id,
-            resume_name=file.filename,
+            resume_name=file_name,
             resume_link=presigned_url,
             created_at=now,
             updated_at=now
