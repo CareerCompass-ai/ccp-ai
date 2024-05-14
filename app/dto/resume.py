@@ -50,3 +50,6 @@ class ResumeRequest(BaseModel):
 
 class CreateResumePostResponse(BaseModel):
     message: str = "Resume post created successfully"
+
+class GetResumesOfCandidateResponse(BaseModel):
+    records: List[ResumeBase]
