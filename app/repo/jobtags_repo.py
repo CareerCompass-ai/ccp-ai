@@ -24,6 +24,9 @@ class JobTagsRepository:
                 updated_at=item.updated_at
             )
             jobtag_aggregates.append(jobtag_aggregate)
+
+        self.db.close()
+        
         return jobtag_aggregates
     
     def get_jobtags_for_job(self, job_id: int) -> List[JobTag]:
@@ -37,6 +40,9 @@ class JobTagsRepository:
                 updated_at=item.updated_at
             )
             jobtag_aggregates.append(jobtag_aggregate)
+
+        self.db.close()
+
         return jobtag_aggregates
     
     def create(self, session: Session, tag_id: int, job_id: int) -> JobTag:

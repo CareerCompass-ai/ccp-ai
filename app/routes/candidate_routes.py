@@ -67,30 +67,7 @@ def list_jobs_saved(
         return data
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
-@candidate_router.post("/candidate/view-job", response_model=candidate.JobViewdResponse)
-def view_job(
-    req: candidate.CreateJobViewedRequest
-):
-    try:    
-        check = candidate_repo.check_viewed_job(candidate_id=req.candidate_id, job_id=req.job_id)
-        if check is None:
-            now = datetime.now()
-            record = ViewedJob(
-                candidate_id = req.candidate_id,
-                job_id = req.job_id,
-                view_datetime = now,
-                created_at = now,
-                updated_at = now
-            )
-            candidate_repo.create_viewd_job(record=record)
-            
-        return candidate.JobViewdResponse (
-            message="OK",
-        )
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
+
 @candidate_router.get("/resumes", response_model=resume.GetResumesOfCandidateResponse)
 async def list_resume_of_candidate(
     candidate_id: Optional[int] = Query(None, description="Candidate ID"),

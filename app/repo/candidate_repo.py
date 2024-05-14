@@ -48,6 +48,7 @@ class CandidateRepository:
             )
 
         self.db.close()
+        
         return candidate.ListAppliedJobsResponse(
             records=records
         )
@@ -55,6 +56,7 @@ class CandidateRepository:
     def create_saved_job(self, record: JobSaved) -> JobSaved:
         self.db.add(record)
         self.db.commit()
+
         return record
 
     def delete_saved_job(self, record: JobSaved) -> candidate.UpdateSaveJobResponse:
@@ -100,6 +102,7 @@ class CandidateRepository:
         result = self.db.query(JobSaved).filter(JobSaved.candidate_id==user_id, JobSaved.job_id==job_id).first()
         
         self.db.close()
+
         return result
     
     def check_viewed_job(self, candidate_id, job_id) -> candidate.JobViewdResponse:
@@ -114,10 +117,3 @@ class CandidateRepository:
         self.db.close()
 
         return result
-
-    def create_viewd_job(self, record: ViewedJob) -> ViewedJob:
-        self.db.add(record)
-        self.db.commit()
-
-        self.db.close()
-        return record

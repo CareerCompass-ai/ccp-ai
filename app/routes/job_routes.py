@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -7,7 +8,9 @@ import os
 from io import BytesIO
 import uuid
 
+from producer.producer import KafkaProducer
 
+from constant import config as cfg
 from config.postgres import SessionLocal
 from config import postgres
 from config.qdrant import QdrantVDB as qdrant
@@ -55,6 +58,8 @@ resume_repo = ResumeRepository()
 candidate_repo = CandidateRepository()
 
 ai_helper = AI()
+kafka_producer = KafkaProducer()
+
 
 @job_router.get("/jobs", response_model=job.ListJobResponse)
 async def list_jobs_from_qdrant(
@@ -125,7 +130,7 @@ async def list_jobs_from_qdrant(
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-    
+
 @job_router.get("/job", response_model=job.JobAggregate)
 async def get_job_from_qdrant(
     id: int = Query(None, description="Job ID"),
@@ -153,6 +158,14 @@ async def get_job_from_qdrant(
 
         if job_saved is not None:
             data.is_saved = True
+
+        # TODO: push message to kafka
+        payload = {
+            "user_id": user_id,
+            "job_id": id
+        }
+        kafka_producer.produce_message(cfg.KAFKA_TOPIC_JOB_VIEW, payload)
+
 
         return data
     except Exception as e:
