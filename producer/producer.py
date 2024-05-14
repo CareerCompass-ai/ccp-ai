@@ -1,0 +1,28 @@
+from confluent_kafka import Producer
+import json
+import constant.config as cfg
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+
+class KafkaProducer:
+    def __init__(self):
+        conf = {
+            'bootstrap.servers': f'{cfg.SERVER_IP}:{cfg.KAFKA_PORT}',
+        }
+        self.producer = Producer(conf)
+
+    def produce_message(self, topic_name: str, payload: dict):
+        """
+        Produce a message to a Kafka topic.
+
+        Parameters:
+        - topic_name (str): The name of the Kafka topic.
+        - payload (dict): The message payload to be sent.
+        """
+        try:
+            self.producer.produce(topic_name, json.dumps(payload))
+            self.producer.flush()
+        except Exception as e:
+            logging.error(f"Failed to produce message: {e}")
