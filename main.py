@@ -1,19 +1,18 @@
-import threading
 import uvicorn
 from app.server import app
-from worker.start_consumer import start_kafka_consumer
 import constant.config as cfg
 
+import logging
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+
 if __name__ == "__main__":
-    def start_consumer():
-        start_kafka_consumer()
-
-    # Create a thread for Kafka consumer and set it as a daemon thread
-    consumer_thread = threading.Thread(target=start_consumer, daemon=True)
-
-    #Start the Kafka consumer thread
-    consumer_thread.start()
-
-    # Start HTTP server in the main thread
-    uvicorn.run("app.server:app", host="0.0.0.0", port=int(cfg.HTTP_PORT), reload=True)
-    print(f"CCP-AI is running on HOST [0.0.0.0] PORT [{cfg.HTTP_PORT}]")
+    logging.info("-------------------------------Starting server-------------------------------")
+    try:
+        uvicorn.run("app.server:app", host="0.0.0.0", port=int(cfg.HTTP_PORT), reload=True)
+    except KeyboardInterrupt:
+        logging.info("Server interrupted by user")
+    except Exception as e:
+        logging.error(f"Server encountered an unexpected error: {e}")
+    finally:
+        logging.info("-------------------------------Server stopped-------------------------------")
