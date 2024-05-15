@@ -334,7 +334,7 @@ async def apply(
     try:
         now = datetime.now()
 
-        data = job_repo.get_by_id(req.job_id)
+        # data = job_repo.get_by_id(req.job_id)
 
         props = {
             "is_hiring": False,
@@ -345,7 +345,7 @@ async def apply(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(data, props)
+                job_repo.update_with_map(req.job_id, props)
 
             except SQLAlchemyError as e:
                 session.rollback()
@@ -358,7 +358,7 @@ async def apply(
 
 @job_router.put("/job/update")
 async def update_job(
-    job_id: int,
+    job_id: int = Form(None),
     job_title: str = Form(None),
     opened_date: str = Form(None) ,
     closed_date: str = Form(None) ,
@@ -383,7 +383,7 @@ async def update_job(
             for tag_id in tags:
                 jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
 
-        data = job_repo.get_by_id(job_id)
+        # data = job_repo.get_by_id(job_id)
         now = datetime.now()
 
         props = {
@@ -440,7 +440,7 @@ async def update_job(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(data, props)
+                job_repo.update_with_map(job_id, props)
 
             except SQLAlchemyError as e:
                 session.rollback()
