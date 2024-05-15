@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query
-from sqlalchemy.orm import Session
+from fastapi import status, HTTPException, Depends, APIRouter, Query
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.repo.candidate_repo import CandidateRepository
@@ -30,7 +29,7 @@ def list_jobs_applied(
         data = candidate_repo.get_applied_jobs(candidate_id)
         return data
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"list_jobs_applied failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @candidate_router.post("/candidate/update-saved-job", response_model=candidate.UpdateSaveJobResponse)
@@ -56,12 +55,10 @@ def update_saved_job(
             return candidate.UpdateSaveJobResponse(
                 message="Unsave job sucessfully"
             ) 
-    # except Exception as e:
-    #     logger.error(f"error: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-    except IntegrityError as e:
+
+    except Exception as e:
         # raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You have already saved this job.")
-        logger.error(f"error: {e}")
+        logger.error(f"update_saved_job failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @candidate_router.get("/candidate/saved-jobs", response_model=candidate.ListSavedJobsResponse)
@@ -72,7 +69,7 @@ def list_jobs_saved(
         data = candidate_repo.get_saved_jobs(candidate_id)
         return data
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"list_jobs_saved failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @candidate_router.get("/resumes", response_model=resume.GetResumesOfCandidateResponse)
@@ -94,5 +91,5 @@ async def list_resume_of_candidate(
 
         return resume.GetResumesOfCandidateResponse(records=resume_records)
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"list_resume_of_candidate failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

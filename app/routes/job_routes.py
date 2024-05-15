@@ -1,9 +1,8 @@
-import json
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
+from fastapi import status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 import PyPDF2
-from typing import List, Optional
+from typing import Optional
 import os
 from io import BytesIO
 import uuid
@@ -34,12 +33,10 @@ from models.ccp_application import Application
 
 from app.dto import job
 from app.dto import resume
-from app.dto import application
 
 from app.ai.ai_helper import AI
 
 import constant.ai as constant
-from config.postgres import PostgresDB
 
 
 job_router = APIRouter(
@@ -130,7 +127,7 @@ async def list_jobs_from_qdrant(
             )
 
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"list_jobs_from_qdrant failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.get("/job", response_model=job.JobAggregate)
@@ -171,7 +168,7 @@ async def get_job_from_qdrant(
 
         return data
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"get_job_from_qdrant failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.post("/job/create", response_model=job.CreateJobPostResponse)
@@ -261,11 +258,11 @@ async def create(
 
             except SQLAlchemyError as e:
                 session.rollback()
-                logger.error(f"error: {e}")
+                logger.error(f"create_job failed error = {e}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"create_job failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     finally:
         session.close()
@@ -287,7 +284,7 @@ async def list_resumes_from_qdrant(
         data = resume_qdrant_repo.list_resumes(input=req)
         return data
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"list_resumes_from_qdrant failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 
@@ -315,19 +312,19 @@ async def apply(
             
             except IntegrityError as e:
                 session.rollback()
-                logger.error(f"error: {e}")
+                logger.error(f"apply_job failed error [IntegrityError] = {e}")
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You have already applied for this job.")
             except SQLAlchemyError as e:
                 session.rollback()
-                logger.error(f"error: {e}")
+                logger.error(f"apply_job failed error [SQLAlchemyError] = {e}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"apply_job failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.post("/job/close", response_model=job.CloseJobResponse)
-async def apply(
+async def close(
         req: Optional[job.CloseJobRequest], 
         session: Session = Depends(postgres.PostgresDB.get_db)
     ):
@@ -345,15 +342,15 @@ async def apply(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(data, props)
+                job_repo.update_with_map(session, data, props)
 
             except SQLAlchemyError as e:
                 session.rollback()
-                logger.error(f"error: {e}")
+                logger.error(f"close_job failed error [SQLAlchemyError] = {e}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
             
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"close_job failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.put("/job/update")
@@ -444,9 +441,9 @@ async def update_job(
 
             except SQLAlchemyError as e:
                 session.rollback()
-                logger.error(f"error: {e}")
+                logger.error(f"update_job failed error [SQLAlchemyError] = {e}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
         
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"update_job failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

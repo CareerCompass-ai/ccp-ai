@@ -1,15 +1,11 @@
-from typing import List, Optional
-from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
+from fastapi import status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy import func
-from sqlalchemy.orm import Session
-
 from datetime import datetime
 import os, PyPDF2
 import uuid
 from io import BytesIO
 
 from config.qdrant import QdrantVDB as qdrant
-from config.postgres import PostgresDB
 
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.resume_minio_repo import ResumeMinioRepository
@@ -75,7 +71,7 @@ async def upload(
 
         return resume.CreateResumePostResponse
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"create_resume failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     finally:
         if file is not None:

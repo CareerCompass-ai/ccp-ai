@@ -1,9 +1,6 @@
-from typing import List, Optional
 from pydantic import BaseModel
 
 from .tag import Tag
-
-import constant.common as constant
 
 class ListCommonTypes(BaseModel):
     tag: list[Tag]

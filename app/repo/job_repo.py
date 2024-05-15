@@ -28,12 +28,13 @@ class JobRepository:
         
         return None
     
-    def update_with_map(self, record: Job, props: dict) -> Job:
+    def update_with_map(self, session: Session, record: Job, props: dict, ) -> Job:
         for key, val in props.items():
             setattr(record, key, val)
 
-            self.db.commit()
-            self.db.refresh(record)
+        session.commit()
+        session.refresh(record)
+        return record
 
     def get_latest_job(self) -> Optional[Job]:
         return self.db.query(Job).order_by(desc(Job.updated_at)).first()

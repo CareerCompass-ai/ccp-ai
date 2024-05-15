@@ -1,5 +1,3 @@
-from collections import defaultdict
-from typing import Optional
 from weaviate.classes.query import MetadataQuery
 
 from config.weaviate import WeaviateVDB
