@@ -111,3 +111,9 @@ class Country(BaseModel):
 
 class ListCountryName(BaseModel):
     data: List[Country]
+
+class JobTitle(BaseModel):
+    job_title: str
+
+class ListJobTitle(BaseModel):
+    data: List[JobTitle]

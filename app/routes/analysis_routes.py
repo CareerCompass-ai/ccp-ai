@@ -207,3 +207,14 @@ async def get_country(
     except Exception:
         logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+@analysis_router.get("/analysis/get-common-job-titles", response_model=analysis.ListJobTitle)
+async def get_common_job_titles(
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:        
+        data = await analysis_repo.get_list_common_job_title(db)
+        return data
+    except Exception:
+        logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

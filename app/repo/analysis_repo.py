@@ -439,3 +439,24 @@ class AnalysisRepository:
         return analysis.ListCountryName(
             data=countries
         )
+
+    async def get_list_common_job_title(self, db:Session) -> analysis.ListJobTitle:
+        query = self.db.query(
+            Job.common_job_title
+        )
+
+        records = query.all()
+        job_titles = []
+
+        for item in records:
+            job_titles.append(
+                analysis.JobTitle(
+                    job_title=item.common_job_title
+                )
+            )
+        
+        db.close()
+
+        return analysis.ListJobTitle(
+            data=job_titles
+        )
