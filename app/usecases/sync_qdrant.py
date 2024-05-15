@@ -1,8 +1,6 @@
 import json
 import hashlib
 
-from qdrant_client import QdrantClient
-
 import constant.config as constant
 from config.qdrant import QdrantVDB
 from config.weaviate import WeaviateVDB

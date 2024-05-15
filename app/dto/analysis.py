@@ -1,6 +1,5 @@
-from fastapi import UploadFile, File, Form
-from typing import List, Optional
-from pydantic import BaseModel, Field, EmailStr, ValidationError
+from typing import List
+from pydantic import BaseModel
 from datetime import datetime
 
 class TopJobTitlesResponse(BaseModel):
