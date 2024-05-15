@@ -1,13 +1,10 @@
 import constant.config as constant
 
-from typing import List, Optional
+from typing import Optional
 from minio import Minio
 from minio.error import S3Error
 
 from app.dto import job
-import os
-import PyPDF2
-from io import BytesIO
 
 from pkg.logging import logger
 
@@ -27,17 +24,18 @@ class JobMinioRepository:
                 url=input.file_name
             )
         else:
-            logger.info(f"Bucket does not exist")
+            logger.info(f"upload_resume_to_minio: Bucket does not exist")
 
 
     def generate_presigned_url(self, object_name: str) -> str:
         try:
             return self.client.presigned_put_object(constant.MINIO_BUCKET_JOB, object_name)
         except S3Error as err:
-            logger.error(f"Error generating pre-signed URL: {err}")
+            logger.error(f"generate_presigned_url: Error generating pre-signed URL: {err}")
 
     def remove_job_from_minio(self, file_name):
         if self.client.bucket_exists(constant.MINIO_BUCKET_JOB):
             self.client.remove_object(constant.MINIO_BUCKET_JOB, str(file_name))
         else:
-            logger.info(f"Bucket does not exist")
+            logger.info(f"remove_job_from_minio: Bucket does not exist")
+

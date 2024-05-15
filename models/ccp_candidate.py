@@ -1,7 +1,6 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Float
+from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
-from sqlalchemy.orm import relationship
 
 from config.postgres import Base
 

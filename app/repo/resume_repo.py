@@ -1,5 +1,4 @@
 from config.postgres import SessionLocal
-from sqlalchemy.orm import Session
 
 from models.ccp_resume import Resume
 from app.dto import resume

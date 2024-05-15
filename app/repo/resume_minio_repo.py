@@ -1,12 +1,9 @@
 import constant.config as constant
 
-from typing import List, Optional
+from typing import Optional
 from minio import Minio
 from minio.error import S3Error
 from app.dto import resume
-
-import PyPDF2
-from io import BytesIO
 
 from pkg.logging import logger
 
@@ -26,10 +23,10 @@ class ResumeMinioRepository:
                 url=input.file_name
             )
         else:
-            logger.info(f"Bucket does not exist")
+            logger.info(f"upload_resume_to_minio: Bucket does not exist")
 
     def generate_presigned_url(self, object_name: str) -> str:
         try:
             return self.client.presigned_put_object(constant.MINIO_BUCKET_RESUME, object_name)
         except S3Error as err:
-            logger.error(f"Error generating pre-signed URL: {err}")
+            logger.error(f"generate_presigned_url: Error generating pre-signed URL: {err}")

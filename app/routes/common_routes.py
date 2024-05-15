@@ -1,5 +1,4 @@
-from fastapi import status, HTTPException, Depends, APIRouter
-from sqlalchemy.orm import Session
+from fastapi import status, HTTPException, APIRouter
 
 from app.dto import common
 
@@ -32,5 +31,5 @@ async def list_common_types():
 
         return data
     except Exception as e:
-        logger.error(f"error: {e}")
+        logger.error(f"list_common_types failed error = {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
