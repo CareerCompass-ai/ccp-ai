@@ -50,4 +50,4 @@ class JobRepository:
 
         self.db.close()
 
-        return data
+        return data.file_name
