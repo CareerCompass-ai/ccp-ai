@@ -16,6 +16,8 @@ from app.repo.resume_minio_repo import ResumeMinioRepository
 from app.repo.resume_repo import ResumeRepository
 from app.dto import resume
 
+from pkg.logging import logger
+
 resume_router = APIRouter(
     prefix="/api",
     tags=['Resume']
@@ -72,9 +74,9 @@ async def upload(
         await resume_repo.post_resume(input=record)
 
         return resume.CreateResumePostResponse
-    except Exception:
-        return {"message": "There was an error uploading or processing the PDF file"}
-
+    except Exception as e:
+        logger.error(f"error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     finally:
         if file is not None:
             file.file.close()
