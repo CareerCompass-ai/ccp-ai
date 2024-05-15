@@ -327,13 +327,14 @@ async def apply(
 
 @job_router.post("/job/close", response_model=job.CloseJobResponse)
 async def close(
-        req: Optional[job.CloseJobRequest], 
+        #req: Optional[job.CloseJobRequest], 
+        job_id: int = Form(None),
         session: Session = Depends(postgres.PostgresDB.get_db)
     ):
     try:
         now = datetime.now()
 
-        data = job_repo.get_by_id(req.job_id)
+        #data = job_repo.get_by_id(req.job_id)
 
         props = {
             "is_hiring": False,
@@ -344,7 +345,9 @@ async def close(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(session, data, props)
+                job_repo.update_with_map(job_id, props=props)
+                return job.CloseJobResponse(message="Closed job succesfully!")
+                # job_repo.update_with_map(session, data, props)
 
             except SQLAlchemyError:
                 session.rollback()
@@ -357,7 +360,7 @@ async def close(
 
 @job_router.put("/job/update")
 async def update_job(
-    job_id: int,
+    job_id: int = Form(None),
     job_title: str = Form(None),
     opened_date: str = Form(None) ,
     closed_date: str = Form(None) ,
@@ -382,7 +385,8 @@ async def update_job(
             for tag_id in tags:
                 jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
 
-        data = job_repo.get_by_id(job_id)
+        # Change common_job_title?
+        common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
         now = datetime.now()
 
         props = {
@@ -396,7 +400,8 @@ async def update_job(
             "address_id": address_id,
             "hiring_level": hiring_level,
             "work_place": work_place,
-            "updated_at": now
+            "updated_at": now,
+            "common_job_title": common_job_title
         }
 
         if file is not None:
@@ -439,7 +444,7 @@ async def update_job(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(data, props)
+                job_repo.update_with_map(job_id, props)
 
             except SQLAlchemyError:
                 session.rollback()
