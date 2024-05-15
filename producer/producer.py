@@ -2,7 +2,7 @@ from confluent_kafka import Producer
 import json
 import constant.config as cfg
 
-from ..pkg.logging import logger
+from pkg.logging import logger
 
 
 class KafkaProducer:
