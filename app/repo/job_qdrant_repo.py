@@ -7,7 +7,6 @@ from config.qdrant import QdrantVDB
 
 from app.dto import job
 from app.dto import mapper
-import constant
 import constant.common
 
 from pkg.logging import logger

@@ -1,5 +1,4 @@
 from config.postgres import SessionLocal
-from sqlalchemy.orm import Session
 
 from models.ccp_tag import Tag
 from app.dto import tag
