@@ -1,10 +1,9 @@
 from confluent_kafka import Producer
 import json
 import constant.config as cfg
-import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+from ..pkg.logging import logger
+
 
 class KafkaProducer:
     def __init__(self):
@@ -25,4 +24,4 @@ class KafkaProducer:
             self.producer.produce(topic_name, json.dumps(payload))
             self.producer.flush()
         except Exception as e:
-            logging.error(f"Failed to produce message: {e}")
+            logger.error(f"Failed to produce message: {e}")
