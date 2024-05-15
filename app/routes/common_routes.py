@@ -1,4 +1,5 @@
 from fastapi import status, HTTPException, APIRouter
+import traceback
 
 from app.dto import common
 
@@ -30,6 +31,6 @@ async def list_common_types():
         )
 
         return data
-    except Exception as e:
-        logger.error(f"list_common_types failed error = {e}")
+    except Exception:
+        logger.error(f"list_common_types failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
