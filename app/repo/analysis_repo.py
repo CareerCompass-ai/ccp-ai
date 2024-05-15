@@ -296,6 +296,49 @@ class AnalysisRepository:
 
         return analysis.ListTopWorkTitlesResponse (data=data)
     
+    async def get_change_job_salary_by_year(self, db:Session, job_title) -> analysis.ChangeJobSalaryByYearResponse:
+
+        sql_query = f'''
+        SELECT 
+            date_trunc('month', updated_at) AS month,
+            common_job_title,
+            hiring_level,
+            ROUND(AVG(
+                CASE 
+                    WHEN salary_from IS NULL AND salary_to IS NOT NULL THEN salary_to
+                    WHEN salary_from IS NOT NULL AND salary_to IS NULL THEN salary_from
+                    ELSE (COALESCE(salary_from, 0) + COALESCE(salary_to, 0)) / 2.0
+                END
+            )) AS average_salary
+        FROM 
+            ccp_job
+        WHERE 
+            common_job_title = '{job_title}' AND updated_at BETWEEN CURRENT_DATE - INTERVAL '1 year' AND CURRENT_DATE
+        GROUP BY 
+            common_job_title, 
+            hiring_level,
+            date_trunc('month', updated_at)
+        ORDER BY 
+            date_trunc('month', updated_at) ASC;
+        '''
+        records = db.execute(text(sql_query))
+
+        data = []
+
+        for item in records:
+            data.append (
+                analysis.ChangeJobSalaryByYearResponse(
+                    time=item.month,
+                    job_title=item.common_job_title,
+                    hiring_level=item.hiring_level,
+                    average_salary=item.average_salary
+                )
+            )
+        
+        db.close()
+
+        return analysis.ListChangeJobSalaryByYearResponse(data=data)
+
     async def get_change_job_salary_by_time(self, db:Session, time_from, time_to, level) -> analysis.ListChangeJobSalaryResponse:
         query = self.db.query (
             func.date_trunc('month', Job.updated_at).label('month'),

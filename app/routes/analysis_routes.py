@@ -171,6 +171,18 @@ async def get_change_of_job_salary_by_time(
         logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
+@analysis_router.get("/analysis/salary-change-by-year", response_model=analysis.ListChangeJobSalaryByYearResponse)
+async def get_change_of_job_salary_by_year(
+    job_title: str = Query(None, description="Selected job title"),
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:        
+        data = await analysis_repo.get_change_job_salary_by_year(db, job_title=job_title)
+        return data
+    except Exception:
+        logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
 @analysis_router.get("/analysis/number-jobs-by-country", response_model=analysis.ListNumberofJobsByCountryResponse)
 async def get_number_jobs_by_country(
     country: str = Query(None, description="Country name"),
@@ -180,6 +192,17 @@ async def get_number_jobs_by_country(
 ):
     try:        
         data = await analysis_repo.get_number_jobs_by_country(db, job_title=job_title, country=country, level=level)
+        return data
+    except Exception:
+        logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+@analysis_router.get("/analysis/get-countries", response_model=analysis.ListCountryName)
+async def get_country(
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:        
+        data = await analysis_repo.get_list_country(db)
         return data
     except Exception:
         logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")

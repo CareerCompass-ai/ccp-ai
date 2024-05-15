@@ -86,6 +86,15 @@ class ChangeJobSalaryResponse(BaseModel):
     job_title: str
     salary: float
 
+class ChangeJobSalaryByYearResponse(BaseModel):
+    time: datetime
+    job_title: str
+    hiring_level: str
+    average_salary: float
+
+class ListChangeJobSalaryByYearResponse(BaseModel):
+    data: List[ChangeJobSalaryByYearResponse]
+
 class ListChangeJobSalaryResponse(BaseModel):
     data: List[ChangeJobSalaryResponse]
 
