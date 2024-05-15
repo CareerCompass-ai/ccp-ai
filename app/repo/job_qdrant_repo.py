@@ -10,6 +10,8 @@ from app.dto import mapper
 import constant
 import constant.common
 
+from pkg.logging import logger
+
 class JobQdrantRepository:
     def __init__(self, index_name: str):
         self.qdrant_setup = QdrantVDB()
@@ -68,7 +70,7 @@ class JobQdrantRepository:
             return []
 
         sorted_ranges = sorted(temp_range, key=lambda x: x[0] if x[0] is not None else float('-inf'))
-        print("Sorted Ranges:", sorted_ranges)
+        logger.debug(f"Error generating pre-signed URL: {sorted_ranges}")
         reduced_ranges = []
         flag_0 = 0
         flag_1 = 0

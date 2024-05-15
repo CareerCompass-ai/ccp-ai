@@ -8,6 +8,9 @@ from app.dto import job
 import os
 import PyPDF2
 from io import BytesIO
+
+from pkg.logging import logger
+
 class JobMinioRepository:
     def __init__(self):
         self.client = Minio (
@@ -24,10 +27,12 @@ class JobMinioRepository:
                 url=input.file_name
             )
         else:
-            print("Bucket does not exist")
+            logger.info(f"Bucket does not exist")
+
 
     def generate_presigned_url(self, object_name: str) -> str:
         try:
             return self.client.presigned_put_object(constant.MINIO_BUCKET_JOB, object_name)
         except S3Error as err:
-            print(f"Error generating pre-signed URL: {err}")
+            logger.error(f"Error generating pre-signed URL: {err}")
+

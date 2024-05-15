@@ -6,6 +6,8 @@ import time
 
 import constant.ai as constant
 
+from pkg.logging import logger
+
 class AI:
     def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL):
         self.openai_client = OpenAI(api_key=api_key)
@@ -21,13 +23,13 @@ class AI:
                 return np.array(response.data[0].embedding)
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
-                    print("Bad request error:", e)
+                    logger.error(f"Bad request error:: {e}")
                     break
                 else:
-                    print("Request to OpenAI API failed. Retrying...")
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
                     time.sleep(2) 
-        print("Exceeded maximum number of retries. Please try again later.")
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
     def get_summarized_content(self, input:str, prompt:str, type:str, max_retries=3):
@@ -47,13 +49,13 @@ class AI:
                 return response.choices[0].message.content.strip()
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
-                    print("Bad request error:", e)
+                    logger.error(f"Bad request error:: {e}")
                     break
                 else:
-                    print("Request to OpenAI API failed. Retrying...")
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
                     time.sleep(2) 
-        print("Exceeded maximum number of retries. Please try again later.")
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
     def get_job_summarized(self, input, max_retries=3):
@@ -79,11 +81,11 @@ class AI:
                 return response.choices[0].message.content.strip()
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
-                    print("Bad request error:", e)
+                    logger.error(f"Bad request error:: {e}")
                     break
                 else:
-                    print("Request to OpenAI API failed. Retrying...")
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
                     time.sleep(2) 
-        print("Exceeded maximum number of retries. Please try again later.")
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
