@@ -1,11 +1,14 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+
 import PyPDF2
 from typing import Optional
 import os
 from io import BytesIO
 import uuid
+from datetime import datetime
+import traceback
 
 from producer.producer import KafkaProducer
 
@@ -16,7 +19,6 @@ from config.qdrant import QdrantVDB as qdrant
 from pkg.logging import logger
 # from config.es import ElasticSearchDB as es
 
-from datetime import datetime
 
 # from app.repo.job_es_repo import JobESRepository
 from app.repo.job_qdrant_repo import JobQdrantRepository
@@ -126,8 +128,8 @@ async def list_jobs_from_qdrant(
                 records=list[job.JobAggregate]
             )
 
-    except Exception as e:
-        logger.error(f"list_jobs_from_qdrant failed error = {e}")
+    except Exception:
+        logger.error(f"list_jobs_from_qdrant failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.get("/job", response_model=job.JobAggregate)
@@ -167,8 +169,8 @@ async def get_job_from_qdrant(
 
 
         return data
-    except Exception as e:
-        logger.error(f"get_job_from_qdrant failed error = {e}")
+    except Exception:
+        logger.error(f"get_job_from_qdrant failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.post("/job/create", response_model=job.CreateJobPostResponse)
@@ -256,13 +258,13 @@ async def create(
 
                 return job.CreateJobPostResponse()
 
-            except SQLAlchemyError as e:
+            except SQLAlchemyError:
                 session.rollback()
-                logger.error(f"create_job failed error = {e}")
+                logger.error(f"create_job failed error = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
-    except Exception as e:
-        logger.error(f"create_job failed error = {e}")
+    except Exception:
+        logger.error(f"create_job failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     finally:
         session.close()
@@ -283,8 +285,8 @@ async def list_resumes_from_qdrant(
         )
         data = resume_qdrant_repo.list_resumes(input=req)
         return data
-    except Exception as e:
-        logger.error(f"list_resumes_from_qdrant failed error = {e}")
+    except Exception:
+        logger.error(f"list_resumes_from_qdrant failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 
@@ -310,17 +312,17 @@ async def apply(
 
                 return job.ApplyJobResponse()
             
-            except IntegrityError as e:
+            except IntegrityError:
                 session.rollback()
-                logger.error(f"apply_job failed error [IntegrityError] = {e}")
+                logger.error(f"apply_job failed error [IntegrityError] = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You have already applied for this job.")
-            except SQLAlchemyError as e:
+            except SQLAlchemyError:
                 session.rollback()
-                logger.error(f"apply_job failed error [SQLAlchemyError] = {e}")
+                logger.error(f"apply_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
-    except Exception as e:
-        logger.error(f"apply_job failed error = {e}")
+    except Exception:
+        logger.error(f"apply_job failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.post("/job/close", response_model=job.CloseJobResponse)
@@ -346,12 +348,14 @@ async def close(
                 job_repo.update_with_map(job_id, props=props)
                 return job.CloseJobResponse(message="Closed job succesfully!")
                 # job_repo.update_with_map(session, data, props)
-            except SQLAlchemyError as e:
+
+            except SQLAlchemyError:
                 session.rollback()
-                logger.error(f"close_job failed error [SQLAlchemyError] = {e}")
+                logger.error(f"close_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-    except Exception as e:
-        logger.error(f"close_job failed error = {e}")
+            
+    except Exception:
+        logger.error(f"close_job failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.put("/job/update")
@@ -442,11 +446,11 @@ async def update_job(
             try:
                 job_repo.update_with_map(job_id, props)
 
-            except SQLAlchemyError as e:
+            except SQLAlchemyError:
                 session.rollback()
-                logger.error(f"update_job failed error [SQLAlchemyError] = {e}")
+                logger.error(f"update_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
         
-    except Exception as e:
-        logger.error(f"update_job failed error = {e}")
+    except Exception:
+        logger.error(f"update_job failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

@@ -2,6 +2,11 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
+from app.dto.certificate import CertificateBase
+from app.dto.education import EducationBase
+from app.dto.project import ProjectBase
+from app.dto.work_experience import WorkExperienceBase
+
 class ResumeBase(BaseModel):
     id: Optional[int] = None
     candidate_id: Optional[int] = None
@@ -19,8 +24,13 @@ class ResumeAggregate(ResumeBase):
     level: Optional[str] = None
     candidate_address: Optional[str] = None
     s_content: Optional[str] = None
+    content: Optional[str] = None
     skills: list[str] = None
     applied_jobs: list[int] = None
+    projects: List[ProjectBase] = None
+    certificates: List[CertificateBase] = None
+    educations: List[EducationBase] = None
+    work_expericences: List[WorkExperienceBase] = None
 
 class ListResumeRequest(BaseModel):
     page: Optional[int] = None
