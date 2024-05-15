@@ -8,6 +8,8 @@ from app.repo.tag_repo import TagRepository
 from config.postgres import PostgresDB
 import constant.common as constant
 
+from pkg.logging import logger
+
 common_router = APIRouter(
     prefix="/api",
     tags=['Common']
@@ -30,4 +32,5 @@ async def list_common_types():
 
         return data
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logger.error(f"error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

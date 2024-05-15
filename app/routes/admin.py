@@ -11,6 +11,8 @@ from app.repo.aggregate import Aggregate
 from config.weaviate import WeaviateVDB as weaviate
 from config.qdrant import QdrantVDB as qdrant
 
+from pkg.logging import logger
+
 
 admin_router = APIRouter(
     prefix="/admin/api",
@@ -40,7 +42,6 @@ def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
 async def protected_route(is_authenticated: bool = Depends(authenticate_user)):
     return {"message": "You are authorized to access this resource"}
 
-
 @admin_router.post("/weaviate/create-job-class")
 async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
     client = weaviate.setup_weaviate_connection()
@@ -54,8 +55,9 @@ async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
         client.collections.create_from_dict(weaviate.jobClass)
         return {"message": "Job class created successfully"}
     except Exception as e:
-        return {"error": str(e)}
-    
+        logger.error(f"error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+
 @admin_router.post("/weaviate/create-jobqna-class")
 async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
     client = weaviate.setup_weaviate_connection()
@@ -64,7 +66,8 @@ async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
         client.collections.create_from_dict(weaviate.jobQnAClass)
         return {"message": "JobQnA class created successfully"}
     except Exception as e:
-        return {"error": str(e)}
+        logger.error(f"error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @admin_router.delete("/weaviate/class")
 async def delete_class(payload: DeleteClassRequest, is_authenticated: bool = Depends(authenticate_user)):
@@ -74,7 +77,8 @@ async def delete_class(payload: DeleteClassRequest, is_authenticated: bool = Dep
         client.collections.delete(payload.collection_name)
         return {"message": "JobQnA class created successfully"}
     except Exception as e:
-        return {"error": str(e)}
+        logger.error(f"error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @admin_router.post("/manual-sync-job")
 async def manual_sync_job(req: ManualSyncJobRequest, is_authenticated: bool = Depends(authenticate_user)):
@@ -89,5 +93,6 @@ async def manual_sync_job(req: ManualSyncJobRequest, is_authenticated: bool = De
 
         return {"message": "ok"}
     except Exception as e:
-        return {"error": str(e)}
+        logger.error(f"error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
