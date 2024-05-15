@@ -23,7 +23,7 @@ source venv/bin/activate
 Install initial packages
 
 ```bash
-pip install -r ./pkg/requirements.txt
+pip install -r ./dep/requirements.txt
 ```
 
 Pull and start infrastructure images
@@ -67,7 +67,7 @@ venv\Scripts\activate.bat
 Install initial packages
 
 ```bash
-pip install -r ./pkg/requirements.txt
+pip install -r ./dep/requirements.txt
 ```
 
 Pull and start infrastructure images

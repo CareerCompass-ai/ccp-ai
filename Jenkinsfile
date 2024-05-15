@@ -22,7 +22,7 @@ pipeline {
                 // Display Python version
                 // sh 'python --version'
                 // Install Python dependencies using pip
-                // sh 'pip install -r ./pkg/requirements.txt'
+                // sh 'pip install -r ./dep/requirements.txt'
                 sh 'docker build -t ccp-ai .'
             }
         }
