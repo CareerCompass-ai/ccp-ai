@@ -14,8 +14,8 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         salary_to=payload["salary_to"],
         job_type=payload["job_type"],
         company_type=payload["company_type"],
-        # created_at=payload["created_at"],
-        # updated_at=payload["updated_at"],
+        created_at=payload["created_at"],
+        updated_at=payload["updated_at"],
         recruiter_id=payload["recruiter_id"],  
         recruiter_name=payload["recruiter_name"],
         job_tags=payload["job_tags"],
@@ -66,5 +66,6 @@ def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
         level=payload["level"],
         candidate_address=payload["candidate_address"],
         s_content=payload["s_content"],
+        content=payload["content"],
         skills=payload["skills"],
     )
