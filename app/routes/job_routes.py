@@ -342,7 +342,7 @@ async def close(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map_v2(req.job_id, props)
+                job_repo.update_with_map(req.job_id, props)
                 # job_repo.update_with_map(session, data, props)
 
             except SQLAlchemyError as e:
@@ -381,7 +381,8 @@ async def update_job(
             for tag_id in tags:
                 jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
 
-        # data = job_repo.get_by_id(job_id)
+        # Change common_job_title?
+        common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
         now = datetime.now()
 
         props = {
@@ -395,7 +396,8 @@ async def update_job(
             "address_id": address_id,
             "hiring_level": hiring_level,
             "work_place": work_place,
-            "updated_at": now
+            "updated_at": now,
+            "common_job_title": common_job_title
         }
 
         if file is not None:

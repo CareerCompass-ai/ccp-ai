@@ -28,7 +28,7 @@ class JobRepository:
         
         return None
     
-    def update_with_map_v2(self, job_id: int, props: dict) -> Optional[Job]:
+    def update_with_map(self, job_id: int, props: dict) -> Optional[Job]:
         with SessionLocal() as session:
             job_record = session.query(Job).filter(Job.id == job_id).first()
             if not job_record:
@@ -41,14 +41,6 @@ class JobRepository:
             session.commit()
             session.refresh(job_record)
             return job_record
-        
-    def update_with_map(self, session: Session, record: Job, props: dict, ) -> Job:
-        for key, val in props.items():
-            setattr(record, key, val)
-
-        session.commit()
-        session.refresh(record)
-        return record
 
     def get_latest_job(self) -> Optional[Job]:
         return self.db.query(Job).order_by(desc(Job.updated_at)).first()
