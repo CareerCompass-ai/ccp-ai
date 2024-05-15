@@ -4,7 +4,7 @@ FROM python:3.10
 WORKDIR /app
 
 # Copy only the requirements file to leverage Docker cache
-COPY ./pkg/requirements.txt .
+COPY ./dep/requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
