@@ -1,4 +1,5 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Query
+import traceback
 
 from app.dto import recruiter
 
@@ -20,6 +21,6 @@ async def list_jobs_posted(
     try:
         data = await recruiter_repo.get_jobs_posted(recruiter_id)
         return data
-    except Exception as e:
-        logger.error(f"list_jobs_posted failed error = {e}")
+    except Exception:
+        logger.error(f"list_jobs_posted failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

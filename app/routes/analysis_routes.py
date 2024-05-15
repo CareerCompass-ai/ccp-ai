@@ -1,5 +1,7 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Query
 from sqlalchemy.orm import Session
+import traceback
+
 from app.dto import analysis
 
 from app.repo.analysis_repo import AnalysisRepository
@@ -25,8 +27,8 @@ async def list_top_job_titles(
     try:
         data = await analysis_repo.get_top_job_titles(db, month=month, year=year)
         return data
-    except Exception as e:
-        logger.error(f"list_top_job_titles failed error = {e}")
+    except Exception:
+        logger.error(f"list_top_job_titles failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 #5
@@ -40,8 +42,8 @@ async def list_top_job_titles_salary(
     try:
         data = await analysis_repo.get_top_leader_salaries(db, limit=top, hiring_level=level, order=order_by)
         return data
-    except Exception as e:
-        logger.error(f"list_top_job_titles_salary failed error = {e}")
+    except Exception:
+        logger.error(f"list_top_job_titles_salary failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 #6
@@ -54,8 +56,8 @@ async def list_top_applied_job_titles(
     try:
         data = await analysis_repo.get_most_applied_job_titles(db, month=month, year=year)
         return data
-    except Exception as e:
-        logger.error(f"list_top_applied_job_titles failed error = {e}")
+    except Exception:
+        logger.error(f"list_top_applied_job_titles failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/top-skills", response_model=analysis.GetTopSkillResponse)
@@ -66,8 +68,8 @@ async def list_top_skills(
     try:
         data = await analysis_repo.get_top_skills(db, top_number=top_number)
         return data
-    except Exception as e:
-        logger.error(f"list_top_skills failed error = {e}")
+    except Exception:
+        logger.error(f"list_top_skills failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/job-company-type", response_model=analysis.GetNumberOfCompanyTypeResponse)
@@ -75,8 +77,8 @@ async def get_number_of_company_type(db: Session = Depends(PostgresDB.get_db)):
     try:
         data = await analysis_repo.number_of_company_type(db)
         return data
-    except Exception as e:
-        logger.error(f"get_number_of_company_type failed error = {e}")
+    except Exception:
+        logger.error(f"get_number_of_company_type failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/new-user-in-time-range", response_model=analysis.GetNumberOfNewUser)
@@ -88,8 +90,8 @@ async def list_new_user_in_time_range(
     try:
         data = await analysis_repo.get_number_of_new_user(db, time_from=time_from, time_to=time_to)
         return data
-    except Exception as e:
-        logger.error(f"list_new_user_in_time_range failed error = {e}")
+    except Exception:
+        logger.error(f"list_new_user_in_time_range failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/count-user-by-role", response_model=analysis.GetNumberOfAllNewUser)
@@ -99,8 +101,8 @@ async def count_new_user_by_role(
     try:
         data = await analysis_repo.count_all_number_of_user_by_role(db)
         return data
-    except Exception as e:
-        logger.error(f"count_new_user_by_role failed error = {e}")
+    except Exception:
+        logger.error(f"count_new_user_by_role failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/job-status", response_model=analysis.GetNumberOfJobStatus)
@@ -110,8 +112,8 @@ async def percentage_of_different_job_status(
     try:
         data = await analysis_repo.percentage_of_different_job_status(db)
         return data
-    except Exception as e:
-        logger.error(f"percentage_of_different_job_status failed error = {e}")
+    except Exception:
+        logger.error(f"percentage_of_different_job_status failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @analysis_router.get("/analysis/top-recruiter-by-job-posting", response_model=analysis.GetTopRecruiterJobPosting)
@@ -124,8 +126,8 @@ async def get_top_recruiters_job_posting(
     try:
         data = await analysis_repo.get_top_recruiters_job_posting(db, top_number, time_from, time_to)
         return data
-    except Exception as e:
-        logger.error(f"get_top_recruiters_job_posting failed error = {e}")
+    except Exception:
+        logger.error(f"get_top_recruiters_job_posting failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/top-viewed-job", response_model=analysis.GetTopViewedJob)
@@ -138,8 +140,8 @@ async def get_top_viewed_jobs(
     try:
         data = await analysis_repo.get_top_viewed_jobs(db, top_number, time_from, time_to)
         return data
-    except Exception as e:
-        logger.error(f"get_top_viewed_jobs failed error = {e}")
+    except Exception:
+        logger.error(f"get_top_viewed_jobs failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @analysis_router.get("/analysis/top-work-titles", response_model=analysis.ListTopWorkTitlesResponse)
@@ -150,8 +152,8 @@ async def list_top_work_titles(
     try:
         data = await analysis_repo.get_top_work_titles(db, top_number=top_number)
         return data
-    except Exception as e:
-        logger.error(f"list_top_work_titles failed error = {e}")
+    except Exception:
+        logger.error(f"list_top_work_titles failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/salary-change-by-time", response_model=analysis.ListChangeJobSalaryResponse)
@@ -164,8 +166,8 @@ async def get_change_of_job_salary_by_time(
     try:        
         data = await analysis_repo.get_change_job_salary_by_time(db, time_from=time_from, time_to=time_to, level=level)
         return data
-    except Exception as e:
-        logger.error(f"get_change_of_job_salary_by_time failed error = {e}")
+    except Exception:
+        logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @analysis_router.get("/analysis/number-jobs-by-city", response_model=analysis.ListNumberofJobsByCityResponse)
@@ -178,6 +180,6 @@ async def get_number_of_job__by_city(
     try:        
         data = await analysis_repo.get_number_jobs_by_city(db, job_title=job_title, country=country, level=level)
         return data
-    except Exception as e:
-        logger.error(f"get_number_of_job__by_city failed error = {e}")
+    except Exception:
+        logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

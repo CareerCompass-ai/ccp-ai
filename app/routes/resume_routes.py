@@ -4,6 +4,7 @@ from datetime import datetime
 import os, PyPDF2
 import uuid
 from io import BytesIO
+import traceback
 
 from config.qdrant import QdrantVDB as qdrant
 
@@ -70,8 +71,8 @@ async def upload(
         await resume_repo.post_resume(input=record)
 
         return resume.CreateResumePostResponse
-    except Exception as e:
-        logger.error(f"create_resume failed error = {e}")
+    except Exception:
+        logger.error(f"create_resume failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     finally:
         if file is not None:
