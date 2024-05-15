@@ -42,8 +42,8 @@ def toJobWeaviateDTO(payload: dict) -> job.JobAggregate:
         salary_to=payload.properties["salary_to"],
         job_type=payload.properties["job_type"],
         company_type=payload.properties["company_type"],
-        # created_at=payload.properties["created_at"],
-        # updated_at=payload.properties["updated_at"],
+        created_at=payload.properties["created_at"],
+        updated_at=payload.properties["updated_at"],
         recruiter_id=payload.properties["recruiter_id"],  
         recruiter_name=payload.properties["recruiter_name"],
         job_tags=payload.properties["job_tags"],
@@ -68,4 +68,9 @@ def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
         s_content=payload["s_content"],
         content=payload["content"],
         skills=payload["skills"],
+        projects=payload["projects"],
+        certificates=payload["certificates"],
+        educations=payload["educations"],
+        work_expericences=payload["work_expericences"],
     )
+
