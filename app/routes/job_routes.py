@@ -176,18 +176,18 @@ async def get_job_from_qdrant(
 @job_router.post("/job/create", response_model=job.CreateJobPostResponse)
 async def create(
         job_title: str = Form(None),
-        content: str = Form(None) ,
-        is_hiring: str = Form(None) ,
-        opened_date: str = Form(None) ,
-        closed_date: str = Form(None) ,
-        salary_from: str = Form(None) ,
-        salary_to: str = Form(None) ,
-        job_type: str = Form(None) ,
-        company_type: str = Form(None) ,
-        address_id: str = Form(None) ,
-        recruiter_id: str = Form(None) ,
-        hiring_level: str = Form(None), 
-        work_place: str = Form(None) ,
+        content: str = Form(None),
+        is_hiring: str = Form(None),
+        opened_date: str = Form(None),
+        closed_date: str = Form(None),
+        salary_from: str = Form(None),
+        salary_to: str = Form(None),
+        job_type: str = Form(None),
+        company_type: str = Form(None),
+        address_id: str = Form(None),
+        recruiter_id: str = Form(None),
+        hiring_level: str = Form(None),
+        work_place: str = Form(None),
         tags: str = Form(None),
         file: UploadFile = File(None),
         session: Session = Depends(postgres.PostgresDB.get_db),
@@ -201,11 +201,14 @@ async def create(
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
 
-        #Generate file name
-        file_name  = str(uuid.uuid4())+"-"+file.filename
+        # Generate file name
+        file_name = str(uuid.uuid4()) + "_" + file.filename
 
-        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file_name))
-        presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
+        # Upload file to MinIO and get the public URL
+        upload_response = job_minio_repo.upload_job_to_minio(
+            job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file_name)
+        )
+        public_url = upload_response.url
 
         os.remove(temp_file_path)
 
@@ -216,7 +219,7 @@ async def create(
         record = job.JobBase(
             job_title=job_title,
             common_job_title=common_job_title,
-            content_url=presigned_url,
+            content_url=public_url,
             is_hiring=is_hiring,
             opened_date=opened_date,
             closed_date=closed_date,

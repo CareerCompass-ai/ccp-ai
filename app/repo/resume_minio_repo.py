@@ -1,3 +1,4 @@
+import traceback
 import constant.config as constant
 
 from typing import Optional
@@ -17,13 +18,24 @@ class ResumeMinioRepository:
         )
     
     def upload_resume_to_minio(self, input: Optional[resume.UploadResumeMinioRequest]) -> resume.UploadResumeMinioResponse:
-        if self.client.bucket_exists(constant.MINIO_BUCKET_RESUME):
-            self.client.fput_object(constant.MINIO_BUCKET_RESUME, input.file_name, input.temp_path)
-            return resume.UploadResumeMinioResponse(
-                url=input.file_name
+        try:
+            if not self.client.bucket_exists(constant.MINIO_BUCKET_RESUME):
+                self.client.make_bucket(constant.MINIO_BUCKET_RESUME)
+                logger.info(f"Bucket {constant.MINIO_BUCKET_RESUME} created")
+
+            self.client.fput_object(
+                constant.MINIO_BUCKET_RESUME,
+                input.file_name,
+                input.temp_path
             )
-        else:
-            logger.info(f"upload_resume_to_minio: Bucket does not exist")
+
+            return resume.UploadResumeMinioResponse(
+                url=f"{constant.MINIO_URL}/{constant.MINIO_BUCKET_RESUME}/{input.file_name}"
+            )
+
+        except S3Error as e:
+            logger.error(f"upload_resume_to_minio: Failed to upload file to MinIO: {traceback.format_exc()}")
+            raise
 
     def generate_presigned_url(self, object_name: str) -> str:
         try:
