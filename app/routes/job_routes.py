@@ -176,18 +176,18 @@ async def get_job_from_qdrant(
 @job_router.post("/job/create", response_model=job.CreateJobPostResponse)
 async def create(
         job_title: str = Form(None),
-        content: str = Form(None) ,
-        is_hiring: str = Form(None) ,
-        opened_date: str = Form(None) ,
-        closed_date: str = Form(None) ,
-        salary_from: str = Form(None) ,
-        salary_to: str = Form(None) ,
-        job_type: str = Form(None) ,
-        company_type: str = Form(None) ,
-        address_id: str = Form(None) ,
-        recruiter_id: str = Form(None) ,
-        hiring_level: str = Form(None), 
-        work_place: str = Form(None) ,
+        content: str = Form(None),
+        is_hiring: str = Form(None),
+        opened_date: str = Form(None),
+        closed_date: str = Form(None),
+        salary_from: str = Form(None),
+        salary_to: str = Form(None),
+        job_type: str = Form(None),
+        company_type: str = Form(None),
+        address_id: str = Form(None),
+        recruiter_id: str = Form(None),
+        hiring_level: str = Form(None),
+        work_place: str = Form(None),
         tags: str = Form(None),
         file: UploadFile = File(None),
         session: Session = Depends(postgres.PostgresDB.get_db),
@@ -201,11 +201,14 @@ async def create(
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(file_content)
 
-        #Generate file name
-        file_name  = str(uuid.uuid4())+"-"+file.filename
+        # Generate file name
+        file_name = str(uuid.uuid4()) + "_" + file.filename
 
-        url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file_name))
-        presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
+        # Upload file to MinIO and get the public URL
+        upload_response = job_minio_repo.upload_job_to_minio(
+            job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file_name)
+        )
+        public_url = upload_response.url
 
         os.remove(temp_file_path)
 
@@ -216,7 +219,7 @@ async def create(
         record = job.JobBase(
             job_title=job_title,
             common_job_title=common_job_title,
-            content_url=presigned_url,
+            content_url=public_url,
             is_hiring=is_hiring,
             opened_date=opened_date,
             closed_date=closed_date,
@@ -327,13 +330,14 @@ async def apply(
 
 @job_router.post("/job/close", response_model=job.CloseJobResponse)
 async def close(
-        req: Optional[job.CloseJobRequest], 
+        #req: Optional[job.CloseJobRequest], 
+        job_id: int = Form(None),
         session: Session = Depends(postgres.PostgresDB.get_db)
     ):
     try:
         now = datetime.now()
 
-        data = job_repo.get_by_id(req.job_id)
+        #data = job_repo.get_by_id(req.job_id)
 
         props = {
             "is_hiring": False,
@@ -344,7 +348,9 @@ async def close(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(session, data, props)
+                job_repo.update_with_map(job_id, props=props)
+                return job.CloseJobResponse(message="Closed job succesfully!")
+                # job_repo.update_with_map(session, data, props)
 
             except SQLAlchemyError:
                 session.rollback()
@@ -357,7 +363,7 @@ async def close(
 
 @job_router.put("/job/update")
 async def update_job(
-    job_id: int,
+    job_id: int = Form(None),
     job_title: str = Form(None),
     opened_date: str = Form(None) ,
     closed_date: str = Form(None) ,
@@ -382,7 +388,8 @@ async def update_job(
             for tag_id in tags:
                 jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
 
-        data = job_repo.get_by_id(job_id)
+        # Change common_job_title?
+        common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
         now = datetime.now()
 
         props = {
@@ -396,7 +403,8 @@ async def update_job(
             "address_id": address_id,
             "hiring_level": hiring_level,
             "work_place": work_place,
-            "updated_at": now
+            "updated_at": now,
+            "common_job_title": common_job_title
         }
 
         if file is not None:
@@ -439,7 +447,7 @@ async def update_job(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(data, props)
+                job_repo.update_with_map(job_id, props)
 
             except SQLAlchemyError:
                 session.rollback()
