@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 import PyPDF2
+from pdfminer.high_level import extract_text
+import fitz
 from typing import Optional
 import os
 from io import BytesIO
@@ -237,7 +239,17 @@ async def create(
         )
 
         if file is not None:
+            # Extract text with formatting from PDF using PyMuPDF
             pdf_file = BytesIO(file_content)
+            document = fitz.open(stream=pdf_file, filetype="pdf")
+            
+            extracted_text = ""
+            for page_num in range(len(document)):
+                page = document.load_page(page_num)
+                extracted_text += page.get_text("html")
+
+            # Store HTML formatted content in the record
+            record.display_content = extracted_text
 
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
@@ -246,7 +258,6 @@ async def create(
                 text_content += pdf_reader.pages[page_num].extract_text()
 
             record.content = text_content
-
 
         session.autocommit = False # TODO: remove this?
         with session.begin():
