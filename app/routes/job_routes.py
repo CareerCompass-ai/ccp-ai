@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 import PyPDF2
-from pdfminer.high_level import extract_text
 import fitz
 from typing import Optional
 import os
