@@ -77,8 +77,8 @@ class AI:
                     ],
                     top_p=0.2,
                 )
-
-                return json.loads(response.choices[0].message.content.strip()).get("answer", "")
+                tmp = json.loads(response.choices[0].message.content.strip())
+                return tmp.get("answer", "")
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
                     logger.error(f"Bad request error:: {e}")
