@@ -4,6 +4,10 @@ import traceback
 from app.dto import common
 
 from app.repo.tag_repo import TagRepository 
+from app.repo.country_repo import CountryRepository
+from app.repo.city_repo import CityRepository
+
+from models.ccp_country import Country
 
 from config.postgres import PostgresDB
 import constant.common as constant
@@ -16,6 +20,8 @@ common_router = APIRouter(
 )
 
 tag_repo = TagRepository()
+country_repo = CountryRepository()
+city_repo = CityRepository()
 
 @common_router.get("/common/types", response_model=common.ListCommonTypes)
 async def list_common_types():
@@ -34,3 +40,28 @@ async def list_common_types():
     except Exception:
         logger.error(f"list_common_types failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+@common_router.get("/common/city", response_model=common.ListCountry)
+async def list_cities_in_countries():
+    try:
+        rec_countries = []
+        countries = country_repo.get_countries()
+        for item in countries:
+            rec_cities = []
+            cities = city_repo.get_cities_by_country(item.id)
+            for _item in cities:
+                rec_cities.append(common.City(
+                    city_id=_item.id,
+                    city_name=_item.city_name
+                ))
+            rec_countries.append(
+                common.Country(
+                    country_id=item.id,
+                    country_name=item.country_name,
+                    city=rec_cities
+                )
+            )
+        return common.ListCountry(records=rec_countries)
+    except Exception:
+        logger.error(f"list_common_types failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")

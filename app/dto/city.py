@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -6,8 +6,7 @@ class CityBase(BaseModel):
     id: int
     country_id: int
     city_name: str
-    created_at: datetime
-    updated_at: datetime
-
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 class ListCityResponse(BaseModel):
     cities: List[CityBase]
