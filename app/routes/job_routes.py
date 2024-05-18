@@ -381,7 +381,7 @@ async def update_job(
     salary_to: str = Form(None) ,
     job_type: str = Form(None) ,
     company_type: str = Form(None) ,
-    address_id: str = Form(None) ,
+    address_id: str = Form(None) , # TODO: Use city_id and country_id instead of address_id, example: replace by: city_id: str = Form(None), country_id: str = Form(None)
     hiring_level: str = Form(None), 
     work_place: str = Form(None) ,
     tags: str = Form(None),
@@ -402,6 +402,8 @@ async def update_job(
         common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
         now = datetime.now()
 
+        # TODO: Create address_id from city_id and country_id first, then assign to the job_id
+
         props = {
             "job_title": job_title,
             "opened_date": opened_date,
@@ -410,7 +412,7 @@ async def update_job(
             "salary_to": salary_to,
             "job_type": job_type,
             "company_type": company_type,
-            "address_id": address_id,
+            "address_id": address_id,# TODO: Get address_id from above TODO note
             "hiring_level": hiring_level,
             "work_place": work_place,
             "updated_at": now,
