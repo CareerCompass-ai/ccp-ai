@@ -72,7 +72,7 @@ class AI:
                 response = self.openai_client.chat.completions.create(
                     model=self.completion_model,
                     messages=[
-                        {"role": "system", "content": f"You are a helpful assistant designed to determine the position of the job title"},
+                        {"role": "system", "content": f"You are a helpful assistant designed to determine the position of the job title. And must follow the response format"},
                         {"role": "system", "content": content}
                     ],
                     top_p=0.2,
