@@ -7,6 +7,7 @@ from app.ai.ai_helper import AI
 from constant import config
 from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest
 from app.usecases.sync_helper import SyncHelper
+from .helper import combine_job_content
 
 from app.repo.aggregate import Aggregate
 
@@ -90,6 +91,19 @@ async def manual_sync_job(req: ManualSyncJobRequest, is_authenticated: bool = De
             summarized_content = ai_helper.get_job_summarized(job_agg.content)
             vector = ai_helper.get_embedding(summarized_content)
             job_agg.s_content = summarized_content
+
+            summarized_content = ai_helper.get_job_summarized(job_agg.content)
+
+            acronyms_and_abbreviations = ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
+
+            # combine content
+            combined_content = combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
+
+            # vectorize the combined content
+            vector = ai_helper.get_embedding(combined_content)
+
+            job_agg.s_content = summarized_content
+            job_agg.combined_content = combined_content
             
             sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
 
