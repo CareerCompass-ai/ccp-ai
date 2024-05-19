@@ -1,3 +1,4 @@
+import json
 from openai import OpenAI
 
 import numpy as np
@@ -79,6 +80,34 @@ class AI:
                 )
 
                 return response.choices[0].message.content.strip()
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error:: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    time.sleep(2) 
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
+        return None
+    
+    def get_acronyms_and_abbreviation_of_job(self, input:str, max_retries=3) -> str:
+        retries = 0
+        prompt = constant.GET_ACRONYMS_AND_ABBREVIATION_PROMPT
+        content = prompt.format(input=input)
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.completion_model,
+                    messages=[
+                        {"role": "system", "content": f"You are a helpful assistant designed to provide a detailed list of the acronyms and abbreviation of a job's title"},
+                        {"role": "system", "content": content}
+                    ],
+                    top_p=0.2,
+                )
+
+                tmp = json.loads(response.choices[0].message.content.strip())  
+                return tmp.get("answer", "")
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
                     logger.error(f"Bad request error:: {e}")

@@ -51,6 +51,7 @@ class ListJobRequest(BaseModel):
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0
     s_content: Optional[str] = ""
+    combined_content: Optional[str] = ""
     address: Optional[str] = ""
     city_name: Optional[str] = ""
     country_name: Optional[str] = ""
