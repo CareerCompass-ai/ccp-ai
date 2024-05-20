@@ -21,3 +21,11 @@ class JobPostedResponse(BaseModel):
 
 class ListJobsPostedResponse(BaseModel):
     records: List[JobPostedResponse]
+
+class SaveTalentRequest(BaseModel):
+    recruiter_id: int
+    candidate_id: int
+    type: int #1: save, 2: unsave
+
+class SaveTalentResponse(BaseModel):
+    msg: str
