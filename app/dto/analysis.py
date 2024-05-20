@@ -10,12 +10,9 @@ class ListTopJobTitlesResponse(BaseModel):
     data: List[TopJobTitlesResponse]
 
 class GetTopJobTitlesSalaryResponse(BaseModel):
-    id: int
     job_title: str
-    job_type: str
-    company_type: str
-    work_place: str
-    salary: float
+    hiring_level: str
+    average_salary: float
 
 class ListTopJobTitlesSalaryResponse(BaseModel):
     data: List[GetTopJobTitlesSalaryResponse]
@@ -89,13 +86,33 @@ class ChangeJobSalaryResponse(BaseModel):
     job_title: str
     salary: float
 
+class ChangeJobSalaryByYearResponse(BaseModel):
+    time: datetime
+    hiring_level: str
+    average_salary: float
+
+class ListChangeJobSalaryByYearResponse(BaseModel):
+    data: List[ChangeJobSalaryByYearResponse]
+
 class ListChangeJobSalaryResponse(BaseModel):
     data: List[ChangeJobSalaryResponse]
 
-class NumberofJobsByCityResponse(BaseModel):
+class NumberofJobsByCountryResponse(BaseModel):
+    hiring_level: str
     city: str
     count: int
 
-class ListNumberofJobsByCityResponse(BaseModel):
-    country: str
-    data: List[NumberofJobsByCityResponse]
+class ListNumberofJobsByCountryResponse(BaseModel):
+    data: List[NumberofJobsByCountryResponse]
+
+class Country(BaseModel):
+    country_name: str
+
+class ListCountryName(BaseModel):
+    data: List[Country]
+
+class JobTitle(BaseModel):
+    job_title: str
+
+class ListJobTitle(BaseModel):
+    data: List[JobTitle]

@@ -44,3 +44,11 @@ pypdf2==3.0.1
 weaviate-client==4.5.5
 PyMuPDFb==1.24.3
 pymupdf==1.24.4
+reportlab==4.2.0
+pypdf==4.2.0
+langchain==0.2.0
+langchain-community==0.2.0
+langchain-core==0.2.0
+langchain-openai==0.1.7
+langchain-text-splitters==0.2.0
+langsmith==0.1.59
