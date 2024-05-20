@@ -83,7 +83,15 @@ async def delete(
     resume_id: int = Form(None),
 ):
     try:
-        await resume_repo.delete_resume(resume_id)
+        now = datetime.now()
+
+        props = {
+            "active": False,
+            'updated_at': now,
+        }
+
+        resume_repo.update_with_map(resume_id, props)
+        
         #Delete resume in MinIO or not?
         
         return resume.DeleteResumeResponse(msg="Delete resume successfully!")

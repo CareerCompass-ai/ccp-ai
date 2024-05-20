@@ -29,7 +29,16 @@ class ResumeRepository:
         self.db.close()
         return result
     
-    async def delete_resume(self, id):
-        self.db.query(Resume).filter(Resume.id == id).update(Resume.active == False)
-        self.db.commit()
-        self.db.close()
+    def update_with_map(self, resume_id: int, props: dict) -> Optional[Resume]:
+        with SessionLocal() as session:
+            resume_record = session.query(Resume).filter(Resume.id == resume_id).first()
+            if not resume_record:
+                return None
+            
+            for key, val in props.items():
+                if hasattr(resume_record, key):
+                    setattr(resume_record, key, val)
+            
+            session.commit()
+            session.refresh(resume_record)
+            return resume_record
