@@ -8,10 +8,15 @@ class Country(BaseModel):
     country_id: int
     country_name: str
     city: List[City]
+
+class ListCountry(BaseModel):
+    country_id: int
+    country_name: str
 class ListCommonTypes(BaseModel):
     tag: list[Tag]
     hiring_level: list[str]
     job_type: list[str]
     company_type: list[str]
     work_place: list[str]
-    countries: List[Country]
+    countries: List[ListCountry]
+    cities: List[Country]

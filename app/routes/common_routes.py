@@ -29,8 +29,16 @@ async def list_common_types():
         tags = await tag_repo.list_tag()
 
         rec_countries = []
+
         countries = country_repo.get_countries()
+        list_countries = []
         for item in countries:
+            list_countries.append (
+                common.ListCountry (
+                    country_id=item.id,
+                    country_name=item.country_name
+                )
+            )
             rec_cities = []
             cities = city_repo.get_cities_by_country(item.id)
             for _item in cities:
@@ -52,7 +60,8 @@ async def list_common_types():
             job_type=constant.JOB_TYPES,
             company_type=constant.COMPANY_TYPES,
             work_place=constant.WORK_PLACES,
-            countries=rec_countries
+            countries=list_countries,
+            cities=rec_countries
         )
         return data
     except Exception:

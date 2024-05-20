@@ -2,7 +2,7 @@ from typing import List
 
 from config.postgres import SessionLocal, thread_local_session
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract, desc, and_
+from sqlalchemy import func, extract, desc, and_, text
 from models.ccp_job import Job
 from models.ccp_application import Application
 from models.ccp_jobtag import JobTag
@@ -20,15 +20,11 @@ class AnalysisRepository:
         self.db = SessionLocal()
         # self.thread_local_session = thread_local_session()
 
-    async def get_top_job_titles(self, db:Session, month=None, year=None) -> analysis.ListTopJobTitlesResponse:
-        query = self.db.query(Job.common_job_title, func.count(Job.id).label('job_count'))
+    async def get_top_job_titles(self, db:Session, top_number, time_from=None, time_to=None) -> analysis.ListTopJobTitlesResponse:
+        query = self.db.query(Job.common_job_title, func.count(Job.id).label('job_count')) \
+                    .filter(and_( Job.updated_at >= time_from, Job.updated_at<= time_to )) 
 
-        if month is not None:
-            query = query.filter(extract('month', Job.updated_at) == month)
-        if year is not None:
-            query = query.filter(extract('year', Job.updated_at) == year)
-
-        query = query.group_by(Job.common_job_title).order_by(func.count(Job.id).desc())
+        query = query.group_by(Job.common_job_title).order_by(func.count(Job.id).desc()).limit(top_number)
 
         records = query.all()
 
@@ -45,49 +41,72 @@ class AnalysisRepository:
         
         return analysis.ListTopJobTitlesResponse (data=data)
     
-    async def get_top_leader_salaries(self, db:Session, limit=5, hiring_level=None, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
-        query = self.db.query(Job.id, Job.job_title, Job.job_type, Job.company_type, Job.work_place, func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).label('average_salary'))
+    async def get_top_leader_salaries(self, db:Session, limit=5, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
+    
+        sql_query = '''
+                SELECT 
+            common_job_title,
+            hiring_level,
+            ROUND(AVG(
+                CASE 
+                    WHEN salary_from IS NULL AND salary_to IS NOT NULL THEN salary_to
+                    WHEN salary_from IS NOT NULL AND salary_to IS NULL THEN salary_from
+                    ELSE (COALESCE(salary_from, 0) + COALESCE(salary_to, 0)) / 2.0
+                END
+            )) AS average_salary
+        FROM 
+            ccp_job
+        WHERE 
+            common_job_title != 'Other position'
+        GROUP BY 
+            common_job_title, 
+            hiring_level
+        ORDER BY 
+            ROUND(AVG(
+                CASE 
+                    WHEN salary_from IS NULL AND salary_to IS NOT NULL THEN salary_to
+                    WHEN salary_from IS NOT NULL AND salary_to IS NULL THEN salary_from
+                    ELSE (COALESCE(salary_from, 0) + COALESCE(salary_to, 0)) / 2.0
+                END
+            ))
+        '''
+        if order != 0:
+            sql_query += " DESC"
+        else:
+            sql_query += " ASC"
+        if limit and limit > 0:
+            sql_query += f" LIMIT {limit};"
+        else:
+            sql_query += ";"
 
-        if hiring_level is not None:
-            query = query.filter(Job.hiring_level == hiring_level)
+        # Execute the SQL query
+        result =  self.db.execute(text(sql_query))
 
-        if order == 1:
-            query = query.order_by(func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).desc())
-        elif order == 2:
-            query = query.order_by(func.coalesce((Job.salary_from + Job.salary_to) / 2, 0).asc())
-
-        query = query.limit(limit)
-
-        results = query.all()
-        
+        # Fetch all the rows from the result
+        rows = result.fetchall()
         data = []
-        for item in results:
-            data.append (
-                analysis.GetTopJobTitlesSalaryResponse(
-                    id=item.id,
-                    job_title=item.job_title,
-                    job_type=item.job_type,
-                    company_type=item.company_type,
-                    work_place=item.work_place,
-                    salary=item.average_salary
-                )
-            )
 
+        for row in rows:
+            # Create an instance of analysis.GetTopJobTitlesSalaryResponse
+            item = analysis.GetTopJobTitlesSalaryResponse(
+                job_title=row[0],  
+                hiring_level=row[1], 
+                average_salary=row[2]  
+            )
+            # Append the created instance to the data list
+            data.append(item)
         db.close()
 
         return analysis.ListTopJobTitlesSalaryResponse(data=data)
     
-    async def get_most_applied_job_titles(self, db:Session, month=None, year=None) -> analysis.ListTopAppliedJobTitlesResponse:
+    async def get_most_applied_job_titles(self, db:Session, top_number, time_from=None, time_to=None)-> analysis.ListTopAppliedJobTitlesResponse:
         query = self.db.query(Job.common_job_title, func.count().label('job_count')) \
                     .join(Application, Job.id == Application.job_id)
-
-        if month is not None:
-            query = query.filter(extract('month', Application.updated_at) == month)
-        if year is not None:
-            query = query.filter(extract('year', Application.updated_at) == year)
+        if time_from and time_from != 'None' and time_to and time_to != None:
+            query = query.filter(and_( Application.updated_at >= time_from, Application.updated_at<= time_to )) 
 
         query = query.group_by(Job.common_job_title) \
-                    .order_by(func.count().desc())
+                    .order_by(func.count().desc()).limit(top_number)
 
         results = query.all()
 
@@ -276,6 +295,48 @@ class AnalysisRepository:
         db.close()
 
         return analysis.ListTopWorkTitlesResponse (data=data)
+    
+    async def get_change_job_salary_by_year(self, db:Session, job_title) -> analysis.ChangeJobSalaryByYearResponse:
+
+        sql_query = f'''
+        SELECT 
+            date_trunc('month', updated_at) AS month,
+            common_job_title,
+            hiring_level,
+            ROUND(AVG(
+                CASE 
+                    WHEN salary_from IS NULL AND salary_to IS NOT NULL THEN salary_to
+                    WHEN salary_from IS NOT NULL AND salary_to IS NULL THEN salary_from
+                    ELSE (COALESCE(salary_from, 0) + COALESCE(salary_to, 0)) / 2.0
+                END
+            )) AS average_salary
+        FROM 
+            ccp_job
+        WHERE 
+            common_job_title = '{job_title}' AND updated_at BETWEEN CURRENT_DATE - INTERVAL '1 year' AND CURRENT_DATE
+        GROUP BY 
+            common_job_title, 
+            hiring_level,
+            date_trunc('month', updated_at)
+        ORDER BY 
+            date_trunc('month', updated_at) ASC;
+        '''
+        records = db.execute(text(sql_query))
+
+        data = []
+
+        for item in records:
+            data.append (
+                analysis.ChangeJobSalaryByYearResponse(
+                    time=item.month,
+                    hiring_level=item.hiring_level,
+                    average_salary=item.average_salary
+                )
+            )
+        
+        db.close()
+
+        return analysis.ListChangeJobSalaryByYearResponse(data=data)
 
     async def get_change_job_salary_by_time(self, db:Session, time_from, time_to, level) -> analysis.ListChangeJobSalaryResponse:
         query = self.db.query (
@@ -313,9 +374,9 @@ class AnalysisRepository:
 
         return analysis.ListChangeJobSalaryResponse(data=data)
 
-    async def get_number_jobs_by_city(self, db:Session, country, job_title, level) -> analysis.ListNumberofJobsByCityResponse:
+    async def get_number_jobs_by_country(self, db:Session, country, job_title, level) -> analysis.ListNumberofJobsByCountryResponse:
         query = self.db.query(
-            City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
+            Job.hiring_level, City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
         ).join(
             Address, Job.address_id == Address.id
         ).join(
@@ -326,14 +387,14 @@ class AnalysisRepository:
             Country.country_name.like(country)
         )
 
-        if job_title is not None:
+        if job_title is not None and job_title!='None':
             query = query.filter(Job.common_job_title.like(job_title))
         
-        if level is not None:
+        if level is not None and level!='None':
             query = query.filter(Job.hiring_level.like(level))
 
         query = query.group_by(
-            City.city_name, Country.country_name
+            Job.hiring_level, City.city_name, Country.country_name
         ).order_by(
             func.count(Job.id).desc()
         )
@@ -343,7 +404,8 @@ class AnalysisRepository:
 
         for item in records:
             data.append(
-                analysis.NumberofJobsByCityResponse(
+                analysis.NumberofJobsByCountryResponse(
+                    hiring_level=item.hiring_level,
                     city=item.city_name,
                     count=item.job_number
                 )
@@ -351,7 +413,49 @@ class AnalysisRepository:
         
         db.close()
 
-        return analysis.ListNumberofJobsByCityResponse(
+        return analysis.ListNumberofJobsByCountryResponse(
             country=records[0][1],
             data=data
+        )
+
+    async def get_list_country(self, db:Session) -> analysis.ListCountryName:
+        query = self.db.query(
+            Country.country_name
+        )
+
+        records = query.all()
+        countries = []
+
+        for item in records:
+            countries.append(
+                analysis.Country(
+                    country_name= item.country_name
+                )
+            )
+        
+        db.close()
+
+        return analysis.ListCountryName(
+            data=countries
+        )
+
+    async def get_list_common_job_title(self, db:Session) -> analysis.ListJobTitle:
+        query = self.db.query(
+            Job.common_job_title
+        ).filter(Job.common_job_title != 'Other position').distinct()
+
+        records = query.all()
+        job_titles = []
+
+        for item in records:
+            job_titles.append(
+                analysis.JobTitle(
+                    job_title=item.common_job_title
+                )
+            )
+        
+        db.close()
+
+        return analysis.ListJobTitle(
+            data=job_titles
         )

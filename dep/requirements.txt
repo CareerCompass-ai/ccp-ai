@@ -15,7 +15,7 @@ itsdangerous==2.1.2
 Jinja2==3.1.3
 MarkupSafe==2.1.5
 numpy==1.26.4
-openai==1.13.3
+openai==1.30.1
 orjson==3.9.15
 pip==23.3.1
 psycopg2==2.9.9
@@ -44,3 +44,11 @@ pypdf2==3.0.1
 weaviate-client==4.5.5
 PyMuPDFb==1.24.3
 pymupdf==1.24.4
+reportlab==4.2.0
+pypdf==4.2.0
+langchain==0.2.0
+langchain-community==0.2.0
+langchain-core==0.2.0
+langchain-openai==0.1.7
+langchain-text-splitters==0.2.0
+langsmith==0.1.59

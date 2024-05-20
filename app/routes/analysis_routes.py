@@ -20,12 +20,13 @@ analysis_repo = AnalysisRepository()
 #1
 @analysis_router.get("/analysis/top-job-titles", response_model=analysis.ListTopJobTitlesResponse)
 async def list_top_job_titles(
-    month: int = Query(None, description="Month"),
-    year: int = Query(None, description="Year"),
+    top_number: int = Query(None, description="Top number of hiring jobs"),
+    time_from: str = Query(None, description="Start time of time to get the top hiring jobs"),
+    time_to: str = Query(None, description="End time of time to get the top hiring jobs"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_job_titles(db, month=month, year=year)
+        data = await analysis_repo.get_top_job_titles(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"list_top_job_titles failed error = {traceback.format_exc()}")
@@ -35,12 +36,11 @@ async def list_top_job_titles(
 @analysis_router.get("/analysis/top-job-titles-salary", response_model=analysis.ListTopJobTitlesSalaryResponse)
 async def list_top_job_titles_salary(
     top: int = Query(None, description="Number of records"),
-    level: str = Query(None, description="Hiring Level"),
-    order_by: int = Query(None, description="1: desc and 2: asc"),
+    order_by: int = Query(None, description="1: desc and 0: asc"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_leader_salaries(db, limit=top, hiring_level=level, order=order_by)
+        data = await analysis_repo.get_top_leader_salaries(db, limit=top, order=order_by)
         return data
     except Exception:
         logger.error(f"list_top_job_titles_salary failed error = {traceback.format_exc()}")
@@ -49,12 +49,13 @@ async def list_top_job_titles_salary(
 #6
 @analysis_router.get("/analysis/top-applied-job-titles", response_model=analysis.ListTopAppliedJobTitlesResponse)
 async def list_top_applied_job_titles(
-    month: int = Query(None, description="Month"),
-    year: int = Query(None, description="Year"),
+    top_number: int = Query(None, description="Number of records"),
+    time_from: str = Query(None, description="Start time of time to get top apply job"),
+    time_to: str = Query(None, description="End time of time to get top apply job"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_most_applied_job_titles(db, month=month, year=year)
+        data = await analysis_repo.get_most_applied_job_titles(db, top_number=top_number,time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"list_top_applied_job_titles failed error = {traceback.format_exc()}")
@@ -170,15 +171,49 @@ async def get_change_of_job_salary_by_time(
         logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
-@analysis_router.get("/analysis/number-jobs-by-city", response_model=analysis.ListNumberofJobsByCityResponse)
-async def get_number_of_job__by_city(
+@analysis_router.get("/analysis/salary-change-by-year", response_model=analysis.ListChangeJobSalaryByYearResponse)
+async def get_change_of_job_salary_by_year(
+    job_title: str = Query(None, description="Selected job title"),
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:        
+        data = await analysis_repo.get_change_job_salary_by_year(db, job_title=job_title)
+        return data
+    except Exception:
+        logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+@analysis_router.get("/analysis/number-jobs-by-country", response_model=analysis.ListNumberofJobsByCountryResponse)
+async def get_number_jobs_by_country(
     country: str = Query(None, description="Country name"),
     job_title: str = Query(None, description="Common job title"),
     level: str = Query(None, description="Hiring level"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_number_jobs_by_city(db, job_title=job_title, country=country, level=level)
+        data = await analysis_repo.get_number_jobs_by_country(db, job_title=job_title, country=country, level=level)
+        return data
+    except Exception:
+        logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+@analysis_router.get("/analysis/get-countries", response_model=analysis.ListCountryName)
+async def get_country(
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:        
+        data = await analysis_repo.get_list_country(db)
+        return data
+    except Exception:
+        logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+@analysis_router.get("/analysis/get-common-job-titles", response_model=analysis.ListJobTitle)
+async def get_common_job_titles(
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:        
+        data = await analysis_repo.get_list_common_job_title(db)
         return data
     except Exception:
         logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
