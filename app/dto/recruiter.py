@@ -29,3 +29,23 @@ class SaveTalentRequest(BaseModel):
 
 class SaveTalentResponse(BaseModel):
     msg: str
+
+class TalentSavedResponse(BaseModel):
+    candidate_id: int
+    year_of_experience: Optional[int] = None
+    open_to_work: Optional[bool] = None
+    self_introduction: Optional[str] = None
+    level: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    work_title: Optional[str] = None
+    gender: Optional[bool] = None
+    dob: Optional[datetime] = None
+    detailed_address: Optional[str] = None
+    city_name: Optional[str] = None
+    country_name: Optional[str] = None
+
+class ListTalentSavedResponse(BaseModel):
+    records: List[TalentSavedResponse]
