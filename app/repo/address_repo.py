@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from models.ccp_address import Address
 from app.dto import address
 
-from typing import List
+from typing import List, Optional
 
 class AddressRepository:
     def __init__(self):
@@ -29,3 +29,14 @@ class AddressRepository:
         self.db.close()
         
         return address_aggregates
+
+    def create(self, session: Session, record: Optional[address.AddressBase]) -> Optional[Address]:
+        if record:
+            record = Address(**record.model_dump())
+            session.add(record)
+            session.flush()  
+            session.refresh(record)  
+
+            return record
+        
+        return None
