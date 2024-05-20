@@ -4,7 +4,7 @@ from openai import OpenAI
 import numpy as np
 import httpx
 import time
-
+import json
 import constant.ai as constant
 
 from pkg.logging import logger
@@ -125,8 +125,8 @@ class AI:
                     ],
                     top_p=0.2,
                 )
-
-                return response.choices[0].message.content.strip()
+                tmp = json.loads(response.choices[0].message.content.strip())
+                return tmp.get("answer", "")
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
                     logger.error(f"Bad request error:: {e}")

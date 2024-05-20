@@ -31,11 +31,13 @@ from app.repo.job_minio_repo import JobMinioRepository
 from app.repo.application_repo import ApplicationRepository
 from app.repo.resume_repo import ResumeRepository
 from app.repo.candidate_repo import CandidateRepository
+from app.repo.address_repo import AddressRepository
 
 from models.ccp_application import Application
 
 from app.dto import job
 from app.dto import resume
+from app.dto import address
 
 from app.ai.ai_helper import AI
 
@@ -57,6 +59,7 @@ job_minio_repo = JobMinioRepository()
 application_repo = ApplicationRepository()
 resume_repo = ResumeRepository()
 candidate_repo = CandidateRepository()
+address_repo = AddressRepository()
 
 ai_helper = AI()
 kafka_producer = KafkaProducer()
@@ -177,7 +180,6 @@ async def get_job_from_qdrant(
 @job_router.post("/job/create", response_model=job.CreateJobPostResponse)
 async def create(
         job_title: str = Form(None),
-        content: str = Form(None),
         is_hiring: str = Form(None),
         opened_date: str = Form(None),
         closed_date: str = Form(None),
@@ -185,7 +187,10 @@ async def create(
         salary_to: str = Form(None),
         job_type: str = Form(None),
         company_type: str = Form(None),
-        address_id: str = Form(None),
+        address_detail: str = Form(None),
+        city_id: str = Form(None),
+        city_name: str = Form(None),
+        country_name: str = Form(None),
         recruiter_id: str = Form(None),
         hiring_level: str = Form(None),
         work_place: str = Form(None),
@@ -217,6 +222,13 @@ async def create(
         
         common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
 
+        address_record = address.AddressBase(
+            city_id=city_id,
+            detailed_address=address_detail,
+            created_at=now,
+            updated_at=now
+        )
+
         record = job.JobBase(
             job_title=job_title,
             common_job_title=common_job_title,
@@ -229,7 +241,6 @@ async def create(
             job_type=job_type,
             work_place=work_place,
             company_type=company_type,
-            address_id=address_id,
             recruiter_id=recruiter_id,
             hiring_level=hiring_level,
             file_name=file_name,
@@ -261,6 +272,9 @@ async def create(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
+                address_rec = address_repo.create(session, address_record)
+
+                record.address_id = address_rec.id
                 job_rec = job_repo.create(session, record)
 
                 if tags is not None:
