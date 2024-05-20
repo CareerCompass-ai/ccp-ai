@@ -28,22 +28,6 @@ async def list_common_types():
     try:
         tags = await tag_repo.list_tag()
 
-        data = common.ListCommonTypes(
-            tag=tags,
-            hiring_level=constant.HIRING_LEVELS,
-            job_type=constant.JOB_TYPES,
-            company_type=constant.COMPANY_TYPES,
-            work_place=constant.WORK_PLACES,
-        )
-
-        return data
-    except Exception:
-        logger.error(f"list_common_types failed error = {traceback.format_exc()}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-    
-@common_router.get("/common/city", response_model=common.ListCountry)
-async def list_cities_in_countries():
-    try:
         rec_countries = []
         countries = country_repo.get_countries()
         for item in countries:
@@ -61,7 +45,16 @@ async def list_cities_in_countries():
                     city=rec_cities
                 )
             )
-        return common.ListCountry(records=rec_countries)
+
+        data = common.ListCommonTypes(
+            tag=tags,
+            hiring_level=constant.HIRING_LEVELS,
+            job_type=constant.JOB_TYPES,
+            company_type=constant.COMPANY_TYPES,
+            work_place=constant.WORK_PLACES,
+            countries=rec_countries
+        )
+        return data
     except Exception:
         logger.error(f"list_common_types failed error = {traceback.format_exc()}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
