@@ -88,7 +88,6 @@ class ChangeJobSalaryResponse(BaseModel):
 
 class ChangeJobSalaryByYearResponse(BaseModel):
     time: datetime
-    job_title: str
     hiring_level: str
     average_salary: float
 

@@ -329,7 +329,6 @@ class AnalysisRepository:
             data.append (
                 analysis.ChangeJobSalaryByYearResponse(
                     time=item.month,
-                    job_title=item.common_job_title,
                     hiring_level=item.hiring_level,
                     average_salary=item.average_salary
                 )
@@ -443,7 +442,7 @@ class AnalysisRepository:
     async def get_list_common_job_title(self, db:Session) -> analysis.ListJobTitle:
         query = self.db.query(
             Job.common_job_title
-        )
+        ).filter(Job.common_job_title != 'Other position').distinct()
 
         records = query.all()
         job_titles = []
