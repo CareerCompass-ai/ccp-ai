@@ -63,3 +63,6 @@ class CreateResumePostResponse(BaseModel):
 
 class GetResumesOfCandidateResponse(BaseModel):
     records: List[ResumeBase]
+
+class DeleteResumeResponse(BaseModel):
+    msg: str

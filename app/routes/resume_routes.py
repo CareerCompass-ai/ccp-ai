@@ -77,3 +77,17 @@ async def upload(
     finally:
         if file is not None:
             file.file.close()
+
+@resume_router.put("/resume/delete", response_model=resume.DeleteResumeResponse)
+async def delete(
+    resume_id: int = Form(None),
+):
+    try:
+        await resume_repo.delete_resume(resume_id)
+        #Delete resume in MinIO or not?
+        
+        return resume.DeleteResumeResponse(msg="Delete resume successfully!")
+
+    except Exception:
+        logger.error(f"delete_resume failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
