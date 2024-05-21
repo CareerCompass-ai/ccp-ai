@@ -276,6 +276,11 @@ async def generate_qna_v2(req: qna.CreateQnARequest):
             job_dict.pop('common_job_title', None)
             job_dict.pop('recruiter_id', None)
             job_dict.pop('file_name', None)
+            job_dict.pop('s_content', None)
+            job_dict.pop('combined_content', None)
+            job_dict.pop('is_applied', None)
+            job_dict.pop('is_saved', None)
+            job_dict.pop('matching_score', None)
             modified_data.append(job_dict)
 
         # Convert modified data to strings
