@@ -28,7 +28,7 @@ qdrant_client = qdrant.setup_qdrant_connection()
 
 # REF: https://medium.com/@shubhama94262/building-a-multiple-choice-question-app-using-langchain-and-llm-model-d59839fd1150
 # REF: https://cookbook.openai.com/examples/vector_databases/qdrant/qa_with_langchain_qdrant_and_openai
-
+# REF: https://forum.bubble.io/t/any-idea-how-to-break-large-pdfs-into-chunks-for-open-ai-s-davinci-model/254365
 @qna_router.post("/qna/generate", response_model=qna.CreateQnAResponse, status_code=status.HTTP_201_CREATED)
 async def generate_qna(req: qna.CreateQnARequest):
     try:
