@@ -43,18 +43,7 @@ class RecruiterRepository:
         self.db.close()
         
         return recruiter.ListJobsPostedResponse (records=record)
-    
-    async def create_saved_talent(self, record: TalentSaved) -> TalentSaved:
-        self.db.add(record)
-        self.db.commit()
-        
-        return record
-    
-    async def delete_saved_talent(self, record: TalentSaved) -> TalentSaved:
-        self.db.query(TalentSaved).filter_by(candidate_id = record.candidate_id, recruiter_id = record.recruiter_id).delete()
-        self.db.commit()
 
-        return record
     
     async def get_talents_saved(self, id) -> recruiter.ListTalentSavedResponse:
         result = self.db.query(TalentSaved.candidate_id, Candidate.year_of_experience, Candidate.open_to_work, Candidate.self_introduction, Candidate.level,

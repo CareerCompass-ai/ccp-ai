@@ -7,6 +7,7 @@ from app.dto import recruiter
 from models.ccp_talent_saved import TalentSaved
 
 from app.repo.recruiter_repo import RecruiterRepository
+from app.repo.talent_saved_repo import TalentSavedRepository
 
 from pkg.logging import logger
 
@@ -16,6 +17,7 @@ recruiter_router = APIRouter(
 )
 
 recruiter_repo = RecruiterRepository()
+talent_repo = TalentSavedRepository()
 
 @recruiter_router.get("/recruiter/jobs-posted", response_model=recruiter.ListJobsPostedResponse)
 async def list_jobs_posted(
@@ -42,11 +44,11 @@ async def update_saved_talent(
         )
 
         if req.type == 1:
-            await recruiter_repo.create_saved_talent(record)
+            await talent_repo.create_saved_talent(record)
             return recruiter.SaveTalentResponse (msg= "Save Talent Successfully!")
         
         elif req.type == 2:
-            await recruiter_repo.delete_saved_talent(record)
+            await talent_repo.delete_saved_talent(record)
             return recruiter.SaveTalentResponse (msg= "Unsave Talent Successfully!")
         
     
