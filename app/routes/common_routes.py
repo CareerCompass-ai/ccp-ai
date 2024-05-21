@@ -4,6 +4,10 @@ import traceback
 from app.dto import common
 
 from app.repo.tag_repo import TagRepository 
+from app.repo.country_repo import CountryRepository
+from app.repo.city_repo import CityRepository
+
+from models.ccp_country import Country
 
 from config.postgres import PostgresDB
 import constant.common as constant
@@ -16,11 +20,39 @@ common_router = APIRouter(
 )
 
 tag_repo = TagRepository()
+country_repo = CountryRepository()
+city_repo = CityRepository()
 
 @common_router.get("/common/types", response_model=common.ListCommonTypes)
 async def list_common_types():
     try:
         tags = await tag_repo.list_tag()
+
+        rec_countries = []
+
+        countries = country_repo.get_countries()
+        list_countries = []
+        for item in countries:
+            list_countries.append (
+                common.ListCountry (
+                    country_id=item.id,
+                    country_name=item.country_name
+                )
+            )
+            rec_cities = []
+            cities = city_repo.get_cities_by_country(item.id)
+            for _item in cities:
+                rec_cities.append(common.City(
+                    city_id=_item.id,
+                    city_name=_item.city_name
+                ))
+            rec_countries.append(
+                common.Country(
+                    country_id=item.id,
+                    country_name=item.country_name,
+                    city=rec_cities
+                )
+            )
 
         data = common.ListCommonTypes(
             tag=tags,
@@ -28,8 +60,9 @@ async def list_common_types():
             job_type=constant.JOB_TYPES,
             company_type=constant.COMPANY_TYPES,
             work_place=constant.WORK_PLACES,
+            countries=list_countries,
+            cities=rec_countries
         )
-
         return data
     except Exception:
         logger.error(f"list_common_types failed error = {traceback.format_exc()}")
