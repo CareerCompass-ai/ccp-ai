@@ -9,9 +9,10 @@ from qdrant_client.http.models import PointStruct
 from qdrant_client.conversions.common_types import VectorParams
 
 from pkg.logging import logger
-from app.dto import qna
+from app.dto import minio, qna
 from config.qdrant import QdrantVDB as qdrant
 from app.repo.job_qdrant_repo import JobQdrantRepository
+from app.repo.minio_repo import MinioRepository
 
 # AI
 from .qna_helper import load_docs, split_docs
@@ -25,10 +26,11 @@ qna_router = APIRouter(
 ai_helper = AI()
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 qdrant_client = qdrant.setup_qdrant_connection()
+minio_repo = MinioRepository()
 
 # REF: https://medium.com/@shubhama94262/building-a-multiple-choice-question-app-using-langchain-and-llm-model-d59839fd1150
 # REF: https://cookbook.openai.com/examples/vector_databases/qdrant/qa_with_langchain_qdrant_and_openai
-
+# REF: https://forum.bubble.io/t/any-idea-how-to-break-large-pdfs-into-chunks-for-open-ai-s-davinci-model/254365
 @qna_router.post("/qna/generate", response_model=qna.CreateQnAResponse, status_code=status.HTTP_201_CREATED)
 async def generate_qna(req: qna.CreateQnARequest):
     try:
@@ -205,25 +207,31 @@ async def generate_qna(req: qna.CreateQnARequest):
         doc.build(elements)
         buffer.seek(0)
 
+        # Define the collection name
+        collection_name = f"qna_{'_'.join(map(str, sorted(req.list_job_ids, reverse=True)))}"
+
         # Save the buffer as a file
-        temp_pdf_path = "tmp/job_storage/pdf/temp_data.pdf"
+        temp_pdf_path = "tmp/job_storage/temp_data.pdf"
         with open(temp_pdf_path, "wb") as f:
             f.write(buffer.getvalue())
 
         # Load the PDF file
-        documents = load_docs("tmp/job_storage/pdf/")
+        documents = load_docs("tmp/job_storage/")
 
         # Split the documents into chunks
         chunks = split_docs(documents)
+
+        minio_repo.upload(minio.UploadMinioRequest(
+            bucket_name="job-qna-storage",
+            file_name=f"{collection_name}.pdf",
+            temp_path=temp_pdf_path
+        ))
 
         # Delete the temporary PDF file after splitting into chunks
         os.remove(temp_pdf_path)
 
         # Embed each chunk
         embeddings = [ai_helper.get_embedding(chunk.page_content) for chunk in chunks]
-
-        # Define the collection name
-        collection_name = f"qna_{'_'.join(map(str, sorted(req.list_job_ids, reverse=True)))}"
 
         vectors_config = VectorParams(
             size=len(embeddings[0]),
@@ -254,6 +262,66 @@ async def generate_qna(req: qna.CreateQnARequest):
         logger.error(f"create_qna failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
+@qna_router.post("/qna/generate_v2", response_model=qna.CreateQnAResponse, status_code=status.HTTP_201_CREATED)
+async def generate_qna_v2(req: qna.CreateQnARequest):
+    try:
+        # Retrieve job list from req.list_job_ids
+        data = job_qdrant_repo.list_jobs_by_ids(req.list_job_ids)
+
+        modified_data = []
+        for job in data:
+            job_dict = job.model_dump()
+            job_dict.pop('display_content', None)
+            job_dict.pop('content_url', None)
+            job_dict.pop('common_job_title', None)
+            job_dict.pop('recruiter_id', None)
+            job_dict.pop('file_name', None)
+            job_dict.pop('s_content', None)
+            job_dict.pop('combined_content', None)
+            job_dict.pop('is_applied', None)
+            job_dict.pop('is_saved', None)
+            job_dict.pop('matching_score', None)
+            modified_data.append(job_dict)
+
+        # Convert modified data to strings
+        string_data = [str(job) for job in modified_data]
+
+        # Define the collection name
+        collection_name = f"qna_{'_'.join(map(str, sorted(req.list_job_ids, reverse=True)))}"
+
+        # Embed each string
+        embeddings = [ai_helper.get_embedding(chunk) for chunk in string_data]
+
+        vectors_config = VectorParams(
+            size=len(embeddings[0]),
+            distance="Cosine"       
+        )
+
+        # Create the collection in Qdrant if it does not exist
+        qdrant_client.recreate_collection(
+            collection_name=collection_name,
+            vectors_config=vectors_config,
+        )
+
+        # Add embeddings to the Qdrant collection
+        points = []
+        for i, embedding in enumerate(embeddings):
+            point = PointStruct(id=i, vector=embedding, payload={"text": string_data[i]})
+            points.append(point)
+
+        qdrant_client.upsert(collection_name=collection_name, points=points)
+
+        # Return response with the collection name
+        return qna.CreateQnAResponse(
+            message="QnA created successfully",
+            collection_name=collection_name
+        )
+
+    except Exception:
+        logger.error(f"create_qna failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+
+
 @qna_router.post("/qna/questioning", response_model=qna.QuestionAndAnswerResponse)
 async def questioning(req: qna.QuestionAndAnswerRequest):
     try:
@@ -264,6 +332,7 @@ async def questioning(req: qna.QuestionAndAnswerRequest):
         relevant_docs = qdrant_client.search(
             collection_name=req.collection_name,
             query_vector=query_embedding,
+            limit=2 # currently limit to 2 relevant docs
         )
 
         # Prepare input for OpenAI model
