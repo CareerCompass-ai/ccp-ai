@@ -9,7 +9,6 @@ from langchain_community.embeddings import SentenceTransformerEmbeddings
 def load_docs(directory):
     loader = PyPDFDirectoryLoader(directory)
     documents = loader.load()
-    print(documents[0].page_content)
     return documents
 
 # Function to split documents into chunks
