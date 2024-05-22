@@ -77,3 +77,25 @@ async def upload(
     finally:
         if file is not None:
             file.file.close()
+
+@resume_router.put("/resume/delete", response_model=resume.DeleteResumeResponse)
+async def delete(
+    resume_id: int = Form(None),
+):
+    try:
+        now = datetime.now()
+
+        props = {
+            "active": False,
+            'updated_at': now,
+        }
+
+        resume_repo.update_with_map(resume_id, props)
+        
+        #Delete resume in MinIO or not?
+        
+        return resume.DeleteResumeResponse(msg="Delete resume successfully!")
+
+    except Exception:
+        logger.error(f"delete_resume failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
