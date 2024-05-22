@@ -1,5 +1,13 @@
 from config.postgres import SessionLocal
+
 from models.ccp_job import Job
+from models.ccp_talent_saved import TalentSaved
+from models.ccp_address import Address
+from models.ccp_candidate import Candidate
+from models.ccp_user import User
+from models.ccp_city import City
+from models.ccp_country import Country
+
 from app.dto import recruiter
 
 class RecruiterRepository:
@@ -35,5 +43,42 @@ class RecruiterRepository:
         self.db.close()
         
         return recruiter.ListJobsPostedResponse (records=record)
+
+    
+    async def get_talents_saved(self, id) -> recruiter.ListTalentSavedResponse:
+        result = self.db.query(TalentSaved.candidate_id, Candidate.year_of_experience, Candidate.open_to_work, Candidate.self_introduction, Candidate.level,
+                               User.email, User.phone, User.first_name, User.last_name, User.work_title, User.gender, User.dob,
+                               Address.detailed_address, City.city_name, Country.country_name) \
+                            .join(Candidate, TalentSaved.candidate_id == Candidate.id)\
+                            .join(User, Candidate.id == User.id)\
+                            .join(Address, User.address_id == Address.id)\
+                            .join(City, Address.city_id == City.id)\
+                            .join(Country, City.country_id == Country.id)\
+                            .filter(TalentSaved.recruiter_id == id)\
+                            .all()
+        record = []
+        for item in result:
+            record.append(
+                recruiter.TalentSavedResponse(
+                    candidate_id=item.candidate_id,
+                    year_of_experience=item.year_of_experience,
+                    open_to_work=item.open_to_work,
+                    self_introduction=item.self_introduction,
+                    level=item.level,
+                    email=item.email,
+                    phone=item.phone,
+                    first_name=item.first_name,
+                    last_name=item.last_name,
+                    work_title=item.work_title,
+                    gender=item.gender,
+                    dob=item.dob,
+                    detailed_address=item.detailed_address,
+                    city_name=item.city_name,
+                    country_name=item.country_name
+                )
+            )
+
+        self.db.close()
         
+        return recruiter.ListTalentSavedResponse(records=record)
     
