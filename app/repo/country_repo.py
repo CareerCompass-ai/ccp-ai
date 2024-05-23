@@ -14,8 +14,8 @@ class CountryRepository:
     def get_by_id(self, id):
         return self.db.query(Country).filter(Country.id == id).first()
     
-    def get_countries(self, db: Session) -> List[Country]:
-        countries = db.query(Country).all()
+    def get_countries(self) -> List[Country]:
+        countries = self.db.query(Country).all()
         country_aggregates = []
         for item in countries:
             country_aggregate = country.CountryBase(
@@ -27,5 +27,4 @@ class CountryRepository:
             country_aggregates.append(country_aggregate)
 
         self.db.close()
-        
         return country_aggregates

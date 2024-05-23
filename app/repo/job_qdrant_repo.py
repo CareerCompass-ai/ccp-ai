@@ -17,6 +17,15 @@ class JobQdrantRepository:
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
 
+    def list_jobs_by_ids(self, ids: List[int]) -> List[job.JobAggregate]:
+        records = self.client.retrieve(
+            collection_name=self.index_name,
+            ids=ids,
+            with_vectors=False
+        )
+
+        return [mapper.toJobDTO(record.payload) for record in records]
+
     def get_job(self, input: Optional[job.GetJobRequest]) -> job.JobAggregate:
         if input.id is not None:
             record = self.client.retrieve(

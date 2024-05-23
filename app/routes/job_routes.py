@@ -31,11 +31,13 @@ from app.repo.job_minio_repo import JobMinioRepository
 from app.repo.application_repo import ApplicationRepository
 from app.repo.resume_repo import ResumeRepository
 from app.repo.candidate_repo import CandidateRepository
+from app.repo.address_repo import AddressRepository
 
 from models.ccp_application import Application
 
 from app.dto import job
 from app.dto import resume
+from app.dto import address
 
 from app.ai.ai_helper import AI
 
@@ -57,6 +59,7 @@ job_minio_repo = JobMinioRepository()
 application_repo = ApplicationRepository()
 resume_repo = ResumeRepository()
 candidate_repo = CandidateRepository()
+address_repo = AddressRepository()
 
 ai_helper = AI()
 kafka_producer = KafkaProducer()
@@ -177,7 +180,6 @@ async def get_job_from_qdrant(
 @job_router.post("/job/create", response_model=job.CreateJobPostResponse)
 async def create(
         job_title: str = Form(None),
-        content: str = Form(None),
         is_hiring: str = Form(None),
         opened_date: str = Form(None),
         closed_date: str = Form(None),
@@ -185,7 +187,10 @@ async def create(
         salary_to: str = Form(None),
         job_type: str = Form(None),
         company_type: str = Form(None),
-        address_id: str = Form(None),
+        address_detail: str = Form(None),
+        city_id: str = Form(None),
+        city_name: str = Form(None),
+        country_name: str = Form(None),
         recruiter_id: str = Form(None),
         hiring_level: str = Form(None),
         work_place: str = Form(None),
@@ -217,6 +222,13 @@ async def create(
         
         common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
 
+        address_record = address.AddressBase(
+            city_id=city_id,
+            detailed_address=address_detail,
+            created_at=now,
+            updated_at=now
+        )
+
         record = job.JobBase(
             job_title=job_title,
             common_job_title=common_job_title,
@@ -229,7 +241,6 @@ async def create(
             job_type=job_type,
             work_place=work_place,
             company_type=company_type,
-            address_id=address_id,
             recruiter_id=recruiter_id,
             hiring_level=hiring_level,
             file_name=file_name,
@@ -261,6 +272,9 @@ async def create(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
+                address_rec = address_repo.create(session, address_record)
+
+                record.address_id = address_rec.id
                 job_rec = job_repo.create(session, record)
 
                 if tags is not None:
@@ -382,6 +396,8 @@ async def update_job(
     job_type: str = Form(None) ,
     company_type: str = Form(None) ,
     address_id: str = Form(None) , # TODO: Use city_id and country_id instead of address_id, example: replace by: city_id: str = Form(None), country_id: str = Form(None)
+    address_detail: str = Form(None),
+    city_id: str = Form(None),
     hiring_level: str = Form(None), 
     work_place: str = Form(None) ,
     tags: str = Form(None),
@@ -389,20 +405,33 @@ async def update_job(
     session: Session = Depends(postgres.PostgresDB.get_db),
 ):
     try:
+        now = datetime.now()
         
-        if tags is not None:
-            #Remove jobtags
-            jobtag_repo.delete_jobtags(job_id=job_id)
-            #Update jobtags
-            tags = tags.split(',')
-            for tag_id in tags:
-                jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
+        #Remove jobtags
+        jobtag_repo.delete_jobtags(job_id=job_id)
+        #Update jobtags
+        session.autocommit = False # TODO: remove this?
+        with session.begin():
+            try:
+                tags = tags.split(',')
+                for tag_id in tags:
+                    jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
+            
+            except IntegrityError:
+                session.rollback()
+                logger.error(f"create jobtags failed error [IntegrityError] = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jobtags create failed.")
+
+
+        #Update address
+        a_props = {
+            "city_id": city_id,
+            "detailed_address": address_detail,
+            "updated_at": now
+        }
 
         # Change common_job_title?
         common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
-        now = datetime.now()
-
-        # TODO: Create address_id from city_id and country_id first, then assign to the job_id
 
         props = {
             "job_title": job_title,
@@ -412,7 +441,6 @@ async def update_job(
             "salary_to": salary_to,
             "job_type": job_type,
             "company_type": company_type,
-            "address_id": address_id,# TODO: Get address_id from above TODO note
             "hiring_level": hiring_level,
             "work_place": work_place,
             "updated_at": now,
@@ -456,15 +484,18 @@ async def update_job(
             props["content_url"] = presigned_url
             props["file_name"] = new_file_name
         
-        session.autocommit = False # TODO: remove this?
-        with session.begin():
-            try:
-                job_repo.update_with_map(job_id, props)
 
-            except SQLAlchemyError:
-                session.rollback()
-                logger.error(f"update_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        try:
+            #update address
+            address_repo.update_with_map(address_id, a_props)
+
+            #update job
+            job_repo.update_with_map(job_id, props)
+
+        except SQLAlchemyError:
+            session.rollback()
+            logger.error(f"update_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
         
     except Exception:
         logger.error(f"update_job failed error = {traceback.format_exc()}")

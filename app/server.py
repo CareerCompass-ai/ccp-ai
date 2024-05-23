@@ -8,6 +8,7 @@ from .routes.common_routes import common_router
 from .routes.candidate_routes import candidate_router
 from .routes.recruiter_routes import recruiter_router
 from .routes.analysis_routes import analysis_router
+from .routes.ai import ai_router
 
 app = FastAPI()
 
@@ -32,6 +33,9 @@ app.include_router(analysis_router)
 
 # common router
 app.include_router(common_router)
+
+# AI router
+app.include_router(ai_router)
 
 @app.get("/health-check")
 async def root():
