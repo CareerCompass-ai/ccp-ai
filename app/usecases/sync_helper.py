@@ -11,7 +11,7 @@ class SyncHelper:
         self.weaviate_client = weaviate_client
         # self.es_client = es_client
 
-    def update_fields_qdrant(self, collection_name: str, id: int, payload):
+    async def update_fields_qdrant(self, collection_name: str, id: int, payload):
         self.qdrant_client.set_payload(
             collection_name=collection_name,
             payload=payload,
@@ -30,7 +30,7 @@ class SyncHelper:
             ]
         )
 
-    def insert_to_weaviate(self, class_name: str, payload):
+    async def insert_to_weaviate(self, class_name: str, payload):
         collection = self.weaviate_client.collections.get(class_name)
 
         properties = payload.model_dump()
@@ -44,7 +44,7 @@ class SyncHelper:
             # }
         )
 
-    def replace_object_weaviate(self, class_name: str, payload):
+    async def replace_object_weaviate(self, class_name: str, payload):
         collection = self.weaviate_client.collections.get(class_name)
 
         properties = payload.model_dump()
@@ -56,7 +56,7 @@ class SyncHelper:
         properties["job_id"]=payload.id
         collection.data.replace(record.objects[0].uuid, properties=properties)
 
-    def update_object_properties_weaviate(self, class_name: str, payload):
+    async def update_object_properties_weaviate(self, class_name: str, payload):
         collection = self.weaviate_client.collections.get(class_name)
 
         properties = payload.model_dump()

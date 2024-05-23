@@ -6,11 +6,8 @@ from app.dto import resume
 from typing import List, Optional
 
 class ResumeRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
-    def get_by_id(self, id):
-        result = self.db.query(Resume).filter(Resume.id == id).first()
+    async def get_by_id(self, db:Session, id):
+        result = db.query(Resume).filter(Resume.id == id).first()
         return result
     
     async def post_resume(self, db:Session, input: Optional[resume.ResumeBase]):

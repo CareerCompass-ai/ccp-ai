@@ -15,7 +15,7 @@ class ResumeQdrantRepository:
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
         
-    def count_total_record(self, filter: Optional[models.Filter]) -> int:
+    async def count_total_record(self, filter: Optional[models.Filter]) -> int:
         return self.client.count(
             collection_name=self.index_name,
             count_filter=filter,
@@ -46,7 +46,7 @@ class ResumeQdrantRepository:
             )
         )
 
-        total_record = self.count_total_record(filter).count
+        total_record = await self.count_total_record(filter).count
 
         records = []
         hits = List[types.ScoredPoint]
