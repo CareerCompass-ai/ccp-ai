@@ -14,3 +14,6 @@ class QuestionAndAnswerRequest(BaseModel):
 class QuestionAndAnswerResponse(BaseModel):
     collection_name: str = ""
     answer: str = ""
+
+class AssistantResponse(BaseModel):
+    tmp: str = ""
