@@ -6,14 +6,11 @@ from app.dto import job_tag
 from typing import List
 
 
-class JobTagsRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-        
-    def get_by_id(self, id_tag, id_job):
-        return self.db.query(JobTag).filter(JobTag.tag_id == id_tag and JobTag.job_id == id_job).first()
+class JobTagsRepository:        
+    async def get_by_id(self, db:Session, id_tag, id_job):
+        return db.query(JobTag).filter(JobTag.tag_id == id_tag and JobTag.job_id == id_job).first()
     
-    def get_jobtags(self, db: Session) -> List[JobTag]:
+    async def get_jobtags(self, db: Session) -> List[JobTag]:
         tags = db.query(JobTag).all()
         jobtag_aggregates = []
         for item in tags:
@@ -24,13 +21,11 @@ class JobTagsRepository:
                 updated_at=item.updated_at
             )
             jobtag_aggregates.append(jobtag_aggregate)
-
-        self.db.close()
         
         return jobtag_aggregates
     
-    def get_jobtags_for_job(self, job_id: int) -> List[JobTag]:
-        tags = self.db.query(JobTag).filter(JobTag.job_id == job_id).all()
+    async def get_jobtags_for_job(self, db:Session, job_id: int) -> List[JobTag]:
+        tags = db.query(JobTag).filter(JobTag.job_id == job_id).all()
         jobtag_aggregates = []
         for item in tags:
             jobtag_aggregate = job_tag.JobTagsBase(
@@ -41,11 +36,9 @@ class JobTagsRepository:
             )
             jobtag_aggregates.append(jobtag_aggregate)
 
-        self.db.close()
-
         return jobtag_aggregates
     
-    def create(self, session: Session, tag_id: int, job_id: int) -> JobTag:
+    async def create(self, session: Session, tag_id: int, job_id: int) -> JobTag:
         record = JobTag(tag_id=tag_id, job_id=job_id)
         session.add(record)
         session.flush()  
@@ -53,6 +46,6 @@ class JobTagsRepository:
 
         return record
 
-    def delete_jobtags(self, job_id: int):
-        self.db.query(JobTag).filter(JobTag.job_id == job_id).delete()
-        self.db.commit()
+    async def delete_jobtags(self, db: Session, job_id: int):
+        db.query(JobTag).filter(JobTag.job_id == job_id).delete()
+        db.commit()

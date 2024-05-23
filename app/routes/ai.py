@@ -29,7 +29,20 @@ qdrant_client = qdrant.setup_qdrant_connection()
 minio_repo = MinioRepository()
 
 # Assistant
-@ai_router.post("/assistant/create", response_model=ai.AssistantResponse)
+@ai_router.post("/assistant/generate", response_model=ai.AssistantResponse)
+@ai_router.post("/assistant/questioning", response_model=ai.AssistantResponse)
+# Flow:
+# Note: different date time range will have different assistant
+# 1. call load_analysis to get file, save file_name to database, next time check exist? if exist note: file has named follow date range then upload the analysis.file to openai -> file.id
+# 2. Get the file.id from openai response
+# 3. Save the file_name and file.id to the database
+# 4. Create a new assistant with the file.id
+# 5. Save the assistant.id to the database
+# 6. Create thread
+# 7. Save the thread.id to the database
+# 8. When user enter chat -> create message with thread.id, run the thread with thread_id and assistant_id, while loop until the thread is done
+# 9. Return the response
+
 
 # Question and Answering
 # REF: https://medium.com/@shubhama94262/building-a-multiple-choice-question-app-using-langchain-and-llm-model-d59839fd1150
@@ -39,7 +52,7 @@ minio_repo = MinioRepository()
 async def generate_qna(req: ai.CreateQnARequest):
     try:
         # Retrieve job list from req.list_job_ids
-        data = job_qdrant_repo.list_jobs_by_ids(req.list_job_ids)
+        data = await job_qdrant_repo.list_jobs_by_ids(req.list_job_ids)
 
         # Create a temporary PDF file with job list
         modified_data = []
@@ -220,12 +233,12 @@ async def generate_qna(req: ai.CreateQnARequest):
             f.write(buffer.getvalue())
 
         # Load the PDF file
-        documents = load_docs("tmp/job_storage/")
+        documents = await load_docs("tmp/job_storage/")
 
         # Split the documents into chunks
-        chunks = split_docs(documents)
+        chunks = await split_docs(documents)
 
-        minio_repo.upload(minio.UploadMinioRequest(
+        await minio_repo.upload(minio.UploadMinioRequest(
             bucket_name="job-qna-storage",
             file_name=f"{collection_name}.pdf",
             temp_path=temp_pdf_path
@@ -235,7 +248,7 @@ async def generate_qna(req: ai.CreateQnARequest):
         os.remove(temp_pdf_path)
 
         # Embed each chunk
-        embeddings = [ai_helper.get_embedding(chunk.page_content) for chunk in chunks]
+        embeddings = [await ai_helper.get_embedding(chunk.page_content) for chunk in chunks]
 
         vectors_config = VectorParams(
             size=len(embeddings[0]),
@@ -270,7 +283,7 @@ async def generate_qna(req: ai.CreateQnARequest):
 async def generate_qna_v2(req: ai.CreateQnARequest):
     try:
         # Retrieve job list from req.list_job_ids
-        data = job_qdrant_repo.list_jobs_by_ids(req.list_job_ids)
+        data = await job_qdrant_repo.list_jobs_by_ids(req.list_job_ids)
 
         modified_data = []
         for job in data:
@@ -294,7 +307,7 @@ async def generate_qna_v2(req: ai.CreateQnARequest):
         collection_name = f"qna_{'_'.join(map(str, sorted(req.list_job_ids, reverse=True)))}"
 
         # Embed each string
-        embeddings = [ai_helper.get_embedding(chunk) for chunk in string_data]
+        embeddings = [await ai_helper.get_embedding(chunk) for chunk in string_data]
 
         vectors_config = VectorParams(
             size=len(embeddings[0]),
@@ -330,7 +343,7 @@ async def generate_qna_v2(req: ai.CreateQnARequest):
 async def questioning(req: ai.QuestionAndAnswerRequest):
     try:
         # Calculate the embedding for the query
-        query_embedding = ai_helper.get_embedding(req.question)
+        query_embedding = await ai_helper.get_embedding(req.question)
 
         # Retrieve relevant documents from Qdrant
         relevant_docs = qdrant_client.search(
@@ -343,7 +356,7 @@ async def questioning(req: ai.QuestionAndAnswerRequest):
         input_documents = [doc.payload["text"] for doc in relevant_docs]
         
         # Get answer from OpenAI model
-        answer = ai_helper.get_answer(req.question, input_documents)
+        answer = await ai_helper.get_answer(req.question, input_documents)
         
         return ai.QuestionAndAnswerResponse(
             collection_name=req.collection_name,

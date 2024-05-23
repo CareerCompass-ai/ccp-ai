@@ -15,7 +15,8 @@ from config.weaviate import WeaviateVDB as weaviate
 from config.qdrant import QdrantVDB as qdrant
 
 from pkg.logging import logger
-
+from sqlalchemy.orm import Session
+from config.postgres import PostgresDB
 
 admin_router = APIRouter(
     prefix="/admin/api",
@@ -84,28 +85,32 @@ async def delete_class(payload: DeleteClassRequest, is_authenticated: bool = Dep
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @admin_router.post("/manual-sync-job")
-async def manual_sync_job(req: ManualSyncJobRequest, is_authenticated: bool = Depends(authenticate_user)):
+async def manual_sync_job(
+    req: ManualSyncJobRequest, 
+    is_authenticated: bool = Depends(authenticate_user), 
+    db: Session = Depends(PostgresDB.get_db)
+):
     try:
         for id in req.ids:
-            job_agg = agg_repo.get_job(id)
-            summarized_content = ai_helper.get_job_summarized(job_agg.content)
-            vector = ai_helper.get_embedding(summarized_content)
+            job_agg = await agg_repo.get_job(db=db, id=id)
+            summarized_content = await ai_helper.get_job_summarized(job_agg.content)
+            vector = await ai_helper.get_embedding(summarized_content)
             job_agg.s_content = summarized_content
 
-            summarized_content = ai_helper.get_job_summarized(job_agg.content)
+            summarized_content = await ai_helper.get_job_summarized(job_agg.content)
 
-            acronyms_and_abbreviations = ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
+            acronyms_and_abbreviations = await ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
 
             # combine content
-            combined_content = combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
+            combined_content = await combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
 
             # vectorize the combined content
-            vector = ai_helper.get_embedding(combined_content)
+            vector = await ai_helper.get_embedding(combined_content)
 
             job_agg.s_content = summarized_content
             job_agg.combined_content = combined_content
             
-            sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
+            await sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
 
         return {"message": "ok"}
     except Exception:

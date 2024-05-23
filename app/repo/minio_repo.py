@@ -18,7 +18,7 @@ class MinioRepository:
             secure=False
         )
 
-    def upload(self, input: Optional[minio.UploadMinioRequest]) -> minio.UploadMinioResponse:
+    async def upload(self, input: Optional[minio.UploadMinioRequest]) -> minio.UploadMinioResponse:
         try:
             if not self.client.bucket_exists(input.bucket_name):
                 self.client.make_bucket(input.bucket_name)
@@ -38,13 +38,13 @@ class MinioRepository:
             logger.error(f"upload with bucket:[{input.bucket_name}] with file:[{input.file_name}] failed err: {traceback.format_exc()}")
             raise
 
-    def generate_presigned_url(self, bucket_name: str, object_name: str) -> str:
+    async def generate_presigned_url(self, bucket_name: str, object_name: str) -> str:
         try:
             return self.client.presigned_put_object(bucket_name, object_name)
         except S3Error as err:
             logger.error(f"generate_presigned_url with bucket:[{bucket_name}] with file:[{object_name}] failed err: {traceback.format_exc()}")
 
-    def remove_object(self, bucket_name, file_name):
+    async def remove_object(self, bucket_name, file_name):
         if self.client.bucket_exists(bucket_name):
             self.client.remove_object(bucket_name, str(file_name))
         else:

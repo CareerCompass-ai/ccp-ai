@@ -2,6 +2,8 @@ from datetime import datetime
 
 from typing import Optional
 
+from sqlalchemy.orm import Session
+
 from app.dto.job import JobAggregate 
 from app.dto.resume import ResumeAggregate 
 
@@ -31,8 +33,8 @@ class Aggregate:
         self.application_repo = ApplicationRepository()
         self.candidate_skills_repo = CandidateSkillsRepository()
 
-    def get_job(self, id: int) -> Optional[JobAggregate]:
-        job = self.job_repo.get_by_id(id)
+    async def get_job(self, db:Session, id: int) -> Optional[JobAggregate]:
+        job = await self.job_repo.get_by_id(db=db, id=id)
 
         if job is None:
             raise ValueError(f"Job with ID {id} not found")
@@ -66,35 +68,35 @@ class Aggregate:
             
         if job.recruiter_id is not None:
             job_aggregate.recruiter_id = job.recruiter_id
-            user = self.user_repo.get_by_id(job.recruiter_id)
+            user = await self.user_repo.get_by_id(db=db, id=job.recruiter_id)
             if user is not None:
                 job_aggregate.recruiter_name = user.first_name + ' ' + user.last_name
 
-        address = self.address_repo.get_by_id(job.address_id)
+        address = await self.address_repo.get_by_id(db=db, id=job.address_id)
         if address is not None:
             job_aggregate.address_id = job.address_id # TODO: double check
             
-        city = self.city_repo.get_by_id(address.city_id)
-        country = self.country_repo.get_by_id(city.country_id)
+        city = await self.city_repo.get_by_id(db=db, id=address.city_id)
+        country = await self.country_repo.get_by_id(db=db, id=city.country_id)
         address_full = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
         
         job_aggregate.address = address_full
         job_aggregate.city_name = city.city_name
         job_aggregate.country_name = country.country_name
         
-        job_tag_list = self.jobtags_repo.get_jobtags_for_job(job_aggregate.id)
+        job_tag_list = await self.jobtags_repo.get_jobtags_for_job(db=db, job_id=job_aggregate.id)
         
         tag_list = []
         for job_tag in job_tag_list:
-            tag = self.tag_repo.get_by_id(job_tag.tag_id)
+            tag = await self.tag_repo.get_by_id(db=db, id=job_tag.tag_id)
             tag_list.append(tag.tag_name)
         
         job_aggregate.job_tags = tag_list
         
         return job_aggregate
     
-    def get_resume(self, id: int) -> Optional[ResumeAggregate]:
-        resume = self.resume_repo.get_by_id(id)
+    async def get_resume(self, db:Session, id: int) -> Optional[ResumeAggregate]:
+        resume = await self.resume_repo.get_by_id(db=db, id=id)
 
         if resume is None:
             raise ValueError(f"Resume with ID {id} not found")
@@ -114,30 +116,30 @@ class Aggregate:
         
         if resume.candidate_id is not None:
             resume_aggregate.candidate_id = resume.candidate_id
-            user = self.user_repo.get_by_id(resume.candidate_id)
+            user = await self.user_repo.get_by_id(db=db, id=resume.candidate_id)
             if user is not None:
                 resume_aggregate.candidate_name = user.first_name + ' ' + user.last_name
                 resume_aggregate.work_title = user.work_title
-                address = self.address_repo.get_by_id(user.address_id)
+                address = await self.address_repo.get_by_id(db=db, id=user.address_id)
                 if address is not None:
-                    city = self.city_repo.get_by_id(address.city_id)
-                    country = self.country_repo.get_by_id(city.country_id)
+                    city = await self.city_repo.get_by_id(db=db, id=address.city_id)
+                    country = await self.country_repo.get_by_id(db=db, id=city.country_id)
                     resume_aggregate.candidate_address = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
             
-            candidate = self.candidate_repo.get_by_id(resume.candidate_id)
+            candidate = await self.candidate_repo.get_by_id(db=db, id=resume.candidate_id)
             if candidate is not None:
                 resume_aggregate.open_to_work = candidate.open_to_work
                 resume_aggregate.level = candidate.level
             
-            candidate_skills_list = self.candidate_skills_repo.get_by_id(resume.candidate_id)
+            candidate_skills_list = await self.candidate_skills_repo.get_by_id(db=db, id=resume.candidate_id)
             skill_list = []
             for i in candidate_skills_list:
-                skill = self.tag_repo.get_by_id(i.skill_id)
+                skill = await self.tag_repo.get_by_id(db=db, id=i.skill_id)
                 skill_list.append(skill.tag_name)
             resume_aggregate.skills = skill_list
             
         return resume_aggregate
 
-    def get_list_job_id(self, id: int):
-        job_id_list = self.application_repo.get_job_ids_by_resume_id(id)
+    async def get_list_job_id(self, db:Session, id: int):
+        job_id_list = await self.application_repo.get_job_ids_by_resume_id(db=db, resume_id=id)
         return job_id_list

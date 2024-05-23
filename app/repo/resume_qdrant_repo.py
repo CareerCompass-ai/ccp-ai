@@ -15,14 +15,14 @@ class ResumeQdrantRepository:
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
         
-    def count_total_record(self, filter: Optional[models.Filter]) -> int:
+    async def count_total_record(self, filter: Optional[models.Filter]) -> int:
         return self.client.count(
             collection_name=self.index_name,
             count_filter=filter,
             exact=True
         )
     
-    def list_resumes(self, input: Optional[resume.ListResumeRequest]) -> resume.ListResumeResponse:
+    async def list_resumes(self, input: Optional[resume.ListResumeRequest]) -> resume.ListResumeResponse:
         if input.page <= 0:
             input.page = 1
         if input.size <= 0:
@@ -45,8 +45,8 @@ class ResumeQdrantRepository:
                 match=models.MatchValue(value=input.job_id)
             )
         )
-
-        total_record = self.count_total_record(filter).count
+        _res = await self.count_total_record(filter)
+        total_record = _res.count
 
         records = []
         hits = List[types.ScoredPoint]

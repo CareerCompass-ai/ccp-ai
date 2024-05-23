@@ -42,7 +42,7 @@ class AI:
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
-    def get_answer(self, question, input_documents, max_retries=3):
+    async def get_answer(self, question, input_documents, max_retries=3):
         retries = 0
         input_text = "\n".join(input_documents)
         prompt = (
@@ -87,7 +87,7 @@ class AI:
         return None
 
 
-    def get_embedding(self, input, max_retries=3):
+    async def get_embedding(self, input, max_retries=3):
         retries = 0
         while retries < max_retries:
             try:
@@ -105,7 +105,7 @@ class AI:
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
-    def get_summarized_content(self, input:str, prompt:str, type:str, max_retries=3):
+    async def get_summarized_content(self, input:str, prompt:str, type:str, max_retries=3):
         retries = 0
         content = prompt.format(input=input)
         while retries < max_retries:
@@ -131,13 +131,13 @@ class AI:
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
-    def get_job_summarized(self, input, max_retries=3):
-        return self.get_summarized_content(input, constant.SUMMARIZE_JOB_DESCRIPTION_PROMPT, "job", max_retries)
+    async def get_job_summarized(self, input, max_retries=3):
+        return await self.get_summarized_content(input, constant.SUMMARIZE_JOB_DESCRIPTION_PROMPT, "job", max_retries)
 
-    def get_resume_summarized(self, input, max_retries=3):
-        return self.get_summarized_content(input, constant.SUMMARIZE_RESUME_PROMPT, "resume", max_retries)
+    async def get_resume_summarized(self, input, max_retries=3):
+        return await self.get_summarized_content(input, constant.SUMMARIZE_RESUME_PROMPT, "resume", max_retries)
     
-    def get_common_job_title(self, input:str, prompt:str, max_retries=3):
+    async def get_common_job_title(self, input:str, prompt:str, max_retries=3):
         retries = 0
         content = prompt.format(input=input)
         while retries < max_retries:
@@ -163,7 +163,7 @@ class AI:
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
-    def get_acronyms_and_abbreviation_of_job(self, input:str, max_retries=3) -> str:
+    async def get_acronyms_and_abbreviation_of_job(self, input:str, max_retries=3) -> str:
         retries = 0
         prompt = constant.GET_ACRONYMS_AND_ABBREVIATION_PROMPT
         content = prompt.format(input=input)
