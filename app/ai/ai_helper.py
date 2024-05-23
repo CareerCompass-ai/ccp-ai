@@ -17,6 +17,31 @@ class AI:
         self.beast_completion_model = constant.OPENAI_BEAST_COMPLETION_MODEL
         self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
 
+    def create_assistant(self, prompt, max_retries=3):
+        try:
+            assistant = self.openai_client.beta.assistants.create(
+                name="Data Visualization",
+                instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
+                f"You have access to a sandboxed environment for writing and testing code."
+                f"When you are asked to create a visualization you should follow these steps:"
+                f"1. Write the code."
+                f"2. Anytime you write new code display a preview of the code to show your work."
+                f"3. Run the code to confirm that it runs."
+                f"4. If the code is successful display the visualization."
+                f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.",
+                tools=[{"type": "code_interpreter"}],
+                model=self.beast_completion_model
+            )
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 400:
+                logger.error(f"Bad request error: {e}")
+            else:
+                logger.info(f"Request to OpenAI API failed. Retrying...")
+                retries += 1
+                time.sleep(2)
+        logger.info("Exceeded maximum number of retries. Please try again later.")
+        return None
+
     def get_answer(self, question, input_documents, max_retries=3):
         retries = 0
         input_text = "\n".join(input_documents)
