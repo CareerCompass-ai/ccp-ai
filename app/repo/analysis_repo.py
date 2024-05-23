@@ -439,16 +439,6 @@ class AnalysisRepository:
         records = query.all()
         data = []
 
-        for row in rows:
-            # Create an instance of analysis.GetTopJobTitlesSalaryResponse
-            item = analysis.NumberofJobsByCountryResponse(
-                hiring_level=row[0],  
-                city=row[1], 
-                count=row[2]  
-            )
-            # Append the created instance to the data list
-            data.append(item)
-        db.close()
         for item in records:
             data.append(
                 analysis.NumberofJobsByCountryResponse(
@@ -498,4 +488,4 @@ class AnalysisRepository:
         
         return analysis.ListJobTitle(
             data=job_titles
-        )
+        ) 
