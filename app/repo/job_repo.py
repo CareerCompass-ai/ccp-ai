@@ -7,17 +7,11 @@ from models.ccp_job import Job
 from app.dto import job
 
 class JobRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
-    def get_by_id(self, id):
-        data = self.db.query(Job).filter(Job.id == id).first()
-
-        self.db.close()
-
+    async def get_by_id(self, db:Session, id):
+        data = db.query(Job).filter(Job.id == id).first()
         return data
     
-    def create(self, session: Session, record: Optional[job.JobBase]) -> Optional[Job]:
+    async def create(self, session: Session, record: Optional[job.JobBase]) -> Optional[Job]:
         if record:
             record = Job(**record.model_dump())
             session.add(record)
@@ -28,26 +22,23 @@ class JobRepository:
         
         return None
     
-    def update_with_map(self, job_id: int, props: dict) -> Optional[Job]:
-        with SessionLocal() as session:
-            job_record = session.query(Job).filter(Job.id == job_id).first()
-            if not job_record:
-                return None
-            
-            for key, val in props.items():
-                if hasattr(job_record, key):
-                    setattr(job_record, key, val)
-            
-            session.commit()
-            session.refresh(job_record)
-            return job_record
+    async def update_with_map(self, db:Session, job_id: int, props: dict) -> Optional[Job]:
+        job_record = db.query(Job).filter(Job.id == job_id).first()
+        if not job_record:
+            return None
+        
+        for key, val in props.items():
+            if hasattr(job_record, key):
+                setattr(job_record, key, val)
+        
+        db.commit()
+        db.refresh(job_record)
+        return job_record
 
-    def get_latest_job(self) -> Optional[Job]:
-        return self.db.query(Job).order_by(desc(Job.updated_at)).first()
+    async def get_latest_job(self, db: Session) -> Optional[Job]:
+        return db.query(Job).order_by(desc(Job.id)).first()    
     
-    def get_file_name(self, job_id: int):
-        data = self.db.query(Job.file_name).filter(Job.id == job_id).first()
-
-        self.db.close()
+    async def get_file_name(self, db:Session, job_id: int):
+        data = db.query(Job.file_name).filter(Job.id == job_id).first()
 
         return data.file_name

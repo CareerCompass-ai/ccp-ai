@@ -1,5 +1,5 @@
 from config.postgres import SessionLocal
-
+from sqlalchemy.orm import Session
 from models.ccp_job import Job
 from models.ccp_talent_saved import TalentSaved
 from models.ccp_address import Address
@@ -10,12 +10,9 @@ from models.ccp_country import Country
 
 from app.dto import recruiter
 
-class RecruiterRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-        
-    async def get_jobs_posted(self, id) -> recruiter.ListJobsPostedResponse:
-        result =  self.db.query(Job.id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
+class RecruiterRepository:        
+    async def get_jobs_posted(self, db:Session, id) -> recruiter.ListJobsPostedResponse:
+        result =  db.query(Job.id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                                 Job.salary_from, Job.salary_to, Job.job_type, Job.work_place,
                                  Job.company_type, Job.hiring_level, Job.created_at, Job.updated_at, Job.applied_count).filter(Job.recruiter_id == id).all()
         record = []
@@ -39,14 +36,12 @@ class RecruiterRepository:
                     applied_count=job.applied_count
                 )
             )
-
-        self.db.close()
         
         return recruiter.ListJobsPostedResponse (records=record)
 
     
-    async def get_talents_saved(self, id) -> recruiter.ListTalentSavedResponse:
-        result = self.db.query(TalentSaved.candidate_id, Candidate.year_of_experience, Candidate.open_to_work, Candidate.self_introduction, Candidate.level,
+    async def get_talents_saved(self, db:Session, id) -> recruiter.ListTalentSavedResponse:
+        result = db.query(TalentSaved.candidate_id, Candidate.year_of_experience, Candidate.open_to_work, Candidate.self_introduction, Candidate.level,
                                User.email, User.phone, User.first_name, User.last_name, User.work_title, User.gender, User.dob,
                                Address.detailed_address, City.city_name, Country.country_name) \
                             .join(Candidate, TalentSaved.candidate_id == Candidate.id)\
@@ -77,8 +72,6 @@ class RecruiterRepository:
                     country_name=item.country_name
                 )
             )
-
-        self.db.close()
         
         return recruiter.ListTalentSavedResponse(records=record)
     

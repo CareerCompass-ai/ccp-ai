@@ -1,44 +1,37 @@
 from config.postgres import SessionLocal
+from sqlalchemy.orm import Session
 
 from models.ccp_resume import Resume
 from app.dto import resume
 from typing import List, Optional
 
 class ResumeRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
-    def get_by_id(self, id):
-        result = self.db.query(Resume).filter(Resume.id == id).first()
+    async def get_by_id(self, db:Session, id):
+        result = db.query(Resume).filter(Resume.id == id).first()
         return result
     
-    async def post_resume(self, input: Optional[resume.ResumeBase]):
+    async def post_resume(self, db:Session, input: Optional[resume.ResumeBase]):
         if input:
             resume_instance = Resume(**input.model_dump())
             resume_instance.id = None
-            self.db.add(resume_instance)
-            self.db.commit()
-            self.db.refresh(resume_instance)
-
-            self.db.close()
+            db.add(resume_instance)
+            db.commit()
+            db.refresh(resume_instance)
             return resume_instance
         
-    async def get_by_user_id(self, user_id) -> List[Resume]:
-        result = self.db.query(Resume).filter(Resume.candidate_id == user_id, Resume.active == True).all()
-
-        self.db.close()
+    async def get_by_user_id(self, db:Session, user_id) -> List[Resume]:
+        result = db.query(Resume).filter(Resume.candidate_id == user_id, Resume.active == True).all()
         return result
     
-    def update_with_map(self, resume_id: int, props: dict) -> Optional[Resume]:
-        with SessionLocal() as session:
-            resume_record = session.query(Resume).filter(Resume.id == resume_id).first()
-            if not resume_record:
-                return None
-            
-            for key, val in props.items():
-                if hasattr(resume_record, key):
-                    setattr(resume_record, key, val)
-            
-            session.commit()
-            session.refresh(resume_record)
-            return resume_record
+    async def update_with_map(self, db:Session, resume_id: int, props: dict) -> Optional[Resume]:
+        resume_record = db.query(Resume).filter(Resume.id == resume_id).first()
+        if not resume_record:
+            return None
+        
+        for key, val in props.items():
+            if hasattr(resume_record, key):
+                setattr(resume_record, key, val)
+        
+        db.commit()
+        db.refresh(resume_record)
+        return resume_record

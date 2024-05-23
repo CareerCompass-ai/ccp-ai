@@ -10,15 +10,12 @@ from models.ccp_viewedjob import ViewedJob
 
 from app.dto import candidate
 
-class CandidateRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-        
-    def get_by_id(self, id):
-        return self.db.query(Candidate).filter(Candidate.id == id).first()
+class CandidateRepository:      
+    async def get_by_id(self, db:Session, id):
+        return db.query(Candidate).filter(Candidate.id == id).first()
     
-    def get_applied_jobs(self, id) -> candidate.ListAppliedJobsResponse:
-        applications = self.db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
+    async def get_applied_jobs(self, db:Session, id) -> candidate.ListAppliedJobsResponse:
+        applications = db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                                      Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Application.created_at, Application.updated_at)\
             .join(Resume, Application.resume_id == Resume.id)\
             .join(Job, Application.job_id == Job.id)\
@@ -47,24 +44,22 @@ class CandidateRepository:
                 )
             )
 
-        self.db.close()
-        
         return candidate.ListAppliedJobsResponse(
             records=records
         )
     
-    def create_saved_job(self, record: JobSaved) -> JobSaved:
-        self.db.add(record)
-        self.db.commit()
+    async def create_saved_job(self, db:Session, record: JobSaved) -> JobSaved:
+        db.add(record)
+        db.commit()
 
         return record
 
-    def delete_saved_job(self, record: JobSaved) -> candidate.UpdateSaveJobResponse:
-        self.db.query(JobSaved).filter_by(candidate_id=record.candidate_id, job_id=record.job_id).delete()
-        self.db.commit()
+    async def delete_saved_job(self, db:Session, record: JobSaved) -> candidate.UpdateSaveJobResponse:
+        db.query(JobSaved).filter_by(candidate_id=record.candidate_id, job_id=record.job_id).delete()
+        db.commit()
 
-    def get_saved_jobs(self, id) -> candidate.ListSavedJobsResponse:
-        jobs = self.db.query(JobSaved.job_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
+    async def get_saved_jobs(self, db:Session, id) -> candidate.ListSavedJobsResponse:
+        jobs = db.query(JobSaved.job_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                              Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, JobSaved.created_at, JobSaved.updated_at)\
             .join(JobSaved, Job.id == JobSaved.job_id)\
             .filter(JobSaved.candidate_id == id)\
@@ -90,30 +85,24 @@ class CandidateRepository:
                     updated_at=job.updated_at
                 )
             )
-
-        self.db.close()
         
         return candidate.ListSavedJobsResponse(
             records=records
         )
     
     # TODO: Refactor this file
-    async def get_job_saved_by_candidate_id(self, user_id, job_id) -> JobSaved:
-        result = self.db.query(JobSaved).filter(JobSaved.candidate_id==user_id, JobSaved.job_id==job_id).first()
-        
-        self.db.close()
+    async def get_job_saved_by_candidate_id(self, db:Session, user_id, job_id) -> JobSaved:
+        result = db.query(JobSaved).filter(JobSaved.candidate_id==user_id, JobSaved.job_id==job_id).first()
 
         return result
     
-    def check_viewed_job(self, candidate_id, job_id) -> candidate.JobViewdResponse:
-        result = self.db.query(ViewedJob).filter(ViewedJob.candidate_id == candidate_id, ViewedJob.job_id == job_id).first()
+    async def check_viewed_job(self, db:Session, candidate_id, job_id) -> candidate.JobViewdResponse:
+        result = db.query(ViewedJob).filter(ViewedJob.candidate_id == candidate_id, ViewedJob.job_id == job_id).first()
         if result is not None:
             return candidate.JobViewdResponse (
                 job_id=result.job_id,
                 candidate_id=result.candidate_id,
                 time=result.view_datetime
             )
-        
-        self.db.close()
 
         return result

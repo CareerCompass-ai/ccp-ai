@@ -17,7 +17,7 @@ class JobQdrantRepository:
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
 
-    def list_jobs_by_ids(self, ids: List[int]) -> List[job.JobAggregate]:
+    async def list_jobs_by_ids(self, ids: List[int]) -> List[job.JobAggregate]:
         records = self.client.retrieve(
             collection_name=self.index_name,
             ids=ids,
@@ -26,7 +26,7 @@ class JobQdrantRepository:
 
         return [mapper.toJobDTO(record.payload) for record in records]
 
-    def get_job(self, input: Optional[job.GetJobRequest]) -> job.JobAggregate:
+    async def get_job(self, input: Optional[job.GetJobRequest]) -> job.JobAggregate:
         if input.id is not None:
             record = self.client.retrieve(
                 self.index_name,
@@ -38,7 +38,7 @@ class JobQdrantRepository:
 
             return mapper.toJobDTO(record.payload)
 
-    def count_total_record(self, filter: Optional[models.Filter]) -> int:
+    async def count_total_record(self, filter: Optional[models.Filter]) -> int:
         return self.client.count(
             collection_name=self.index_name,
             count_filter=filter,
@@ -48,7 +48,7 @@ class JobQdrantRepository:
                 # If `False` - provide the approximate count of points matching the filter. Works faster.
         )
     
-    def update_dynamic_filters(self, hits, dynamic_filters):
+    async def update_dynamic_filters(self, hits, dynamic_filters):
         for item in hits:
             payload = item.payload
             if "hiring_level" in payload:
@@ -60,7 +60,7 @@ class JobQdrantRepository:
             if "company_type" in payload:
                 dynamic_filters['company_types'][payload["company_type"]] += 1
 
-    def build_dynamic_filters(self, dynamic_filters):
+    async def build_dynamic_filters(self, dynamic_filters):
         hiring_levels_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['hiring_levels'].items()]
         job_types_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['job_types'].items()]
         work_places_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['work_places'].items()]
@@ -73,7 +73,7 @@ class JobQdrantRepository:
             company_types=company_types_list
         )
 
-    def reduce_ranges(self, temp_range):
+    async def reduce_ranges(self, temp_range):
         if not temp_range:
             return []
 
@@ -105,7 +105,7 @@ class JobQdrantRepository:
         return reduced_ranges
 
     # TODO: find threshold to decide return or not return || base on score -> return label ? relavent or not, not return
-    def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
+    async def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
         if input.page <= 0:
             input.page = 1
         if input.size <= 0:
@@ -132,7 +132,7 @@ class JobQdrantRepository:
                 elif 'none' in temp[1].lower():
                     temp[1] = None
                 temp_range.append(temp)
-            reduced_range = self.reduce_ranges(temp_range)
+            reduced_range = await self.reduce_ranges(temp_range)
             for range in reduced_range:
                 filter = models.Filter()
                 if filter.must is None:
@@ -249,7 +249,7 @@ class JobQdrantRepository:
                                 ),
                             )
                     )
-                total_record += self.count_total_record(filter).count
+                total_record += await self.count_total_record(filter).count
 
                 # TODO: get all records match filter and return the dynamic filters
 
@@ -421,7 +421,7 @@ class JobQdrantRepository:
                     )
                 )
 
-            total_record += self.count_total_record(filter).count
+            total_record += await self.count_total_record(filter).count
 
             hits = List[types.ScoredPoint]
             if input.vectors is not None:
@@ -452,7 +452,7 @@ class JobQdrantRepository:
                     limit=total_record,
                     offset=(input.page - 1) * input.size,
                 )
-                self.update_dynamic_filters(hits, dynamic_filters)
+                await self.update_dynamic_filters(hits, dynamic_filters)
 
             else:
                 result = self.client.scroll(
@@ -483,7 +483,7 @@ class JobQdrantRepository:
                     with_payload=True,
                     # with_vectors=False
                 )
-                self.update_dynamic_filters(result[0], dynamic_filters)
+                await self.update_dynamic_filters(result[0], dynamic_filters)
 
             del hits
             del filter
@@ -492,7 +492,7 @@ class JobQdrantRepository:
         dynamic_filters['job_types'] = dict(dynamic_filters['job_types'])
         dynamic_filters['work_places'] = dict(dynamic_filters['work_places'])
         dynamic_filters['company_types'] = dict(dynamic_filters['company_types'])
-        dynamic_filters_obj = self.build_dynamic_filters(dynamic_filters)
+        dynamic_filters_obj = await self.build_dynamic_filters(dynamic_filters)
 
         return job.ListJobResponse(
             count=total_record,

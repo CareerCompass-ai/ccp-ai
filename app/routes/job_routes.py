@@ -1,5 +1,6 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
 from sqlalchemy.orm import Session
+from config.postgres import PostgresDB
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 import PyPDF2
@@ -14,7 +15,6 @@ import traceback
 from producer.producer import KafkaProducer
 
 from constant import config as cfg
-from config.postgres import SessionLocal
 from config import postgres
 from config.qdrant import QdrantVDB as qdrant
 from pkg.logging import logger
@@ -27,7 +27,7 @@ from app.repo.job_weaviate_repo import JobWeaviateRepository
 from app.repo.job_repo import JobRepository 
 from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
-from app.repo.job_minio_repo import JobMinioRepository
+from app.repo.minio_repo import MinioRepository
 from app.repo.application_repo import ApplicationRepository
 from app.repo.resume_repo import ResumeRepository
 from app.repo.candidate_repo import CandidateRepository
@@ -38,10 +38,12 @@ from models.ccp_application import Application
 from app.dto import job
 from app.dto import resume
 from app.dto import address
+from app.dto import minio
 
 from app.ai.ai_helper import AI
 
 import constant.ai as constant
+import constant.config as minio_constant
 
 
 job_router = APIRouter(
@@ -55,7 +57,7 @@ job_weaviate_repo = JobWeaviateRepository(collection_name="Job")
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
 job_repo = JobRepository()
 jobtag_repo = JobTagsRepository()
-job_minio_repo = JobMinioRepository()
+minio_repo = MinioRepository()
 application_repo = ApplicationRepository()
 resume_repo = ResumeRepository()
 candidate_repo = CandidateRepository()
@@ -85,6 +87,7 @@ async def list_jobs_from_qdrant(
     salary:  Optional[str] = Query(None, description="Salary range (multile range)"),
     is_hiring:  Optional[bool] = Query(True, description="Is hiring"),
     alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)"),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     # map query params to req
     try:
@@ -109,17 +112,18 @@ async def list_jobs_from_qdrant(
         )
 
         if search_type == "vector": # handle vector search
-            req.latest_job_id = job_repo.get_latest_job().id
+            latest_job =  await job_repo.get_latest_job(db=db)
+            req.latest_job_id = latest_job.id
 
             if input is not None:
-                vectors = ai_helper.get_embedding(input)
+                vectors = await ai_helper.get_embedding(input)
                 req.vectors = vectors.tolist() if vectors is not None else None
 
-            data = job_qdrant_repo.list_jobs(input=req)
+            data = await job_qdrant_repo.list_jobs(input=req)
 
             return data
         elif search_type == "hybrid": # handle hybrid search
-            data = job_weaviate_repo.list_jobs(input=req)
+            data = await job_weaviate_repo.list_jobs(input=req)
 
             return data
         # elif search_type == "fulltext": # handle full-text search
@@ -140,23 +144,24 @@ async def list_jobs_from_qdrant(
 async def get_job_from_qdrant(
     id: int = Query(None, description="Job ID"),
     user_id: Optional[int] = Query(None, description="User ID"),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         req = job.GetJobRequest(
             id=id,
         )
 
-        data = job_qdrant_repo.get_job(input=req)
+        data = await job_qdrant_repo.get_job(input=req)
 
         # Check whether this user applied to this job or not
-        resumes = await resume_repo.get_by_user_id(user_id)
+        resumes = await resume_repo.get_by_user_id(db=db, user_id=user_id)
         resume_ids = []
         for resume in resumes:
             resume_ids.append(resume.id)
-        applications = await application_repo.list_by_resume_ids(resume_ids=resume_ids, job_id=id)
+        applications = await application_repo.list_by_resume_ids(db=db, resume_ids=resume_ids, job_id=id)
 
         # Check whether this user saved this job or not
-        job_saved = await candidate_repo.get_job_saved_by_candidate_id(user_id=user_id, job_id=req.id)
+        job_saved = await candidate_repo.get_job_saved_by_candidate_id(db=db, user_id=user_id, job_id=req.id)
 
         if len(applications) > 0:
             data.is_applied = True
@@ -189,8 +194,6 @@ async def create(
         company_type: str = Form(None),
         address_detail: str = Form(None),
         city_id: str = Form(None),
-        city_name: str = Form(None),
-        country_name: str = Form(None),
         recruiter_id: str = Form(None),
         hiring_level: str = Form(None),
         work_place: str = Form(None),
@@ -211,8 +214,8 @@ async def create(
         file_name = str(uuid.uuid4()) + "_" + file.filename
 
         # Upload file to MinIO and get the public URL
-        upload_response = job_minio_repo.upload_job_to_minio(
-            job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=file_name)
+        upload_response = await minio_repo.upload(
+            minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=file_name)
         )
         public_url = upload_response.url
 
@@ -220,7 +223,7 @@ async def create(
 
         now = datetime.now()
         
-        common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
+        common_job_title = await ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
 
         address_record = address.AddressBase(
             city_id=city_id,
@@ -272,16 +275,16 @@ async def create(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                address_rec = address_repo.create(session, address_record)
+                address_rec = await address_repo.create(session, address_record)
 
                 record.address_id = address_rec.id
-                job_rec = job_repo.create(session, record)
+                job_rec = await job_repo.create(session, record)
 
                 if tags is not None:
                     tags = tags.split(',')
 
                     for tag_id in tags:
-                        jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_rec.id)
+                        await jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_rec.id)
 
                 return job.CreateJobPostResponse()
 
@@ -294,7 +297,6 @@ async def create(
         logger.error(f"create_job failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     finally:
-        session.close()
         if file is not None:
             file.file.close()
 
@@ -310,12 +312,11 @@ async def list_resumes_from_qdrant(
             size=size,
             job_id=id
         )
-        data = resume_qdrant_repo.list_resumes(input=req)
+        data = await resume_qdrant_repo.list_resumes(input=req)
         return data
     except Exception:
         logger.error(f"list_resumes_from_qdrant failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-
 
 @job_router.post("/job/apply", response_model=job.ApplyJobResponse)
 async def apply(
@@ -372,7 +373,7 @@ async def close(
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                job_repo.update_with_map(job_id, props=props)
+                await job_repo.update_with_map(db=session, job_id=job_id, props=props)
                 return job.CloseJobResponse(message="Closed job succesfully!")
                 # job_repo.update_with_map(session, data, props)
 
@@ -389,6 +390,7 @@ async def close(
 async def update_job(
     job_id: int = Form(None),
     job_title: str = Form(None),
+    new_job_title: str = Form(None) , #None if there is no change
     opened_date: str = Form(None) ,
     closed_date: str = Form(None) ,
     salary_from: str = Form(None) ,
@@ -408,14 +410,14 @@ async def update_job(
         now = datetime.now()
         
         #Remove jobtags
-        jobtag_repo.delete_jobtags(job_id=job_id)
+        await jobtag_repo.delete_jobtags(db=session, job_id=job_id)
         #Update jobtags
         session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
                 tags = tags.split(',')
                 for tag_id in tags:
-                    jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
+                    await jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
             
             except IntegrityError:
                 session.rollback()
@@ -430,9 +432,6 @@ async def update_job(
             "updated_at": now
         }
 
-        # Change common_job_title?
-        common_job_title = ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
-
         props = {
             "job_title": job_title,
             "opened_date": opened_date,
@@ -444,15 +443,19 @@ async def update_job(
             "hiring_level": hiring_level,
             "work_place": work_place,
             "updated_at": now,
-            "common_job_title": common_job_title
         }
+
+        # Change common_job_title if change job_title
+        if new_job_title is not None:
+            common_job_title = await ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
+            props["common_job_title"] = common_job_title
 
         if file is not None:
             #Get file name
-            file_name = job_repo.get_file_name(job_id)
+            file_name = await job_repo.get_file_name(db=session, job_id=job_id)
 
             #Delete file in minio
-            job_minio_repo.remove_job_from_minio(file_name=file_name)
+            await minio_repo.remove_object(bucket_name=minio_constant.MINIO_BUCKET_JOB, file_name=file_name)
 
 
             file_content = await file.read()
@@ -466,8 +469,9 @@ async def update_job(
             #Generate file name
             new_file_name  = str(uuid.uuid4())+"-"+file.filename
 
-            url = job_minio_repo.upload_job_to_minio(input=job.UploadJobMinioRequest(temp_path=temp_file_path, file_name=new_file_name))
-            presigned_url = job_minio_repo.generate_presigned_url(object_name=str(url))
+            url = await minio_repo.upload(
+                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=new_file_name)
+            )
 
             os.remove(temp_file_path)
 
@@ -481,16 +485,16 @@ async def update_job(
                 text_content += pdf_reader.pages[page_num].extract_text()
 
             props["content"] = text_content
-            props["content_url"] = presigned_url
+            props["content_url"] = url.url
             props["file_name"] = new_file_name
         
 
         try:
             #update address
-            address_repo.update_with_map(address_id, a_props)
+            await address_repo.update_with_map(db=session, address_id=address_id, props=a_props)
 
             #update job
-            job_repo.update_with_map(job_id, props)
+            await job_repo.update_with_map(db=session, job_id=job_id, props=props)
 
         except SQLAlchemyError:
             session.rollback()

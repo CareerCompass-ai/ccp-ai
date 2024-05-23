@@ -1,17 +1,21 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
-from sqlalchemy import func
+from sqlalchemy.orm import Session
+from config.postgres import PostgresDB
 from datetime import datetime
 import os, PyPDF2
 import uuid
 from io import BytesIO
+import constant.config as minio_constant
 import traceback
 
 from config.qdrant import QdrantVDB as qdrant
 
+
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
-from app.repo.resume_minio_repo import ResumeMinioRepository
+from app.repo.minio_repo import MinioRepository
 from app.repo.resume_repo import ResumeRepository
 from app.dto import resume
+from app.dto import minio
 
 from pkg.logging import logger
 
@@ -21,13 +25,14 @@ resume_router = APIRouter(
 )
 
 resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
-resume_minio_repo = ResumeMinioRepository()
 resume_repo = ResumeRepository()
+minio_repo = MinioRepository()
 
 @resume_router.post("/resume/create", response_model=resume.CreateResumePostResponse)
 async def upload(
     candidate_id: str = Form(None),
     file: UploadFile = File(None),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         file_content = await file.read()
@@ -40,8 +45,8 @@ async def upload(
         # Generate file name
         file_name = str(uuid.uuid4()) + "_" + file.filename
 
-        upload_response = resume_minio_repo.upload_resume_to_minio(
-            resume.UploadResumeMinioRequest(temp_path=temp_file_path, file_name=file_name)
+        upload_response = await minio_repo.upload(
+            minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_RESUME, temp_path=temp_file_path, file_name=file_name)
         )
         public_url = upload_response.url
 
@@ -68,7 +73,7 @@ async def upload(
 
             record.content = text_content
 
-        await resume_repo.post_resume(input=record)
+        await resume_repo.post_resume(db=db, input=record)
 
         return resume.CreateResumePostResponse
     except Exception:
@@ -81,6 +86,7 @@ async def upload(
 @resume_router.put("/resume/delete", response_model=resume.DeleteResumeResponse)
 async def delete(
     resume_id: int = Form(None),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         now = datetime.now()
@@ -90,7 +96,7 @@ async def delete(
             'updated_at': now,
         }
 
-        resume_repo.update_with_map(resume_id, props)
+        await resume_repo.update_with_map(db=db, resume_id=resume_id, props=props)
         
         #Delete resume in MinIO or not?
         
