@@ -9,18 +9,18 @@ from qdrant_client.http.models import PointStruct
 from qdrant_client.conversions.common_types import VectorParams
 
 from pkg.logging import logger
-from app.dto import minio, qna
+from app.dto import ai, minio
 from config.qdrant import QdrantVDB as qdrant
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.minio_repo import MinioRepository
 
 # AI
-from .qna_helper import load_docs, split_docs
+from .ai_helper import load_docs, split_docs
 from ..ai.ai_helper import AI
 
-qna_router = APIRouter(
+ai_router = APIRouter(
     prefix="/api",
-    tags=['Question and Answer']
+    tags=['AI']
 )
 
 ai_helper = AI()
@@ -28,11 +28,15 @@ job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 qdrant_client = qdrant.setup_qdrant_connection()
 minio_repo = MinioRepository()
 
+# Assistant
+@ai_router.post("/assistant/create", response_model=ai.AssistantResponse)
+
+# Question and Answering
 # REF: https://medium.com/@shubhama94262/building-a-multiple-choice-question-app-using-langchain-and-llm-model-d59839fd1150
 # REF: https://cookbook.openai.com/examples/vector_databases/qdrant/qa_with_langchain_qdrant_and_openai
 # REF: https://forum.bubble.io/t/any-idea-how-to-break-large-pdfs-into-chunks-for-open-ai-s-davinci-model/254365
-@qna_router.post("/qna/generate", response_model=qna.CreateQnAResponse, status_code=status.HTTP_201_CREATED)
-async def generate_qna(req: qna.CreateQnARequest):
+@ai_router.post("/qna/generate", response_model=ai.CreateQnAResponse, status_code=status.HTTP_201_CREATED)
+async def generate_qna(req: ai.CreateQnARequest):
     try:
         # Retrieve job list from req.list_job_ids
         data = job_qdrant_repo.list_jobs_by_ids(req.list_job_ids)
@@ -253,7 +257,7 @@ async def generate_qna(req: qna.CreateQnARequest):
         qdrant_client.upsert(collection_name=collection_name, points=points)
 
         # Return response with the collection name
-        return qna.CreateQnAResponse(
+        return ai.CreateQnAResponse(
             message="QnA created successfully",
             collection_name=collection_name
         )
@@ -262,8 +266,8 @@ async def generate_qna(req: qna.CreateQnARequest):
         logger.error(f"create_qna failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
-@qna_router.post("/qna/generate_v2", response_model=qna.CreateQnAResponse, status_code=status.HTTP_201_CREATED)
-async def generate_qna_v2(req: qna.CreateQnARequest):
+@ai_router.post("/qna/generate_v2", response_model=ai.CreateQnAResponse, status_code=status.HTTP_201_CREATED)
+async def generate_qna_v2(req: ai.CreateQnARequest):
     try:
         # Retrieve job list from req.list_job_ids
         data = job_qdrant_repo.list_jobs_by_ids(req.list_job_ids)
@@ -312,7 +316,7 @@ async def generate_qna_v2(req: qna.CreateQnARequest):
         qdrant_client.upsert(collection_name=collection_name, points=points)
 
         # Return response with the collection name
-        return qna.CreateQnAResponse(
+        return ai.CreateQnAResponse(
             message="QnA created successfully",
             collection_name=collection_name
         )
@@ -322,8 +326,8 @@ async def generate_qna_v2(req: qna.CreateQnARequest):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
 
-@qna_router.post("/qna/questioning", response_model=qna.QuestionAndAnswerResponse)
-async def questioning(req: qna.QuestionAndAnswerRequest):
+@ai_router.post("/qna/questioning", response_model=ai.QuestionAndAnswerResponse)
+async def questioning(req: ai.QuestionAndAnswerRequest):
     try:
         # Calculate the embedding for the query
         query_embedding = ai_helper.get_embedding(req.question)
@@ -341,7 +345,7 @@ async def questioning(req: qna.QuestionAndAnswerRequest):
         # Get answer from OpenAI model
         answer = ai_helper.get_answer(req.question, input_documents)
         
-        return qna.QuestionAndAnswerResponse(
+        return ai.QuestionAndAnswerResponse(
             collection_name=req.collection_name,
             answer=answer
         )
