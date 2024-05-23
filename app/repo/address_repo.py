@@ -6,14 +6,11 @@ from app.dto import address
 
 from typing import List, Optional
 
-class AddressRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-        
-    def get_by_id(self, id):
-        return self.db.query(Address).filter(Address.id == id).first()
+class AddressRepository:        
+    async def get_by_id(self, db:Session, id):
+        return db.query(Address).filter(Address.id == id).first()
 
-    def get_addresses(self, db: Session) -> List[Address]:
+    async def get_addresses(self, db: Session) -> List[Address]:
         addresses = db.query(Address).all()
         address_aggregates = []
         for item in addresses:
@@ -25,12 +22,10 @@ class AddressRepository:
                 updated_at=item.updated_at
             )
             address_aggregates.append(address_aggregate)
-
-        self.db.close()
         
         return address_aggregates
 
-    def create(self, session: Session, record: Optional[address.AddressBase]) -> Optional[Address]:
+    async def create(self, session: Session, record: Optional[address.AddressBase]) -> Optional[Address]:
         if record:
             record = Address(**record.model_dump())
             session.add(record)
@@ -41,16 +36,15 @@ class AddressRepository:
         
         return None
     
-    def update_with_map(self, address_id: int, props: dict) -> Optional[Address]:
-        with SessionLocal() as session:
-            address_record = session.query(Address).filter(Address.id == address_id).first()
-            if not address_record:
-                return None
-            
-            for key, val in props.items():
-                if hasattr(address_record, key):
-                    setattr(address_record, key, val)
-            
-            session.commit()
-            session.refresh(address_record)
-            return address_record
+    async def update_with_map(self, db: Session, address_id: int, props: dict) -> Optional[Address]:
+        address_record = db.query(Address).filter(Address.id == address_id).first()
+        if not address_record:
+            return None
+        
+        for key, val in props.items():
+            if hasattr(address_record, key):
+                setattr(address_record, key, val)
+        
+        db.commit()
+        db.refresh(address_record)
+        return address_record

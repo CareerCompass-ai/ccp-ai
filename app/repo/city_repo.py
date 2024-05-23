@@ -10,12 +10,12 @@ class CityRepository:
     def __init__(self):
         self.db = SessionLocal()
 
-    def get_by_id(self, id):
+    async def get_by_id(self, db:Session, id):
 
-        return self.db.query(City).where(City.id == id).first()
+        return db.query(City).where(City.id == id).first()
     
-    def get_cities(self, db: Session) -> List[City]:
-        cities = db.query(City).all()
+    async def get_cities_by_country(self, db:Session, country_id: int) -> List[City]:
+        cities = db.query(City).filter(City.country_id == country_id).all()
         city_aggregates = []
         for item in cities:
             city_aggregate = city.CityBase(
@@ -26,24 +26,5 @@ class CityRepository:
                 updated_at=item.updated_at
             )
             city_aggregates.append(city_aggregate)
-        
-        self.db.close()
-        
-        return city_aggregates
-    
-    def get_cities_by_country(self, country_id: int) -> List[City]:
-        cities = self.db.query(City).filter(City.country_id == country_id).all()
-        city_aggregates = []
-        for item in cities:
-            city_aggregate = city.CityBase(
-                id=item.id,
-                country_id=item.country_id,
-                city_name=item.city_name, 
-                created_at=item.created_at,
-                updated_at=item.updated_at
-            )
-            city_aggregates.append(city_aggregate)
-        
-        self.db.close()
         
         return city_aggregates

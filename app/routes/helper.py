@@ -1,6 +1,6 @@
 from app.dto import job
 
-def combine_job_content(job_agg: job.JobAggregate, summarized_content: str, acronyms_and_abbreviations: str) -> str:
+async def combine_job_content(job_agg: job.JobAggregate, summarized_content: str, acronyms_and_abbreviations: str) -> str:
         combined_content = (
             summarized_content + " " +
             job_agg.job_title + " " + 

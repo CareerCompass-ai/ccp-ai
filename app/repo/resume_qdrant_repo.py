@@ -22,7 +22,7 @@ class ResumeQdrantRepository:
             exact=True
         )
     
-    def list_resumes(self, input: Optional[resume.ListResumeRequest]) -> resume.ListResumeResponse:
+    async def list_resumes(self, input: Optional[resume.ListResumeRequest]) -> resume.ListResumeResponse:
         if input.page <= 0:
             input.page = 1
         if input.size <= 0:

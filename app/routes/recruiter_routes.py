@@ -1,4 +1,7 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Query
+from sqlalchemy.orm import Session
+from config.postgres import PostgresDB
+
 import traceback
 from datetime import datetime
 
@@ -22,9 +25,10 @@ talent_repo = TalentSavedRepository()
 @recruiter_router.get("/recruiter/jobs-posted", response_model=recruiter.ListJobsPostedResponse)
 async def list_jobs_posted(
     recruiter_id: int = Query(None, description="recuiter ID"),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await recruiter_repo.get_jobs_posted(recruiter_id)
+        data = await recruiter_repo.get_jobs_posted(db=db, id=recruiter_id)
         return data
     except Exception:
         logger.error(f"list_jobs_posted failed error = {traceback.format_exc()}")
@@ -32,7 +36,8 @@ async def list_jobs_posted(
     
 @recruiter_router.post("/recruiter/update-saved-talent", response_model=recruiter.SaveTalentResponse)
 async def update_saved_talent(
-    req: recruiter.SaveTalentRequest
+    req: recruiter.SaveTalentRequest,
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         now = datetime.now()
@@ -44,11 +49,11 @@ async def update_saved_talent(
         )
 
         if req.type == 1:
-            await talent_repo.create_saved_talent(record)
+            await talent_repo.create_saved_talent(db=db, record=record)
             return recruiter.SaveTalentResponse (msg= "Save Talent Successfully!")
         
         elif req.type == 2:
-            await talent_repo.delete_saved_talent(record)
+            await talent_repo.delete_saved_talent(db=db, record=record)
             return recruiter.SaveTalentResponse (msg= "Unsave Talent Successfully!")
         
     
@@ -59,9 +64,10 @@ async def update_saved_talent(
 @recruiter_router.get("/recruiter/candidates-saved", response_model=recruiter.ListTalentSavedResponse)
 async def list_candidates_saved(
     recruiter_id: int = Query(None, description="recuiter ID"),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await recruiter_repo.get_talents_saved(recruiter_id)
+        data = await recruiter_repo.get_talents_saved(db=db, id=recruiter_id)
         return data
     except Exception:
         logger.error(f"list_candidates_saved failed error = {traceback.format_exc()}")
