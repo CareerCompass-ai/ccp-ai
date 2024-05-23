@@ -45,8 +45,8 @@ class ResumeQdrantRepository:
                 match=models.MatchValue(value=input.job_id)
             )
         )
-
-        total_record = await self.count_total_record(filter).count
+        _res = await self.count_total_record(filter)
+        total_record = _res.count
 
         records = []
         hits = List[types.ScoredPoint]
