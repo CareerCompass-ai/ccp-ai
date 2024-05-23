@@ -249,7 +249,8 @@ class JobQdrantRepository:
                                 ),
                             )
                     )
-                total_record += await self.count_total_record(filter).count
+                _res = await self.count_total_record(filter)
+                total_record += _res.count
 
                 # TODO: get all records match filter and return the dynamic filters
 
@@ -420,8 +421,8 @@ class JobQdrantRepository:
                         ),
                     )
                 )
-
-            total_record += await self.count_total_record(filter).count
+            _res = await self.count_total_record(filter)
+            total_record += _res.count
 
             hits = List[types.ScoredPoint]
             if input.vectors is not None:
