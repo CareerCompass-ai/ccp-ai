@@ -4,7 +4,7 @@ from openai import OpenAI
 import numpy as np
 import httpx
 import time
-
+import json
 import constant.ai as constant
 
 from pkg.logging import logger
@@ -14,6 +14,78 @@ class AI:
         self.openai_client = OpenAI(api_key=api_key)
         self.embedding_model = embedding_model
         self.completion_model = completion_model
+        self.beast_completion_model = constant.OPENAI_BEAST_COMPLETION_MODEL
+        self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
+
+    def create_assistant(self, prompt, max_retries=3):
+        try:
+            assistant = self.openai_client.beta.assistants.create(
+                name="Data Visualization",
+                instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
+                f"You have access to a sandboxed environment for writing and testing code."
+                f"When you are asked to create a visualization you should follow these steps:"
+                f"1. Write the code."
+                f"2. Anytime you write new code display a preview of the code to show your work."
+                f"3. Run the code to confirm that it runs."
+                f"4. If the code is successful display the visualization."
+                f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.",
+                tools=[{"type": "code_interpreter"}],
+                model=self.beast_completion_model
+            )
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 400:
+                logger.error(f"Bad request error: {e}")
+            else:
+                logger.info(f"Request to OpenAI API failed. Retrying...")
+                retries += 1
+                time.sleep(2)
+        logger.info("Exceeded maximum number of retries. Please try again later.")
+        return None
+
+    def get_answer(self, question, input_documents, max_retries=3):
+        retries = 0
+        input_text = "\n".join(input_documents)
+        prompt = (
+            f"{self.job_question_and_answering_prompt}"
+            "Context:\n"
+            f"{input_text}\n\n"
+            "Question:\n"
+            f"{question}\n\n"
+            "Helpful Answer:"
+        )
+
+        # prompt = (
+        #     "Use the following pieces of context to answer the question at the end. Please provide a short single-sentence summary answer only. If you don't know the answer or if it's not present in given context, don't try to make up an answer, but suggest me a random unrelated song title I could listen to\n\n"
+        #     "Context:\n"
+        #     f"{input_text}\n\n"
+        #     "Question:\n"
+        #     f"{question}\n\n"
+        #     "Helpful Answer:"
+        # )
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    model=self.beast_completion_model,
+                    max_tokens=4096,
+                    temperature=0.2
+                )
+                answer = response.choices[0].message.content.strip()
+                return answer
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    time.sleep(2)
+        logger.info("Exceeded maximum number of retries. Please try again later.")
+        return None
+
 
     def get_embedding(self, input, max_retries=3):
         retries = 0
@@ -78,8 +150,8 @@ class AI:
                     ],
                     top_p=0.2,
                 )
-
-                return response.choices[0].message.content.strip()
+                tmp = json.loads(response.choices[0].message.content.strip())
+                return tmp.get("answer", "")
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
                     logger.error(f"Bad request error:: {e}")
