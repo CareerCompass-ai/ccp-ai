@@ -1,5 +1,4 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Query
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from datetime import datetime
 from typing import Optional
 import traceback
@@ -8,9 +7,11 @@ from app.repo.candidate_repo import CandidateRepository
 from app.repo.resume_repo import ResumeRepository
 from app.dto import candidate
 from app.dto import resume
+
 from config.postgres import PostgresDB
+from sqlalchemy.orm import Session
+
 from models.ccp_job_saved import JobSaved
-from models.ccp_viewedjob import ViewedJob
 
 from pkg.logging import logger
 
@@ -23,19 +24,21 @@ candidate_repo = CandidateRepository()
 resume_repo = ResumeRepository()
 
 @candidate_router.get("/candidate/applied", response_model=candidate.ListAppliedJobsResponse)
-def list_jobs_applied(
+async def list_jobs_applied(
         candidate_id: Optional[int] = Query(None, description="Candidate/User ID"),
+        db: Session = Depends(PostgresDB.get_db)
     ):
     try:
-        data = candidate_repo.get_applied_jobs(candidate_id)
+        data = await candidate_repo.get_applied_jobs(db=db, id=candidate_id)
         return data
     except Exception:
         logger.error(f"list_jobs_applied failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @candidate_router.post("/candidate/update-saved-job", response_model=candidate.UpdateSaveJobResponse)
-def update_saved_job(
-    req: candidate.UpdateSaveJobRequest
+async def update_saved_job(
+    req: candidate.UpdateSaveJobRequest,
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
         now = datetime.now()
@@ -47,12 +50,12 @@ def update_saved_job(
         )
 
         if req.type == 1:
-            candidate_repo.create_saved_job(record)
+            await candidate_repo.create_saved_job(db=db, record=record)
             return candidate.UpdateSaveJobResponse(
                 message="Save job successfully!"
             )
         elif req.type == 2:
-            candidate_repo.delete_saved_job(record)
+            await candidate_repo.delete_saved_job(db=db, record=record)
             return candidate.UpdateSaveJobResponse(
                 message="Unsave job sucessfully"
             ) 
@@ -63,11 +66,12 @@ def update_saved_job(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     
 @candidate_router.get("/candidate/saved-jobs", response_model=candidate.ListSavedJobsResponse)
-def list_jobs_saved(
+async def list_jobs_saved(
     candidate_id: Optional[int] = Query(None, description="Candidate/User ID"),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try: 
-        data = candidate_repo.get_saved_jobs(candidate_id)
+        data = await candidate_repo.get_saved_jobs(db=db, id=candidate_id)
         return data
     except Exception:
         logger.error(f"list_jobs_saved failed error = {traceback.format_exc()}")
@@ -76,9 +80,10 @@ def list_jobs_saved(
 @candidate_router.get("/resumes", response_model=resume.GetResumesOfCandidateResponse)
 async def list_resume_of_candidate(
     candidate_id: Optional[int] = Query(None, description="Candidate ID"),
+    db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await resume_repo.get_by_user_id(candidate_id)
+        data = await resume_repo.get_by_user_id(db=db, user_id=candidate_id)
 
         resume_records = [resume.ResumeBase(
             id=res.id,

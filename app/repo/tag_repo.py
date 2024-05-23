@@ -1,4 +1,5 @@
 from config.postgres import SessionLocal
+from sqlalchemy.orm import Session
 
 from models.ccp_tag import Tag
 from app.dto import tag
@@ -9,11 +10,11 @@ class TagRepository:
     def __init__(self):
         self.db = SessionLocal()
 
-    def get_by_id(self, id):
-        return self.db.query(Tag).filter(Tag.id == id).first()
+    async def get_by_id(self, db:Session, id):
+        return db.query(Tag).filter(Tag.id == id).first()
 
-    async def list_tag(self) -> List[Tag]:
-        records = self.db.query(Tag).all()
+    async def list_tag(self, db:Session) -> List[Tag]:
+        records = db.query(Tag).all()
 
         tags = []
         for item in records:
@@ -22,7 +23,5 @@ class TagRepository:
                 tag_name=item.tag_name, 
             )
             tags.append(tag_aggregate)
-
-        self.db.close()
 
         return tags

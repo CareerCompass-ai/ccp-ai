@@ -18,7 +18,7 @@ class SyncHelper:
             points=[id],
         )
 
-    def upsert_to_qdrant(self, collection_name: str, payload, vector):
+    async def upsert_to_qdrant(self, collection_name: str, payload, vector):
         self.qdrant_client.upsert(
             collection_name=collection_name,
             points=[ 

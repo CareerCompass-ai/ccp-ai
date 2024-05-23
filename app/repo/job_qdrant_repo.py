@@ -26,7 +26,7 @@ class JobQdrantRepository:
 
         return [mapper.toJobDTO(record.payload) for record in records]
 
-    def get_job(self, input: Optional[job.GetJobRequest]) -> job.JobAggregate:
+    async def get_job(self, input: Optional[job.GetJobRequest]) -> job.JobAggregate:
         if input.id is not None:
             record = self.client.retrieve(
                 self.index_name,
@@ -105,7 +105,7 @@ class JobQdrantRepository:
         return reduced_ranges
 
     # TODO: find threshold to decide return or not return || base on score -> return label ? relavent or not, not return
-    def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
+    async def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
         if input.page <= 0:
             input.page = 1
         if input.size <= 0:

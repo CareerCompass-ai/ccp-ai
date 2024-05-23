@@ -42,7 +42,7 @@ async def list_top_job_titles_salary(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_leader_salaries(db, country_name= country_name, time=time, limit=top, order=order_by)
+        data = await analysis_repo.get_top_leader_salaries(db=db, country_name= country_name, time=time, limit=top, order=order_by)
         return data
     except Exception:
         logger.error(f"list_top_job_titles_salary failed error = {traceback.format_exc()}")
@@ -57,7 +57,7 @@ async def list_top_applied_job_titles(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_most_applied_job_titles(db, top_number=top_number,time_from=time_from, time_to=time_to)
+        data = await analysis_repo.get_most_applied_job_titles(db=db, top_number=top_number,time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"list_top_applied_job_titles failed error = {traceback.format_exc()}")
@@ -70,7 +70,7 @@ async def list_top_skills(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_skills(db, top_number=top_number, time=time)
+        data = await analysis_repo.get_top_skills(db=db, top_number=top_number, time=time)
         return data
     except Exception:
         logger.error(f"list_top_skills failed error = {traceback.format_exc()}")
@@ -79,7 +79,7 @@ async def list_top_skills(
 @analysis_router.get("/analysis/job-company-type", response_model=analysis.GetNumberOfCompanyTypeResponse)
 async def get_number_of_company_type(db: Session = Depends(PostgresDB.get_db)):
     try:
-        data = await analysis_repo.number_of_company_type(db)
+        data = await analysis_repo.number_of_company_type(db=db)
         return data
     except Exception:
         logger.error(f"get_number_of_company_type failed error = {traceback.format_exc()}")
@@ -92,7 +92,7 @@ async def list_new_user_in_time_range(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_number_of_new_user(db, time_from=time_from, time_to=time_to)
+        data = await analysis_repo.get_number_of_new_user(db=db, time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"list_new_user_in_time_range failed error = {traceback.format_exc()}")
@@ -103,7 +103,7 @@ async def count_new_user_by_role(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.count_all_number_of_user_by_role(db)
+        data = await analysis_repo.count_all_number_of_user_by_role(db=db)
         return data
     except Exception:
         logger.error(f"count_new_user_by_role failed error = {traceback.format_exc()}")
@@ -114,7 +114,7 @@ async def percentage_of_different_job_status(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.percentage_of_different_job_status(db)
+        data = await analysis_repo.percentage_of_different_job_status(db=db)
         return data
     except Exception:
         logger.error(f"percentage_of_different_job_status failed error = {traceback.format_exc()}")
@@ -128,7 +128,7 @@ async def get_top_recruiters_job_posting(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_recruiters_job_posting(db, top_number, time_from, time_to)
+        data = await analysis_repo.get_top_recruiters_job_posting(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"get_top_recruiters_job_posting failed error = {traceback.format_exc()}")
@@ -142,7 +142,7 @@ async def get_top_viewed_jobs(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_viewed_jobs(db, top_number, time_from, time_to)
+        data = await analysis_repo.get_top_viewed_jobs(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"get_top_viewed_jobs failed error = {traceback.format_exc()}")
@@ -154,7 +154,7 @@ async def list_top_work_titles(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_work_titles(db, top_number=top_number)
+        data = await analysis_repo.get_top_work_titles(db=db, top_number=top_number)
         return data
     except Exception:
         logger.error(f"list_top_work_titles failed error = {traceback.format_exc()}")
@@ -168,7 +168,7 @@ async def get_change_of_job_salary_by_time(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_change_job_salary_by_time(db, time_from=time_from, time_to=time_to, level=level)
+        data = await analysis_repo.get_change_job_salary_by_time(db=db, time_from=time_from, time_to=time_to, level=level)
         return data
     except Exception:
         logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
@@ -181,7 +181,7 @@ async def get_change_of_job_salary_by_year(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_change_job_salary_by_year(db, country_name=country_name, job_title=job_title)
+        data = await analysis_repo.get_change_job_salary_by_year(db=db, country_name=country_name, job_title=job_title)
         return data
     except Exception:
         logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
@@ -196,7 +196,7 @@ async def get_number_jobs_by_country(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_number_jobs_by_country(db, job_title=job_title, country_name=country_name, time=time, level=level)
+        data = await analysis_repo.get_number_jobs_by_country(db=db, job_title=job_title, country_name=country_name, time=time, level=level)
         return data
     except Exception:
         logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
@@ -207,7 +207,7 @@ async def get_country(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_list_country(db)
+        data = await analysis_repo.get_list_country(db=db)
         return data
     except Exception:
         logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
@@ -218,7 +218,7 @@ async def get_common_job_titles(
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_list_common_job_title(db)
+        data = await analysis_repo.get_list_common_job_title(db=db)
         return data
     except Exception:
         logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
