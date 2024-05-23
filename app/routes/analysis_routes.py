@@ -36,11 +36,13 @@ async def list_top_job_titles(
 @analysis_router.get("/analysis/top-job-titles-salary", response_model=analysis.ListTopJobTitlesSalaryResponse)
 async def list_top_job_titles_salary(
     top: int = Query(None, description="Number of records"),
+    country_name: str = Query(None, description="Selected country name"),
+    time: str = Query(None, description="Selected time range (month or year)"),
     order_by: int = Query(None, description="1: desc and 0: asc"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_leader_salaries(db, limit=top, order=order_by)
+        data = await analysis_repo.get_top_leader_salaries(db, country_name= country_name, time=time, limit=top, order=order_by)
         return data
     except Exception:
         logger.error(f"list_top_job_titles_salary failed error = {traceback.format_exc()}")
@@ -64,10 +66,11 @@ async def list_top_applied_job_titles(
 @analysis_router.get("/analysis/top-skills", response_model=analysis.GetTopSkillResponse)
 async def list_top_skills(
     top_number: int = Query(None, description="Top number of skills"),
+    time: str = Query(None, description="Selected time range"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_skills(db, top_number=top_number)
+        data = await analysis_repo.get_top_skills(db, top_number=top_number, time=time)
         return data
     except Exception:
         logger.error(f"list_top_skills failed error = {traceback.format_exc()}")
@@ -174,10 +177,11 @@ async def get_change_of_job_salary_by_time(
 @analysis_router.get("/analysis/salary-change-by-year", response_model=analysis.ListChangeJobSalaryByYearResponse)
 async def get_change_of_job_salary_by_year(
     job_title: str = Query(None, description="Selected job title"),
+    country_name: str = Query(None, description="Selected country"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_change_job_salary_by_year(db, job_title=job_title)
+        data = await analysis_repo.get_change_job_salary_by_year(db, country_name=country_name, job_title=job_title)
         return data
     except Exception:
         logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
@@ -185,13 +189,14 @@ async def get_change_of_job_salary_by_year(
     
 @analysis_router.get("/analysis/number-jobs-by-country", response_model=analysis.ListNumberofJobsByCountryResponse)
 async def get_number_jobs_by_country(
-    country: str = Query(None, description="Country name"),
+    country_name: str = Query(None, description="Country name"),
+    time: str = Query(None, description="Time range"),
     job_title: str = Query(None, description="Common job title"),
     level: str = Query(None, description="Hiring level"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_number_jobs_by_country(db, job_title=job_title, country=country, level=level)
+        data = await analysis_repo.get_number_jobs_by_country(db, job_title=job_title, country_name=country_name, time=time, level=level)
         return data
     except Exception:
         logger.error(f"get_number_of_job__by_city failed error = {traceback.format_exc()}")
