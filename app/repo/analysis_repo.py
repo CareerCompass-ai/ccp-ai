@@ -35,9 +35,13 @@ class AnalysisRepository:
         
         return analysis.ListTopJobTitlesResponse (data=data)
     
-    async def get_top_leader_salaries(self, db:Session, limit=5, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
-    
-        sql_query = '''
+    async def get_top_leader_salaries(self, db:Session, country_name = 'VietNam', time = 'Month', limit=0, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
+        time = time.lower()
+        if "'" not in country_name:
+            country_name = f"'{country_name}'"
+        if "'" in time:
+            time = time.replace("'", "")
+        sql_query = f'''
                 SELECT 
             common_job_title,
             hiring_level,
@@ -50,8 +54,11 @@ class AnalysisRepository:
             )) AS average_salary
         FROM 
             ccp_job
+        LEFT JOIN ccp_address ON address_id = ccp_address.id
+        LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
+        LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
-            common_job_title != 'Other position'
+            common_job_title != 'Other position' and country_name = {country_name} and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
         GROUP BY 
             common_job_title, 
             hiring_level
@@ -114,24 +121,41 @@ class AnalysisRepository:
 
         return analysis.ListTopAppliedJobTitlesResponse(data=data)
     
-    async def get_top_skills (self, db:Session, top_number:int) -> analysis.GetTopSkillResponse:
-        records = db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
-                        .join(JobTag, Tag.id == JobTag.tag_id) \
-                        .group_by(Tag.id, Tag.tag_name) \
-                        .order_by(desc('skill_count')) \
-                        .limit(top_number) \
-                        .all()
+    async def get_top_skills (self, db:Session, top_number:int, time: str) -> analysis.GetTopSkillResponse:
+        if time and "'" in time[0]:
+            time = time.replace("'", "")
+        sql_query = f'''
+        SELECT ccp_tag.id, ccp_tag.tag_name, count(ccp_tag.id) as count
+        FROM ccp_tag
+        JOIN ccp_jobtags on ccp_tag.id = ccp_jobtags.tag_id
+        WHERE 
+            ccp_jobtags.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+        GROUP BY ccp_tag.id, ccp_tag.name
+        ORDER by count(ccp_tag.id) DESC()
+        LIMIT {top_number}
+        '''
+        # records = self.db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
+        #                 .join(JobTag, Tag.id == JobTag.tag_id) \
+        #                 .group_by(Tag.id, Tag.tag_name) \
+        #                 .order_by(desc('skill_count')) \
+        #                 .limit(top_number) \
+        #                 .all()
         
+        # data = []
+        records = db.execute(text(sql_query))
+
         data = []
+
         for item in records:
-            data.append(
+            data.append (
                 analysis.TopSkillResponse(
                     id=item.id,
                     skill=item.tag_name,
-                    count=item.skill_count
+                    count=item.count
                 )
             )
         
+        db.close()
         return analysis.GetTopSkillResponse(data=data)        
     
     async def number_of_company_type (self, db:Session) -> analysis.GetNumberOfCompanyTypeResponse:
@@ -270,11 +294,14 @@ class AnalysisRepository:
         
         return analysis.ListTopWorkTitlesResponse (data=data)
     
-    async def get_change_job_salary_by_year(self, db:Session, job_title) -> analysis.ChangeJobSalaryByYearResponse:
-
+    async def get_change_job_salary_by_year(self, db:Session, country_name = 'VietNam', job_title = 'Software Engineer') -> analysis.ChangeJobSalaryByYearResponse:
+        if "'" in country_name[0]:
+            country_name = country_name.replace("'", "")
+        if "'" in job_title[0]:
+            job_title = job_title.replace("'", "")
         sql_query = f'''
         SELECT 
-            date_trunc('month', updated_at) AS month,
+            date_trunc('month', ccp_job.updated_at) AS month,
             common_job_title,
             hiring_level,
             ROUND(AVG(
@@ -286,14 +313,17 @@ class AnalysisRepository:
             )) AS average_salary
         FROM 
             ccp_job
+        LEFT JOIN ccp_address ON address_id = ccp_address.id
+        LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
+        LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
-            common_job_title = '{job_title}' AND updated_at BETWEEN CURRENT_DATE - INTERVAL '1 year' AND CURRENT_DATE
+            common_job_title = '{job_title}' AND country_name = '{country_name}' AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 year' AND CURRENT_DATE
         GROUP BY 
             common_job_title, 
             hiring_level,
-            date_trunc('month', updated_at)
+            date_trunc('month', ccp_job.updated_at)
         ORDER BY 
-            date_trunc('month', updated_at) ASC;
+            date_trunc('month', ccp_job.updated_at) ASC;
         '''
         records = db.execute(text(sql_query))
 
@@ -344,45 +374,47 @@ class AnalysisRepository:
         
         return analysis.ListChangeJobSalaryResponse(data=data)
 
-    async def get_number_jobs_by_country(self, db:Session, country, job_title, level) -> analysis.ListNumberofJobsByCountryResponse:
-        query = db.query(
-            Job.hiring_level, City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
-        ).join(
-            Address, Job.address_id == Address.id
-        ).join(
-            City, Address.city_id == City.id
-        ).join(
-            Country, City.country_id == Country.id
-        ).filter(
-            Country.country_name.like(country)
-        )
+    async def get_number_jobs_by_country(self, db:Session, country_name = 'VietNam', time = 'Month', job_title= None, level=None) -> analysis.ListNumberofJobsByCountryResponse:
+        time = time.lower()
+        if "'" not in country_name:
+            country_name = f"'{country_name}'"
+        if "'" in time:
+            time = time.replace("'", "")
+        sql_query = f'''
+                SELECT 
+            hiring_level,
+            city_name,
+            COUNT(ccp_job.id) as job_number
+        FROM 
+            ccp_job
+        LEFT JOIN ccp_address ON address_id = ccp_address.id
+        LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
+        LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
+        WHERE 
+            country_name = {country_name} and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+        GROUP BY 
+            hiring_level,
+            city_name
+        '''
 
-        if job_title is not None and job_title!='None':
-            query = query.filter(Job.common_job_title.like(job_title))
-        
-        if level is not None and level!='None':
-            query = query.filter(Job.hiring_level.like(level))
+        # Execute the SQL query
+        result =  self.db.execute(text(sql_query))
 
-        query = query.group_by(
-            Job.hiring_level, City.city_name, Country.country_name
-        ).order_by(
-            func.count(Job.id).desc()
-        )
-
-        records = query.all()
+        # Fetch all the rows from the result
+        rows = result.fetchall()
         data = []
 
-        for item in records:
-            data.append(
-                analysis.NumberofJobsByCountryResponse(
-                    hiring_level=item.hiring_level,
-                    city=item.city_name,
-                    count=item.job_number
-                )
+        for row in rows:
+            # Create an instance of analysis.GetTopJobTitlesSalaryResponse
+            item = analysis.NumberofJobsByCountryResponse(
+                hiring_level=row[0],  
+                city=row[1], 
+                count=row[2]  
             )
-
+            # Append the created instance to the data list
+            data.append(item)
+        db.close()
         return analysis.ListNumberofJobsByCountryResponse(
-            country=records[0][1],
             data=data
         )
 
