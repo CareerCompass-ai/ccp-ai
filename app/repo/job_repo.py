@@ -35,8 +35,8 @@ class JobRepository:
         db.refresh(job_record)
         return job_record
 
-    async def get_latest_job(self, db:Session) -> Optional[Job]:
-        return db.query(Job).order_by(desc(Job.updated_at)).first()
+    async def get_latest_job(self, db: Session) -> Optional[Job]:
+        return db.query(Job).order_by(desc(Job.id)).first()    
     
     async def get_file_name(self, db:Session, job_id: int):
         data = db.query(Job.file_name).filter(Job.id == job_id).first()

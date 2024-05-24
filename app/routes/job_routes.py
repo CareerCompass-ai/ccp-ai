@@ -112,8 +112,8 @@ async def list_jobs_from_qdrant(
         )
 
         if search_type == "vector": # handle vector search
-            _res = await job_repo.get_latest_job(db=db)
-            req.latest_job_id =  _res.id
+            latest_job =  await job_repo.get_latest_job(db=db)
+            req.latest_job_id = latest_job.id
 
             if input is not None:
                 vectors = await ai_helper.get_embedding(input)

@@ -29,7 +29,20 @@ qdrant_client = qdrant.setup_qdrant_connection()
 minio_repo = MinioRepository()
 
 # Assistant
-@ai_router.post("/assistant/create", response_model=ai.AssistantResponse)
+@ai_router.post("/assistant/generate", response_model=ai.AssistantResponse)
+@ai_router.post("/assistant/questioning", response_model=ai.AssistantResponse)
+# Flow:
+# Note: different date time range will have different assistant
+# 1. call load_analysis to get file, save file_name to database, next time check exist? if exist note: file has named follow date range then upload the analysis.file to openai -> file.id
+# 2. Get the file.id from openai response
+# 3. Save the file_name and file.id to the database
+# 4. Create a new assistant with the file.id
+# 5. Save the assistant.id to the database
+# 6. Create thread
+# 7. Save the thread.id to the database
+# 8. When user enter chat -> create message with thread.id, run the thread with thread_id and assistant_id, while loop until the thread is done
+# 9. Return the response
+
 
 # Question and Answering
 # REF: https://medium.com/@shubhama94262/building-a-multiple-choice-question-app-using-langchain-and-llm-model-d59839fd1150
