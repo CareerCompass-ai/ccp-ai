@@ -89,12 +89,13 @@ async def get_number_of_company_type(db: Session = Depends(PostgresDB.get_db)):
     
 @analysis_router.get("/analysis/new-user-in-time-range", response_model=analysis.GetNumberOfNewUser)
 async def list_new_user_in_time_range(
+    time: str = Query(None, description="Time range (Month/year)"),
     time_from: str = Query(None, description="Start time to calculate number of new users"),
     time_to: str = Query(None, description="End time to calculate number of new users"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_number_of_new_user(db=db, time_from=time_from, time_to=time_to)
+        data = await analysis_repo.get_number_of_new_user(db=db, time=time, time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"list_new_user_in_time_range failed error = {traceback.format_exc()}")
