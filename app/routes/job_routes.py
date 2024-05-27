@@ -225,13 +225,6 @@ async def create(
         
         common_job_title = await ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
 
-        address_record = address.AddressBase(
-            city_id=city_id,
-            detailed_address=address_detail,
-            created_at=now,
-            updated_at=now
-        )
-
         record = job.JobBase(
             job_title=job_title,
             common_job_title=common_job_title,
@@ -272,12 +265,27 @@ async def create(
 
             record.content = text_content
 
-        session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
-                address_rec = await address_repo.create(session, address_record)
+                address_record = None
+                #If they are both None -> Not create a new address record in db
+                if (address_detail is not None) or (city_id is not None):
+                    address_record = address.AddressBase(
+                        created_at=now,
+                        updated_at=now
+                    )
+                    
+                    if address_detail is not None:
+                        address_record.detailed_address = address_detail
 
-                record.address_id = address_rec.id
+                    if city_id is not None:
+                        address_record.city_id = city_id
+
+                    address_rec = await address_repo.create(session, address_record)
+                    #Add new address record to a new job
+                    record.address_id = address_rec.id
+
+                #Create new job
                 job_rec = await job_repo.create(session, record)
 
                 if tags is not None:
@@ -412,7 +420,6 @@ async def update_job(
         #Remove jobtags
         await jobtag_repo.delete_jobtags(db=session, job_id=job_id)
         #Update jobtags
-        session.autocommit = False # TODO: remove this?
         with session.begin():
             try:
                 tags = tags.split(',')
