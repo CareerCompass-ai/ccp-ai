@@ -179,11 +179,14 @@ async def get_change_of_job_salary_by_time(
 @analysis_router.get("/analysis/salary-change-by-year", response_model=analysis.ListChangeJobSalaryByYearResponse)
 async def get_change_of_job_salary_by_year(
     job_title: str = Query(None, description="Selected job title"),
+    time: str = Query(None, description="Time range"),
+    time_from: str = Query(None, description="Time range from"),
+    time_to: str = Query(None, description="Time range to"),
     country_name: str = Query(None, description="Selected country"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_change_job_salary_by_year(db=db, country_name=country_name, job_title=job_title)
+        data = await analysis_repo.get_change_job_salary_by_year(db=db, time=time, time_from=time_from, time_to=time_to, country_name=country_name, job_title=job_title)
         return data
     except Exception:
         logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
