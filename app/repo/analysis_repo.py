@@ -35,14 +35,11 @@ class AnalysisRepository:
         
         return analysis.ListTopJobTitlesResponse (data=data)
     
-    async def get_top_leader_salaries(self, db:Session, country_name = 'VietNam', time = 'Month', limit=0, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
-        time = time.lower()
+    async def get_top_leader_salaries(self, db:Session, country_name = 'Vietnam', time = None, time_from=None, time_to = None, limit=0, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
         if "'" not in country_name:
             country_name = f"'{country_name}'"
-        if "'" in time:
-            time = time.replace("'", "")
         sql_query = f'''
-                SELECT 
+                    SELECT 
             common_job_title,
             hiring_level,
             ROUND(AVG(
@@ -58,8 +55,26 @@ class AnalysisRepository:
         LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
         LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
-            common_job_title != 'Other position' and country_name = {country_name} and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
-        GROUP BY 
+            common_job_title != 'Other position' and country_name = {country_name} 
+            '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+            if "'" in time_to or "'" in time_from:
+                time_from = time_from.replace("'", "")
+                time_to =  time_to.replace("'", "")
+            sql_query += f'''
+             AND 
+             ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
+            AND ccp_job.updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            '''
+
+        sql_query += '''
+         GROUP BY 
             common_job_title, 
             hiring_level
         ORDER BY 
@@ -70,7 +85,7 @@ class AnalysisRepository:
                     ELSE (COALESCE(salary_from, 0) + COALESCE(salary_to, 0)) / 2.0
                 END
             ))
-        '''
+                '''
         if order != 0:
             sql_query += " DESC"
         else:
@@ -309,7 +324,7 @@ class AnalysisRepository:
         
         return analysis.ListTopWorkTitlesResponse (data=data)
     
-    async def get_change_job_salary_by_year(self, db:Session, country_name = 'VietNam', job_title = 'Software Engineer') -> analysis.ChangeJobSalaryByYearResponse:
+    async def get_change_job_salary_by_year(self, db:Session, country_name = 'Vietnam', job_title = 'Software Engineer') -> analysis.ChangeJobSalaryByYearResponse:
         if "'" in country_name[0]:
             country_name = country_name.replace("'", "")
         if "'" in job_title[0]:
@@ -389,28 +404,43 @@ class AnalysisRepository:
         
         return analysis.ListChangeJobSalaryResponse(data=data)
 
-    async def get_number_jobs_by_country(self, db:Session, country_name = 'VietNam', time = 'Month', job_title= None, level=None) -> analysis.ListNumberofJobsByCountryResponse:
-        time = time.lower()
+    async def get_number_jobs_by_country(self, db:Session, country_name = 'Vietnam', time = None, time_from=None, time_to=None, job_title= None, level=None) -> analysis.ListNumberofJobsByCountryResponse:
         if "'" not in country_name:
             country_name = f"'{country_name}'"
-        if "'" in time:
-            time = time.replace("'", "")
         sql_query = f'''
-                SELECT 
-            hiring_level,
-            city_name,
-            COUNT(ccp_job.id) as job_number
-        FROM 
-            ccp_job
-        LEFT JOIN ccp_address ON address_id = ccp_address.id
-        LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
-        LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
-        WHERE 
-            country_name = {country_name} and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+                    SELECT 
+                hiring_level,
+                city_name,
+                COUNT(ccp_job.id) as job_number
+            FROM 
+                ccp_job
+            LEFT JOIN ccp_address ON address_id = ccp_address.id
+            LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
+            LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
+            WHERE 
+                country_name = {country_name}
+            '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+            if "'" in time_to or "'" in time_from:
+                time_from = time_from.replace("'", "")
+                time_to =  time_to.replace("'", "")
+            sql_query += f'''
+             AND 
+             ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
+            AND updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            '''
+
+        sql_query += '''
         GROUP BY 
-            hiring_level,
-            city_name
-        '''
+                hiring_level,
+                city_name; 
+                '''
 
         # Execute the SQL query
         result =  db.execute(text(sql_query))
