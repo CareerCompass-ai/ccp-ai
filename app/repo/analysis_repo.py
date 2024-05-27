@@ -202,14 +202,31 @@ class AnalysisRepository:
 
         return analysis.GetNumberOfCompanyTypeResponse(data=data)
     
-    async def get_number_of_new_user(self, db:Session, time_from, time_to) -> analysis.GetNumberOfNewUser:
-        records = db.query(User.id, User.role, User.created_at) \
-                        .filter(and_(User.created_at >= time_from,User.created_at <= time_to )) \
-                        .all()
-        
+    async def get_number_of_new_user(self, db:Session, time, time_from, time_to) -> analysis.GetNumberOfNewUser:
+        sql_query= '''
+        select id, role, created_at
+        from ccp_user
+        '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+             where created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+            if "'" in time_to or "'" in time_from:
+                time_from = time_from.replace("'", "")
+                time_to =  time_to.replace("'", "")
+            sql_query += f'''
+            where created_at >= to_date('{time_from}', 'YYYY/MM')  AND
+            created_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            '''
+        records = db.execute(text(sql_query))
+
         data = []
+
         for item in records:
-            data.append(
+            data.append (
                 analysis.NumberOfNewUser(
                     id=item.id,
                     role=item.role,
@@ -324,11 +341,15 @@ class AnalysisRepository:
         
         return analysis.ListTopWorkTitlesResponse (data=data)
     
-    async def get_change_job_salary_by_year(self, db:Session, country_name = 'Vietnam', job_title = 'Software Engineer') -> analysis.ChangeJobSalaryByYearResponse:
+    async def get_change_job_salary_by_year(self, db:Session, country_name = 'Vietnam', time=None, time_from=None, time_to=None, job_title = 'Software Engineer') -> analysis.ChangeJobSalaryByYearResponse:
         if "'" in country_name[0]:
             country_name = country_name.replace("'", "")
         if "'" in job_title[0]:
             job_title = job_title.replace("'", "")
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
         sql_query = f'''
         SELECT 
             date_trunc('month', ccp_job.updated_at) AS month,
@@ -347,14 +368,33 @@ class AnalysisRepository:
         LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
         LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
-            common_job_title = '{job_title}' AND country_name = '{country_name}' AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 year' AND CURRENT_DATE
-        GROUP BY 
-            common_job_title, 
-            hiring_level,
-            date_trunc('month', ccp_job.updated_at)
-        ORDER BY 
-            date_trunc('month', ccp_job.updated_at) ASC;
+            common_job_title = '{job_title}' AND country_name = '{country_name}'
         '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+                sql_query += f'''
+                AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+                    '''
+            elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+                if "'" in time_to or "'" in time_from:
+                        time_from = time_from.replace("'", "")
+                        time_to =  time_to.replace("'", "")
+                sql_query += f'''
+                    AND 
+                    ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
+                    AND updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+                    '''        
+        sql_query += '''
+        GROUP BY 
+                    common_job_title, 
+                    hiring_level,
+                    date_trunc('month', ccp_job.updated_at)
+                ORDER BY 
+                    date_trunc('month', ccp_job.updated_at) ASC;
+        '''
+       
         records = db.execute(text(sql_query))
 
         data = []

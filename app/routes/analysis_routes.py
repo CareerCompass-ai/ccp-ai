@@ -89,12 +89,13 @@ async def get_number_of_company_type(db: Session = Depends(PostgresDB.get_db)):
     
 @analysis_router.get("/analysis/new-user-in-time-range", response_model=analysis.GetNumberOfNewUser)
 async def list_new_user_in_time_range(
+    time: str = Query(None, description="Time range (Month/year)"),
     time_from: str = Query(None, description="Start time to calculate number of new users"),
     time_to: str = Query(None, description="End time to calculate number of new users"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_number_of_new_user(db=db, time_from=time_from, time_to=time_to)
+        data = await analysis_repo.get_number_of_new_user(db=db, time=time, time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"list_new_user_in_time_range failed error = {traceback.format_exc()}")
@@ -179,11 +180,14 @@ async def get_change_of_job_salary_by_time(
 @analysis_router.get("/analysis/salary-change-by-year", response_model=analysis.ListChangeJobSalaryByYearResponse)
 async def get_change_of_job_salary_by_year(
     job_title: str = Query(None, description="Selected job title"),
+    time: str = Query(None, description="Time range"),
+    time_from: str = Query(None, description="Time range from"),
+    time_to: str = Query(None, description="Time range to"),
     country_name: str = Query(None, description="Selected country"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:        
-        data = await analysis_repo.get_change_job_salary_by_year(db=db, country_name=country_name, job_title=job_title)
+        data = await analysis_repo.get_change_job_salary_by_year(db=db, time=time, time_from=time_from, time_to=time_to, country_name=country_name, job_title=job_title)
         return data
     except Exception:
         logger.error(f"get_change_of_job_salary_by_time failed error = {traceback.format_exc()}")
