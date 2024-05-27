@@ -130,28 +130,11 @@ class AnalysisRepository:
         JOIN ccp_jobtags on ccp_tag.id = ccp_jobtags.tag_id
         WHERE 
             ccp_jobtags.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
-        GROUP BY ccp_tag.id, ccp_tag.name
-        ORDER by count(ccp_tag.id) DESC()
+        GROUP BY ccp_tag.id, ccp_tag.tag_name
+        ORDER BY count DESC
         LIMIT {top_number}
         '''
-        # records = self.db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
-        #                 .join(JobTag, Tag.id == JobTag.tag_id) \
-        #                 .group_by(Tag.id, Tag.tag_name) \
-        #                 .order_by(desc('skill_count')) \
-        #                 .limit(top_number) \
-        #                 .all()
-        
-        # data = []
         records = db.execute(text(sql_query))
-
-    async def get_top_skills (self, db:Session, top_number:int) -> analysis.GetTopSkillResponse:
-        records = db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
-                        .join(JobTag, Tag.id == JobTag.tag_id) \
-                        .group_by(Tag.id, Tag.tag_name) \
-                        .order_by(desc('skill_count')) \
-                        .limit(top_number) \
-                        .all()
-        
         data = []
 
         for item in records:
@@ -165,7 +148,30 @@ class AnalysisRepository:
         
         db.close()
         
-        return analysis.GetTopSkillResponse(data=data)        
+        return analysis.GetTopSkillResponse(data=data) 
+
+    # async def get_top_skills (self, db:Session, top_number:int) -> analysis.GetTopSkillResponse:
+    #     records = db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
+    #                     .join(JobTag, Tag.id == JobTag.tag_id) \
+    #                     .group_by(Tag.id, Tag.tag_name) \
+    #                     .order_by(desc('skill_count')) \
+    #                     .limit(top_number) \
+    #                     .all()
+        
+    #     data = []
+
+    #     for item in records:
+    #         data.append (
+    #             analysis.TopSkillResponse(
+    #                 id=item.id,
+    #                 skill=item.tag_name,
+    #                 count=item.count
+    #             )
+    #         )
+        
+    #     db.close()
+        
+    #     return analysis.GetTopSkillResponse(data=data)        
     
     async def number_of_company_type (self, db:Session) -> analysis.GetNumberOfCompanyTypeResponse:
         records = db.query(Job.company_type, func.count(Job.id).label('company_type_count')).group_by(Job.company_type).all()
@@ -407,50 +413,24 @@ class AnalysisRepository:
         '''
 
         # Execute the SQL query
-        result =  self.db.execute(text(sql_query))
+        result =  db.execute(text(sql_query))
 
         # Fetch all the rows from the result
         rows = result.fetchall()
-    async def get_number_jobs_by_country(self, db:Session, country, job_title, level) -> analysis.ListNumberofJobsByCountryResponse:
-        query = db.query(
-            Job.hiring_level, City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
-        ).join(
-            Address, Job.address_id == Address.id
-        ).join(
-            City, Address.city_id == City.id
-        ).join(
-            Country, City.country_id == Country.id
-        ).filter(
-            Country.country_name.like(country)
-        )
-
-        if job_title is not None and job_title!='None':
-            query = query.filter(Job.common_job_title.like(job_title))
-        
-        if level is not None and level!='None':
-            query = query.filter(Job.hiring_level.like(level))
-
-        query = query.group_by(
-            Job.hiring_level, City.city_name, Country.country_name
-        ).order_by(
-            func.count(Job.id).desc()
-        )
-
-        records = query.all()
         data = []
-
-        for item in records:
+        for item in rows:
             data.append(
                 analysis.NumberofJobsByCountryResponse(
-                    hiring_level=item.hiring_level,
-                    city=item.city_name,
-                    count=item.job_number
+                    hiring_level=item[0],
+                    city=item[1],
+                    count=item[2]
                 )
             )
-
+        db.close()
         return analysis.ListNumberofJobsByCountryResponse(
             data=data
         )
+        
 
     async def get_list_country(self, db:Session) -> analysis.ListCountryName:
         query = db.query(
