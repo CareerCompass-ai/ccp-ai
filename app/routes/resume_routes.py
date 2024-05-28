@@ -62,16 +62,16 @@ async def upload(
         )
 
         if file is not None:
-
             pdf_file = BytesIO(file_content)
-
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
             text_content = ""
             for page_num in range(len(pdf_reader.pages)):
-                text_content += pdf_reader.pages[page_num].extract_text()
+                text = pdf_reader.pages[page_num].extract_text()
+                text_content += text.replace('\x00', '')
 
             record.content = text_content
+
 
         await resume_repo.post_resume(db=db, input=record)
 
