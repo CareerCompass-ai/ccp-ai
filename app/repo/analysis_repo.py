@@ -372,19 +372,20 @@ class AnalysisRepository:
         '''
         if time is not None and time.lower() != 'none':
             time = time.lower()
+            print(time)
             if "'" in time:
                 time = time.replace("'", "")
-                sql_query += f'''
+            sql_query += f'''
                 AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
                     '''
-            elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
                 if "'" in time_to or "'" in time_from:
                         time_from = time_from.replace("'", "")
                         time_to =  time_to.replace("'", "")
                 sql_query += f'''
                     AND 
                     ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
-                    AND updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+                    AND ccp_job.updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
                     '''        
         sql_query += '''
         GROUP BY 
