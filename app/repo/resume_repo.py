@@ -15,9 +15,11 @@ class ResumeRepository:
             resume_instance = Resume(**input.model_dump())
             resume_instance.id = None
             db.add(resume_instance)
-            db.commit()
+            db.flush()
             db.refresh(resume_instance)
             return resume_instance
+        
+        return None
         
     async def get_by_user_id(self, db:Session, user_id) -> List[Resume]:
         result = db.query(Resume).filter(Resume.candidate_id == user_id, Resume.active == True).all()
