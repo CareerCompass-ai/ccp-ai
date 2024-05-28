@@ -4,8 +4,8 @@ from datetime import datetime
 
 class AddressBase(BaseModel):
     id: Optional[int] = None
-    city_id: int
-    detailed_address: str
+    city_id: Optional[int] = None
+    detailed_address: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

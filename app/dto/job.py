@@ -15,7 +15,7 @@ class JobBase(BaseModel):
     salary_to: Optional[float] = 0.0
     job_type: Optional[str] = ""
     company_type: Optional[str] = ""
-    address_id: Optional[int] = 0
+    address_id: Optional[int] = None
     applied_count: Optional[int] = 0
     hiring_level: Optional[str] = ""
     work_place: Optional[str] = ""
