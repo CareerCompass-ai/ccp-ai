@@ -75,6 +75,7 @@ async def upload(
 
         await resume_repo.post_resume(db=db, input=record)
 
+        os.remove(temp_file_path)
         return resume.CreateResumePostResponse
     except Exception:
         logger.error(f"create_resume failed error = {traceback.format_exc()}")
