@@ -261,7 +261,9 @@ async def create(
 
             text_content = ""
             for page_num in range(len(pdf_reader.pages)):
-                text_content += pdf_reader.pages[page_num].extract_text()
+                text = pdf_reader.pages[page_num].extract_text()
+                text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
+                text_content += text
 
             record.content = text_content
 
