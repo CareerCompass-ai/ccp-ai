@@ -7,9 +7,6 @@ from models.ccp_job import Job
 from app.dto import job
 
 class JobRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
     async def get_by_id(self, db:Session, id):
         data = db.query(Job).filter(Job.id == id).first()
         return data

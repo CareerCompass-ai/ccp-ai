@@ -7,9 +7,6 @@ from models.ccp_city import City
 from app.dto import city
 
 class CityRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
     async def get_by_id(self, db:Session, id):
 
         return db.query(City).where(City.id == id).first()

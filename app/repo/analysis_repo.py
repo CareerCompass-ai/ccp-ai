@@ -35,14 +35,11 @@ class AnalysisRepository:
         
         return analysis.ListTopJobTitlesResponse (data=data)
     
-    async def get_top_leader_salaries(self, db:Session, country_name = 'VietNam', time = 'Month', limit=0, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
-        time = time.lower()
+    async def get_top_leader_salaries(self, db:Session, country_name = 'Vietnam', time = None, time_from=None, time_to = None, limit=0, order=1) -> analysis.ListTopJobTitlesSalaryResponse:
         if "'" not in country_name:
             country_name = f"'{country_name}'"
-        if "'" in time:
-            time = time.replace("'", "")
         sql_query = f'''
-                SELECT 
+                    SELECT 
             common_job_title,
             hiring_level,
             ROUND(AVG(
@@ -58,8 +55,26 @@ class AnalysisRepository:
         LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
         LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
-            common_job_title != 'Other position' and country_name = {country_name} and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
-        GROUP BY 
+            common_job_title != 'Other position' and country_name = {country_name} 
+            '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+            if "'" in time_to or "'" in time_from:
+                time_from = time_from.replace("'", "")
+                time_to =  time_to.replace("'", "")
+            sql_query += f'''
+             AND 
+             ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
+            AND ccp_job.updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            '''
+
+        sql_query += '''
+         GROUP BY 
             common_job_title, 
             hiring_level
         ORDER BY 
@@ -70,7 +85,7 @@ class AnalysisRepository:
                     ELSE (COALESCE(salary_from, 0) + COALESCE(salary_to, 0)) / 2.0
                 END
             ))
-        '''
+                '''
         if order != 0:
             sql_query += " DESC"
         else:
@@ -130,28 +145,11 @@ class AnalysisRepository:
         JOIN ccp_jobtags on ccp_tag.id = ccp_jobtags.tag_id
         WHERE 
             ccp_jobtags.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
-        GROUP BY ccp_tag.id, ccp_tag.name
-        ORDER by count(ccp_tag.id) DESC()
+        GROUP BY ccp_tag.id, ccp_tag.tag_name
+        ORDER BY count DESC
         LIMIT {top_number}
         '''
-        # records = self.db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
-        #                 .join(JobTag, Tag.id == JobTag.tag_id) \
-        #                 .group_by(Tag.id, Tag.tag_name) \
-        #                 .order_by(desc('skill_count')) \
-        #                 .limit(top_number) \
-        #                 .all()
-        
-        # data = []
         records = db.execute(text(sql_query))
-
-    async def get_top_skills (self, db:Session, top_number:int) -> analysis.GetTopSkillResponse:
-        records = db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
-                        .join(JobTag, Tag.id == JobTag.tag_id) \
-                        .group_by(Tag.id, Tag.tag_name) \
-                        .order_by(desc('skill_count')) \
-                        .limit(top_number) \
-                        .all()
-        
         data = []
 
         for item in records:
@@ -165,7 +163,30 @@ class AnalysisRepository:
         
         db.close()
         
-        return analysis.GetTopSkillResponse(data=data)        
+        return analysis.GetTopSkillResponse(data=data) 
+
+    # async def get_top_skills (self, db:Session, top_number:int) -> analysis.GetTopSkillResponse:
+    #     records = db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
+    #                     .join(JobTag, Tag.id == JobTag.tag_id) \
+    #                     .group_by(Tag.id, Tag.tag_name) \
+    #                     .order_by(desc('skill_count')) \
+    #                     .limit(top_number) \
+    #                     .all()
+        
+    #     data = []
+
+    #     for item in records:
+    #         data.append (
+    #             analysis.TopSkillResponse(
+    #                 id=item.id,
+    #                 skill=item.tag_name,
+    #                 count=item.count
+    #             )
+    #         )
+        
+    #     db.close()
+        
+    #     return analysis.GetTopSkillResponse(data=data)        
     
     async def number_of_company_type (self, db:Session) -> analysis.GetNumberOfCompanyTypeResponse:
         records = db.query(Job.company_type, func.count(Job.id).label('company_type_count')).group_by(Job.company_type).all()
@@ -181,14 +202,31 @@ class AnalysisRepository:
 
         return analysis.GetNumberOfCompanyTypeResponse(data=data)
     
-    async def get_number_of_new_user(self, db:Session, time_from, time_to) -> analysis.GetNumberOfNewUser:
-        records = db.query(User.id, User.role, User.created_at) \
-                        .filter(and_(User.created_at >= time_from,User.created_at <= time_to )) \
-                        .all()
-        
+    async def get_number_of_new_user(self, db:Session, time, time_from, time_to) -> analysis.GetNumberOfNewUser:
+        sql_query= '''
+        select id, role, created_at
+        from ccp_user
+        '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+             where created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+            if "'" in time_to or "'" in time_from:
+                time_from = time_from.replace("'", "")
+                time_to =  time_to.replace("'", "")
+            sql_query += f'''
+            where created_at >= to_date('{time_from}', 'YYYY/MM')  AND
+            created_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            '''
+        records = db.execute(text(sql_query))
+
         data = []
+
         for item in records:
-            data.append(
+            data.append (
                 analysis.NumberOfNewUser(
                     id=item.id,
                     role=item.role,
@@ -303,11 +341,15 @@ class AnalysisRepository:
         
         return analysis.ListTopWorkTitlesResponse (data=data)
     
-    async def get_change_job_salary_by_year(self, db:Session, country_name = 'VietNam', job_title = 'Software Engineer') -> analysis.ChangeJobSalaryByYearResponse:
+    async def get_change_job_salary_by_year(self, db:Session, country_name = 'Vietnam', time=None, time_from=None, time_to=None, job_title = 'Software Engineer') -> analysis.ChangeJobSalaryByYearResponse:
         if "'" in country_name[0]:
             country_name = country_name.replace("'", "")
         if "'" in job_title[0]:
             job_title = job_title.replace("'", "")
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
         sql_query = f'''
         SELECT 
             date_trunc('month', ccp_job.updated_at) AS month,
@@ -326,14 +368,34 @@ class AnalysisRepository:
         LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
         LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
-            common_job_title = '{job_title}' AND country_name = '{country_name}' AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 year' AND CURRENT_DATE
-        GROUP BY 
-            common_job_title, 
-            hiring_level,
-            date_trunc('month', ccp_job.updated_at)
-        ORDER BY 
-            date_trunc('month', ccp_job.updated_at) ASC;
+            common_job_title = '{job_title}' AND country_name = '{country_name}'
         '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            print(time)
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+                AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+                    '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+                if "'" in time_to or "'" in time_from:
+                        time_from = time_from.replace("'", "")
+                        time_to =  time_to.replace("'", "")
+                sql_query += f'''
+                    AND 
+                    ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
+                    AND ccp_job.updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+                    '''        
+        sql_query += '''
+        GROUP BY 
+                    common_job_title, 
+                    hiring_level,
+                    date_trunc('month', ccp_job.updated_at)
+                ORDER BY 
+                    date_trunc('month', ccp_job.updated_at) ASC;
+        '''
+       
         records = db.execute(text(sql_query))
 
         data = []
@@ -383,74 +445,63 @@ class AnalysisRepository:
         
         return analysis.ListChangeJobSalaryResponse(data=data)
 
-    async def get_number_jobs_by_country(self, db:Session, country_name = 'VietNam', time = 'Month', job_title= None, level=None) -> analysis.ListNumberofJobsByCountryResponse:
-        time = time.lower()
+    async def get_number_jobs_by_country(self, db:Session, country_name = 'Vietnam', time = None, time_from=None, time_to=None, job_title= None, level=None) -> analysis.ListNumberofJobsByCountryResponse:
         if "'" not in country_name:
             country_name = f"'{country_name}'"
-        if "'" in time:
-            time = time.replace("'", "")
         sql_query = f'''
-                SELECT 
-            hiring_level,
-            city_name,
-            COUNT(ccp_job.id) as job_number
-        FROM 
-            ccp_job
-        LEFT JOIN ccp_address ON address_id = ccp_address.id
-        LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
-        LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
-        WHERE 
-            country_name = {country_name} and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+                    SELECT 
+                hiring_level,
+                city_name,
+                COUNT(ccp_job.id) as job_number
+            FROM 
+                ccp_job
+            LEFT JOIN ccp_address ON address_id = ccp_address.id
+            LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
+            LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
+            WHERE 
+                country_name = {country_name}
+            '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+            if "'" in time_to or "'" in time_from:
+                time_from = time_from.replace("'", "")
+                time_to =  time_to.replace("'", "")
+            sql_query += f'''
+             AND 
+             ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
+            AND updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            '''
+
+        sql_query += '''
         GROUP BY 
-            hiring_level,
-            city_name
-        '''
+                hiring_level,
+                city_name; 
+                '''
 
         # Execute the SQL query
-        result =  self.db.execute(text(sql_query))
+        result =  db.execute(text(sql_query))
 
         # Fetch all the rows from the result
         rows = result.fetchall()
-    async def get_number_jobs_by_country(self, db:Session, country, job_title, level) -> analysis.ListNumberofJobsByCountryResponse:
-        query = db.query(
-            Job.hiring_level, City.city_name, Country.country_name, func.count(Job.id).label('job_number') 
-        ).join(
-            Address, Job.address_id == Address.id
-        ).join(
-            City, Address.city_id == City.id
-        ).join(
-            Country, City.country_id == Country.id
-        ).filter(
-            Country.country_name.like(country)
-        )
-
-        if job_title is not None and job_title!='None':
-            query = query.filter(Job.common_job_title.like(job_title))
-        
-        if level is not None and level!='None':
-            query = query.filter(Job.hiring_level.like(level))
-
-        query = query.group_by(
-            Job.hiring_level, City.city_name, Country.country_name
-        ).order_by(
-            func.count(Job.id).desc()
-        )
-
-        records = query.all()
         data = []
-
-        for item in records:
+        for item in rows:
             data.append(
                 analysis.NumberofJobsByCountryResponse(
-                    hiring_level=item.hiring_level,
-                    city=item.city_name,
-                    count=item.job_number
+                    hiring_level=item[0],
+                    city=item[1],
+                    count=item[2]
                 )
             )
-
+        db.close()
         return analysis.ListNumberofJobsByCountryResponse(
             data=data
         )
+        
 
     async def get_list_country(self, db:Session) -> analysis.ListCountryName:
         query = db.query(

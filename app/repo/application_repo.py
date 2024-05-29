@@ -5,12 +5,9 @@ from sqlalchemy.orm import Session
 from models.ccp_application import Application
 
 class ApplicationRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
-    def get_job_ids_by_resume_id(self, resume_id):
+    async def get_job_ids_by_resume_id(self, db:Session, resume_id):
         job_ids = (
-            self.db.query(Application.job_id)
+            db.query(Application.job_id)
             .filter(Application.resume_id == resume_id)
             .all()
         )

@@ -8,9 +8,6 @@ from app.dto import country
 from typing import List
 
 class CountryRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
     async def get_by_id(self, db:Session, id):
         return db.query(Country).filter(Country.id == id).first()
     

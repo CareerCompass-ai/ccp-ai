@@ -6,21 +6,18 @@ from app.dto import resume
 from typing import List, Optional
 
 class ResumeRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
-    def get_by_id(self, id):
-        result = self.db.query(Resume).filter(Resume.id == id).first()
+    async def get_by_id(self, db:Session, id):
+        result = db.query(Resume).filter(Resume.id == id).first()
         return result
     
-    async def post_resume(self, db:Session, input: Optional[resume.ResumeBase]):
+    async def post_resume(self, db: Session, input: Optional[resume.ResumeBase]):
         if input:
             resume_instance = Resume(**input.model_dump())
-            resume_instance.id = None
             db.add(resume_instance)
-            db.commit()
+            db.flush()
             db.refresh(resume_instance)
             return resume_instance
+        return None
         
     async def get_by_user_id(self, db:Session, user_id) -> List[Resume]:
         result = db.query(Resume).filter(Resume.candidate_id == user_id, Resume.active == True).all()

@@ -1,13 +1,10 @@
 from config.postgres import SessionLocal
-
+from sqlalchemy.orm import Session
 from models.ccp_candidate_skills import Candidate_Skills
 
 class CandidateSkillsRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-
-    def get_by_id(self, id):
-        return self.db.query(Candidate_Skills).filter(Candidate_Skills.candidate_id == id).all()
+    async def get_by_id(self, db:Session, id):
+        return db.query(Candidate_Skills).filter(Candidate_Skills.candidate_id == id).all()
     
     # def get_jobtags(self, db: Session) -> List[JobTag]:
     #     tags = db.query(JobTag).all()

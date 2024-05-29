@@ -10,10 +10,7 @@ from models.ccp_country import Country
 
 from app.dto import recruiter
 
-class RecruiterRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-        
+class RecruiterRepository:        
     async def get_jobs_posted(self, db:Session, id) -> recruiter.ListJobsPostedResponse:
         result =  db.query(Job.id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                                 Job.salary_from, Job.salary_to, Job.job_type, Job.work_place,

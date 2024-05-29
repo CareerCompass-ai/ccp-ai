@@ -7,7 +7,7 @@ import uuid
 from io import BytesIO
 import constant.config as minio_constant
 import traceback
-
+from sqlalchemy.exc import SQLAlchemyError
 from config.qdrant import QdrantVDB as qdrant
 
 
@@ -62,20 +62,27 @@ async def upload(
         )
 
         if file is not None:
-
             pdf_file = BytesIO(file_content)
-
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
             text_content = ""
             for page_num in range(len(pdf_reader.pages)):
-                text_content += pdf_reader.pages[page_num].extract_text()
+                text = pdf_reader.pages[page_num].extract_text()
+                text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
+                text_content += text
 
             record.content = text_content
 
-        await resume_repo.post_resume(db=db, input=record)
+        os.remove(temp_file_path)
 
-        return resume.CreateResumePostResponse
+        with db.begin():
+            try:
+                await resume_repo.post_resume(db=db, input=record)
+                return resume.CreateResumePostResponse
+            except SQLAlchemyError:
+                db.rollback()
+                logger.error(f"create_resume failed error = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     except Exception:
         logger.error(f"create_resume failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

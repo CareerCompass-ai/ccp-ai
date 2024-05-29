@@ -15,6 +15,7 @@ class ResumeBase(BaseModel):
     resume_name: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    active: bool = True
 
 class ResumeAggregate(ResumeBase):
     matching_score: Optional[float] = None

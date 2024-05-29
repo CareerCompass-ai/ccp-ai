@@ -6,14 +6,11 @@ from app.dto import job_tag
 from typing import List
 
 
-class JobTagsRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-        
-    def get_by_id(self, id_tag, id_job):
-        return self.db.query(JobTag).filter(JobTag.tag_id == id_tag and JobTag.job_id == id_job).first()
+class JobTagsRepository:        
+    async def get_by_id(self, db:Session, id_tag, id_job):
+        return db.query(JobTag).filter(JobTag.tag_id == id_tag and JobTag.job_id == id_job).first()
     
-    def get_jobtags(self, db: Session) -> List[JobTag]:
+    async def get_jobtags(self, db: Session) -> List[JobTag]:
         tags = db.query(JobTag).all()
         jobtag_aggregates = []
         for item in tags:
@@ -24,8 +21,6 @@ class JobTagsRepository:
                 updated_at=item.updated_at
             )
             jobtag_aggregates.append(jobtag_aggregate)
-
-        self.db.close()
         
         return jobtag_aggregates
     

@@ -10,12 +10,9 @@ from models.ccp_viewedjob import ViewedJob
 
 from app.dto import candidate
 
-class CandidateRepository:
-    def __init__(self):
-        self.db = SessionLocal()
-        
-    def get_by_id(self, id):
-        return self.db.query(Candidate).filter(Candidate.id == id).first()
+class CandidateRepository:      
+    async def get_by_id(self, db:Session, id):
+        return db.query(Candidate).filter(Candidate.id == id).first()
     
     async def get_applied_jobs(self, db:Session, id) -> candidate.ListAppliedJobsResponse:
         applications = db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
@@ -99,15 +96,13 @@ class CandidateRepository:
 
         return result
     
-    def check_viewed_job(self, candidate_id, job_id) -> candidate.JobViewdResponse:
-        result = self.db.query(ViewedJob).filter(ViewedJob.candidate_id == candidate_id, ViewedJob.job_id == job_id).first()
+    async def check_viewed_job(self, db:Session, candidate_id, job_id) -> candidate.JobViewdResponse:
+        result = db.query(ViewedJob).filter(ViewedJob.candidate_id == candidate_id, ViewedJob.job_id == job_id).first()
         if result is not None:
             return candidate.JobViewdResponse (
                 job_id=result.job_id,
                 candidate_id=result.candidate_id,
                 time=result.view_datetime
             )
-        
-        self.db.close()
 
         return result
