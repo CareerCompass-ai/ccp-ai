@@ -8,7 +8,7 @@ from .routes.common_routes import common_router
 from .routes.candidate_routes import candidate_router
 from .routes.recruiter_routes import recruiter_router
 from .routes.analysis_routes import analysis_router
-from .routes.ai import ai_router
+from .routes.ai_router import ai_router
 
 app = FastAPI()
 
