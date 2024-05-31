@@ -1,6 +1,7 @@
 import os
-from fastapi import status, HTTPException, APIRouter
+from fastapi import status, HTTPException, APIRouter, Form, Depends
 import traceback
+import constant.config as minio_constant
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -13,10 +14,16 @@ from app.dto import ai, minio
 from config.qdrant import QdrantVDB as qdrant
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.minio_repo import MinioRepository
+from app.repo.assistant_repo import AssistantRepository
+
+from config.postgres import PostgresDB
+from sqlalchemy.orm import Session
+from datetime import datetime
 
 # AI
 from .ai_helper import load_docs, split_docs
 from ..ai.ai_helper import AI
+from .helper import generate_analysis_file
 
 ai_router = APIRouter(
     prefix="/api",
@@ -27,9 +34,51 @@ ai_helper = AI()
 job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
 qdrant_client = qdrant.setup_qdrant_connection()
 minio_repo = MinioRepository()
+assistant_repo = AssistantRepository()
 
 # Assistant
 @ai_router.post("/assistant/generate", response_model=ai.AssistantResponse)
+async def generate_assistant (
+    time_from: str = Form(None),
+    time_to: str = Form(None),
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:
+
+        #Check if csv exist?
+        _file_name = time_from + '-' + time_to + '.csv'
+        _file = await assistant_repo.get_by_file_name(db=db, name=_file_name)
+
+        if _file is not None:
+            return ai.AssistantResponse(tmp="Get go!")
+        
+        #Create analysis file > Upload to MinIO
+        try: 
+            await generate_analysis_file(db=db, time_from=time_from, time_to=time_to, file_name=_file_name)
+            upload_response = await minio_repo.upload(
+                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT, temp_path=_file_name, file_name=_file_name)
+            )
+            public_url = upload_response.url
+            os.remove(_file_name)
+
+        except Exception:
+            logger.error(f"generate_analysis_file failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+        #Create assistant
+
+        #Add assistant record to db
+
+        return ai.AssistantResponse(tmp="Create asssitant successfully!")
+
+        
+
+    except Exception:
+        logger.error(f"generate_assistant failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+        
+
+
+
 @ai_router.post("/assistant/questioning", response_model=ai.AssistantResponse)
 # Flow:
 # Note: different date time range will have different assistant
