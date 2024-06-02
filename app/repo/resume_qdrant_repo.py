@@ -22,6 +22,15 @@ class ResumeQdrantRepository:
             exact=True
         )
     
+    async def get_resume_vector(self, resume_id: str) -> list[float]:
+        data = self.client.retrieve(
+            collection_name=self.index_name,
+            ids=[resume_id],
+            with_vectors=True,
+        )
+        
+        return data[0].vector
+    
     async def list_resumes(self, input: Optional[resume.ListResumeRequest]) -> resume.ListResumeResponse:
         if input.page <= 0:
             input.page = 1
