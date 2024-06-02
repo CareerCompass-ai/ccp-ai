@@ -9,6 +9,8 @@ from app.dto import mapper
 
 import constant.config as constant
 
+from pkg.logging import logger
+
 class ResumeQdrantRepository:
     def __init__(self, index_name: str):
         self.qdrant_setup = QdrantVDB()
@@ -39,11 +41,22 @@ class ResumeQdrantRepository:
         if input.size >= 100:
             input.size = 100
 
+        # TODO: Move this to above layer and call from job qdran repo, then pass the vector here
         job_vector = self.client.retrieve(
             collection_name=constant.QDRANT_INDEX_JOB_SEARCH,
             ids=[input.job_id],
             with_vectors=True,
         )
+
+        if not job_vector:
+            # If job_vector is empty, return an empty response
+            logger.info(f"No vectors found for job_id: {input.job_id}")
+            return resume.ListResumeResponse(
+                count=0,
+                page=input.page,
+                size=input.size,
+                records=[]
+            )
 
         filter = models.Filter()
         filter.must = []
