@@ -126,12 +126,13 @@ async def percentage_of_different_job_status(
 @analysis_router.get("/analysis/top-recruiter-by-job-posting", response_model=analysis.GetTopRecruiterJobPosting)
 async def get_top_recruiters_job_posting(
     top_number: int = Query(None, description="Top number of recruiter"),
+    time: str = Query(None, description="Selected time range"),
     time_from: str = Query(None, description="Start time to find out the top recruiter"),
     time_to: str = Query(None, description="End time to find out the top recruiter"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        data = await analysis_repo.get_top_recruiters_job_posting(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
+        data = await analysis_repo.get_top_recruiters_job_posting(db=db, top_number=top_number, time=time, time_from=time_from, time_to=time_to)
         return data
     except Exception:
         logger.error(f"get_top_recruiters_job_posting failed error = {traceback.format_exc()}")

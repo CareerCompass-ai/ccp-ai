@@ -266,22 +266,39 @@ class AnalysisRepository:
         
         return analysis.GetNumberOfJobStatus(data=data)
     
-    async def get_top_recruiters_job_posting (self, db:Session, top_number, time_from, time_to) -> analysis.GetTopRecruiterJobPosting:
-        if time_from != 'None' and time_to != 'None':
-            records = db.query(Job.recruiter_id, func.concat(User.first_name, ' ', User.last_name).label('full_name'), func.count(Job.id).label('post_count')) \
-                            .join(User, Job.recruiter_id == User.id) \
-                            .filter(and_(Job.created_at >= time_from, Job.created_at <= time_to)) \
-                            .group_by(Job.recruiter_id, 'full_name') \
-                            .order_by(desc('post_count')) \
-                            .limit(top_number) \
-                            .all()
-        else:
-            records = db.query(Job.recruiter_id, func.concat(User.first_name, ' ', User.last_name).label('full_name'), func.count(Job.id).label('post_count')) \
-                            .join(User, Job.recruiter_id == User.id) \
-                            .group_by(Job.recruiter_id, 'full_name') \
-                            .order_by(func.desc('post_count')) \
-                            .limit(top_number) \
-                            .all()
+    async def get_top_recruiters_job_posting (self, db:Session, top_number, time, time_from, time_to) -> analysis.GetTopRecruiterJobPosting:
+        sql_query = f''' SELECT j.recruiter_id, CONCAT(u.first_name, ' ', u.last_name) AS full_name, COUNT(j.id) AS post_count
+            FROM
+                ccp_job j
+            JOIN
+                ccp_user u
+            ON
+                j.recruiter_id = u.id
+                '''
+        if time is not None and time.lower() != 'none':
+            time = time.lower()
+            if "'" in time:
+                time = time.replace("'", "")
+            sql_query += f'''
+             where j.created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+            if "'" in time_to or "'" in time_from:
+                time_from = time_from.replace("'", "")
+                time_to =  time_to.replace("'", "")
+            sql_query += f'''
+            where j.created_at >= to_date('{time_from}', 'YYYY/MM')  AND
+            j.created_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            '''
+        sql_query += f'''
+            GROUP BY
+                j.recruiter_id, full_name
+            ORDER BY
+                post_count DESC
+            LIMIT
+                {top_number};
+                '''
+            
+        records = db.execute(text(sql_query))
         
         data = []
         for item in records:
@@ -474,7 +491,7 @@ class AnalysisRepository:
             sql_query += f'''
              AND 
              ccp_job.updated_at >= to_date('{time_from}', 'YYYY/MM') 
-            AND updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            AND ccp_job.updated_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
             '''
 
         sql_query += '''
