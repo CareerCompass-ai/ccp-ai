@@ -87,6 +87,7 @@ async def list_jobs_from_qdrant(
     salary:  Optional[str] = Query(None, description="Salary range (multile range)"),
     is_hiring:  Optional[bool] = Query(True, description="Is hiring"),
     alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)"),
+    resume_id: Optional[int] = Query(None, description="Resume id"),
     db: Session = Depends(PostgresDB.get_db)
 ):
     # map query params to req
@@ -114,6 +115,11 @@ async def list_jobs_from_qdrant(
         if search_type == "vector": # handle vector search
             latest_job =  await job_repo.get_latest_job(db=db)
             req.latest_job_id = latest_job.id
+
+            if resume_id is not None: 
+                resume_vector = await resume_qdrant_repo.get_resume_vector(resume_id=resume_id)
+
+                req.vectors = resume_vector if resume_vector is not None else None
 
             if input is not None:
                 vectors = await ai_helper.get_embedding(input)

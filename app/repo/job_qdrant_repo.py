@@ -434,7 +434,13 @@ class JobQdrantRepository:
                     offset=(input.page - 1) * input.size,
                 )
 
-                # TODO: Handle empty result -> will be panicked
+                if not hits:
+                    return job.ListJobResponse(
+                        count=0,
+                        page=input.page,
+                        size=input.size,
+                        records=[]
+                    )
 
                 for item in hits:
                     score = item.score
@@ -469,7 +475,13 @@ class JobQdrantRepository:
                     # with_vectors=False
                 )
 
-                # TODO: Handle empty result -> will be panicked
+                if not result[0]:
+                    return job.ListJobResponse(
+                        count=0,
+                        page=input.page,
+                        size=input.size,
+                        records=[]
+                    )
                 
                 for item in result[0]:
                     if item is not None:
