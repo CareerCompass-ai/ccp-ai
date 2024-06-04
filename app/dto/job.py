@@ -48,6 +48,11 @@ class ListJobRequest(BaseModel):
     is_hiring: Optional[bool] = None
     latest_job_id: Optional[int] = None
 
+class ListRelatedJobRequest(BaseModel):
+    page: Optional[int]
+    size: Optional[int]
+    job_id: Optional[int]
+
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0
     s_content: Optional[str] = ""
@@ -77,6 +82,11 @@ class ListJobResponse(BaseModel):
     size: int
     records: List[JobAggregate]
     dynamic_filters: DynamicFilters = DynamicFilters()
+
+class ListRelatedJobResponse(BaseModel):
+    page: int
+    size: int
+    records: List[JobAggregate]
 
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
