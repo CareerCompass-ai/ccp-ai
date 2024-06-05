@@ -180,9 +180,10 @@ async def list_recommend_jobs_from_qdrant(
     
     # map query params to req
     try:
+        # NOTE: Should we get from qdrant instead of gettin from db? Because in case that resume is existed in db but not in qdrant, the api will return error
         # get all user resumes
         resumes = await resume_repo.get_by_user_id(db=db, user_id=user_id)
-        
+
         resume_ids = []
         for resume in resumes:
             resume_ids.append(resume.id)
