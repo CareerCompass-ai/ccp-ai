@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
@@ -18,4 +18,5 @@ class Assistant(Base):
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=True)
     assistant_name = Column(String, nullable=True)
     thread_id = Column(String, nullable=True)
+    active = Column(Boolean, nullable=False)
 

@@ -16,4 +16,6 @@ class QuestionAndAnswerResponse(BaseModel):
     answer: str = ""
 
 class AssistantResponse(BaseModel):
+    assistant_id: str
+    thread_id: str
     tmp: str = ""

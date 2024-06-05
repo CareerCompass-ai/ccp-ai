@@ -49,24 +49,42 @@ async def generate_assistant (
     try:
         _file_name = time_from + '-' + time_to + '.csv'
 
+        # Check if CSV exist?
         with db.begin():
             try: 
-                await generate_analysis_file(db=db, time_from=time_from, time_to=time_to, file_name=_file_name)
-
+                _file = await assistant_repo.get_by_file_name(db=db, name=_file_name)
             except SQLAlchemyError:
                 db.rollback()
-                logger.error(f"generate analysis file failed error = {traceback.format_exc()}")
+                logger.error(f"get analysis file failed error = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-            
-        #Create assistant
 
+
+        #If exist
+        if _file is not None:
+            #Get file from minio
+            await minio_repo.get_object(minio_constant.MINIO_BUCKET_ASSISTANT, _file_name)
+        else:
+            #Generate CSV
+            with db.begin():
+                try: 
+                    await generate_analysis_file(db=db, time_from=time_from, time_to=time_to, file_name=_file_name)
+
+                except SQLAlchemyError:
+                    db.rollback()
+                    logger.error(f"generate analysis file failed error = {traceback.format_exc()}")
+                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+                
+            #Upload MinIO
+            upload_response = await minio_repo.upload(
+                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT, temp_path=_file_name, file_name=_file_name)
+            )
+
+        #Create assistant & thread
+        #Insert into db
         assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name)
 
         thread_id = await ai_helper.create_thread()
 
-        os.remove(_file_name)
-
-        #Add assistant record to db
         now = datetime.now()
 
         record = assistant.AssistantBase (
@@ -78,10 +96,17 @@ async def generate_assistant (
             created_at=now,
             updated_at=now
         )
+
+        os.remove(_file_name)
+        
         with db.begin():
             try:
                 await assistant_repo.create(session=db, input=record)
-                return ai.AssistantResponse(tmp="Create asssitant successfully!")
+                return ai.AssistantResponse (
+                    assistant_id=assistant_id,
+                    thread_id=thread_id,
+                    tmp="Sucessfully!"
+                )
             except SQLAlchemyError:
                 db.rollback()
                 logger.error(f"generate assistant failed error = {traceback.format_exc()}")
