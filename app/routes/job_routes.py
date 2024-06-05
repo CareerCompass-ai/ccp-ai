@@ -137,13 +137,68 @@ async def list_jobs_from_qdrant(
         else:
             return job.ListJobResponse(
                 count=0,
-                page=req.size,
+                page=req.page,
                 size=req.size,
                 records=list[job.JobAggregate]
             )
 
     except Exception:
         logger.error(f"list_jobs_from_qdrant failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+
+@job_router.get("/related_jobs", response_model=job.ListRelatedJobResponse)
+async def list_related_jobs_from_qdrant(
+    page: Optional[int] = Query(None, description="Page number"),
+    size: Optional[int] = Query(None, description="Page size"),
+    job_id: Optional[int] = Query(None, description="Job id"),
+):
+    
+    # map query params to req
+    try:
+        req = job.ListRelatedJobRequest(
+            job_id=job_id,
+            page=page,
+            size=size
+        )
+
+        data = await job_qdrant_repo.list_related_jobs(req)
+
+        return data
+
+    except Exception:
+        logger.error(f"list_related_jobs_from_qdrant failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    
+@job_router.get("/recommend_jobs", response_model=job.ListRelatedJobResponse)
+async def list_recommend_jobs_from_qdrant(
+    page: Optional[int] = Query(None, description="Page number"),
+    size: Optional[int] = Query(None, description="Page size"),
+    user_id: Optional[int] = Query(None, description="User id"),
+    db: Session = Depends(PostgresDB.get_db),
+):
+    
+    # map query params to req
+    try:
+        # get all user resumes
+        resumes = await resume_repo.get_by_user_id(db=db, user_id=user_id)
+        
+        resume_ids = []
+        for resume in resumes:
+            resume_ids.append(resume.id)
+
+        req = job.ListRecommendJobRequest(
+            page=page,
+            size=size,
+            resume_ids=resume_ids
+        )
+
+        data = await job_qdrant_repo.list_recommend_jobs(req)
+
+        return data
+
+    except Exception:
+        logger.error(f"list_recommend_jobs_from_qdrant failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 @job_router.get("/job", response_model=job.JobAggregate)

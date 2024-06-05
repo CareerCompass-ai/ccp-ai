@@ -3,7 +3,9 @@ from typing import List, Optional
 
 from qdrant_client.conversions import common_types as types
 from qdrant_client.http import models
+
 from config.qdrant import QdrantVDB
+from constant import config as cfg
 
 from app.dto import job
 from app.dto import mapper
@@ -16,6 +18,80 @@ class JobQdrantRepository:
         self.qdrant_setup = QdrantVDB()
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
+        
+    async def list_recommend_jobs(self, input: job.ListRecommendJobRequest) -> List[job.JobAggregate]:
+        records = []
+
+        hits = self.client.recommend(
+            collection_name=self.index_name,
+            positive=input.resume_ids,
+            lookup_from=models.LookupLocation(
+                collection=cfg.QDRANT_INDEX_RESUME_SEARCH
+            ),
+            limit=input.size,
+            offset=(input.page - 1) * input.size,
+        )
+
+        if not hits:
+            return job.ListRelatedJobResponse(
+                page=input.page,
+                size=input.size,
+                records=[]
+            )
+        
+        for item in hits:
+            score = item.score
+            payload = item.payload
+
+            result = mapper.toJobDTO(payload)
+            result.matching_score = score
+
+            records.append(result)  
+            del result
+
+        return job.ListRelatedJobResponse(
+            page=input.page,
+            size=input.size,
+            records=records,
+        )
+    
+    async def list_related_jobs(self, input: job.ListRelatedJobRequest) -> List[job.JobAggregate]:
+        records = []
+
+        hits = self.client.recommend(
+            collection_name=self.index_name,
+            positive=[input.job_id],
+            # lookup_from=types.LookupLocation(
+            #     models.LookupLocation(
+            #         collection_name=cfg.ES_INDEX_RESUME_SEARCH,
+            #     )
+            # ),
+            limit=input.size,
+            offset=(input.page - 1) * input.size,
+        )
+
+        if not hits:
+            return job.ListRelatedJobResponse(
+                page=input.page,
+                size=input.size,
+                records=[]
+            )
+        
+        for item in hits:
+            score = item.score
+            payload = item.payload
+
+            result = mapper.toJobDTO(payload)
+            result.matching_score = score
+
+            records.append(result)  
+            del result
+
+        return job.ListRelatedJobResponse(
+            page=input.page,
+            size=input.size,
+            records=records,
+        )
 
     async def list_jobs_by_ids(self, ids: List[int]) -> List[job.JobAggregate]:
         records = self.client.retrieve(
