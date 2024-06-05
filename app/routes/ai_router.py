@@ -338,9 +338,9 @@ async def generate_qna_v2(req: ai.CreateQnARequest):
         logger.error(f"create_qna failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
-
-@ai_router.post("/qna/questioning", response_model=ai.QuestionAndAnswerResponse)
-async def questioning(req: ai.QuestionAndAnswerRequest):
+# RAG
+@ai_router.post("/qna/questioning_v1", response_model=ai.QuestionAndAnswerResponse)
+async def questioning_v1(req: ai.QuestionAndAnswerRequest):
     try:
         # Calculate the embedding for the query
         query_embedding = await ai_helper.get_embedding(req.question)
@@ -356,10 +356,60 @@ async def questioning(req: ai.QuestionAndAnswerRequest):
         input_documents = [doc.payload["text"] for doc in relevant_docs]
         
         # Get answer from OpenAI model
-        answer = await ai_helper.get_answer(req.question, input_documents)
+        answer = await ai_helper.get_answer_v1(req.question, input_documents)
         
         return ai.QuestionAndAnswerResponse(
             collection_name=req.collection_name,
+            answer=answer
+        )
+
+    except Exception:
+        logger.error(f"questioning failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+    
+@ai_router.post("/qna/questioning", response_model=ai.JobQnAResponse)
+async def questioning(req: ai.JobQnARequest):
+    try:
+        data = await job_qdrant_repo.list_jobs_by_ids(req.job_ids)
+
+        # Remove unnecessary fields
+        modified_data = []
+        for job in data:
+            job_dict = job.model_dump()
+            job_dict.pop('content_url', None)
+            job_dict.pop('address_id', None)
+            job_dict.pop('recruiter_id', None)
+            job_dict.pop('file_name', None)
+            job_dict.pop('s_content', None)
+            job_dict.pop('display_content', None)
+            job_dict.pop('combined_content', None)
+            job_dict.pop('recruiter_id', None)
+            job_dict.pop('is_applied', None)
+            job_dict.pop('is_saved', None)
+
+            modified_data.append(job_dict)
+
+        previous_context_formatted = "\n".join(
+            [
+                f"user_question: {item.user_question}\nyour_answer: {item.your_answer}\n"
+                for item in req.previous_context
+            ]
+        )
+
+        answer = await ai_helper.get_answer(modified_data, previous_context_formatted, req.question)
+
+        # TODO: Remove this debug log later
+        logger.info("===================BEGIN=====================\n")
+        logger.info(f"answer = {answer}\n")
+        logger.info("---------------------------------------------\n")
+        logger.info(f"question = {req.question}\n")
+        logger.info("---------------------------------------------\n")
+        logger.info(f"previous_context = {req.previous_context}\n")
+        logger.info("===================END======================\n")
+
+        # TODO: Count remain token -> return a field to indicate whether the user has run out of tokens
+
+        return ai.JobQnAResponse(
             answer=answer
         )
 
