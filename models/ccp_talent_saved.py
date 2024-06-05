@@ -4,6 +4,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from config.postgres import Base
 
+
 class TalentSaved(Base):
     __tablename__ = "ccp_talent_saved"
     candidate_id = Column(Integer, primary_key=True, nullable=False)

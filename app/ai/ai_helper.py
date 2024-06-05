@@ -1,13 +1,13 @@
 import json
+import time
+
+import httpx
+import numpy as np
 from openai import OpenAI
 
-import numpy as np
-import httpx
-import time
-import json
 import constant.ai as constant
-
 from pkg.logging import logger
+
 
 class AI:
     def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL):

@@ -1,23 +1,22 @@
 from datetime import datetime
-
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.dto.job import JobAggregate 
-from app.dto.resume import ResumeAggregate 
-
-from app.repo.job_repo import JobRepository
-from app.repo.resume_repo import ResumeRepository
-from app.repo.country_repo import CountryRepository
-from app.repo.city_repo import CityRepository
+from app.dto.job import JobAggregate
+from app.dto.resume import ResumeAggregate
 from app.repo.address_repo import AddressRepository
+from app.repo.application_repo import ApplicationRepository
+from app.repo.candidate_repo import CandidateRepository
+from app.repo.candidate_skills_repo import CandidateSkillsRepository
+from app.repo.city_repo import CityRepository
+from app.repo.country_repo import CountryRepository
+from app.repo.job_repo import JobRepository
 from app.repo.jobtags_repo import JobTagsRepository
+from app.repo.resume_repo import ResumeRepository
 from app.repo.tag_repo import TagRepository
 from app.repo.user_repo import UserRepository
-from app.repo.candidate_repo import CandidateRepository
-from app.repo.application_repo import ApplicationRepository
-from app.repo.candidate_skills_repo import CandidateSkillsRepository
+
 
 class Aggregate:
     def __init__(self):

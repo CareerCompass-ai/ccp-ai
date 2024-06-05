@@ -1,19 +1,15 @@
-from typing import List
 
-from config.postgres import SessionLocal, thread_local_session
+from sqlalchemy import and_, desc, func, text
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract, desc, and_, text
-from models.ccp_job import Job
-from models.ccp_application import Application
-from models.ccp_jobtag import JobTag
+
 from app.dto import analysis
-from models.ccp_tag import Tag
+from models.ccp_application import Application
+from models.ccp_candidate import Candidate
+from models.ccp_country import Country
+from models.ccp_job import Job
 from models.ccp_user import User
 from models.ccp_viewedjob import ViewedJob
-from models.ccp_candidate import Candidate
-from models.ccp_city import City
-from models.ccp_country import Country
-from models.ccp_address import Address
+
 
 class AnalysisRepository:
     async def get_top_job_titles(self, db:Session, top_number, time_from=None, time_to=None) -> analysis.ListTopJobTitlesResponse:

@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class CreateQnARequest(BaseModel):
     list_job_ids: list[int]
 

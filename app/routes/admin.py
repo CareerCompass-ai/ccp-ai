@@ -1,22 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-
 import traceback
 
-from app.ai.ai_helper import AI
-from constant import config
-from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest
-from app.usecases.sync_helper import SyncHelper
-from .helper import combine_job_content
-
-from app.repo.aggregate import Aggregate
-
-from config.weaviate import WeaviateVDB as weaviate
-from config.qdrant import QdrantVDB as qdrant
-
-from pkg.logging import logger
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
+
+from app.ai.ai_helper import AI
+from app.repo.aggregate import Aggregate
+from app.usecases.sync_helper import SyncHelper
 from config.postgres import PostgresDB
+from config.qdrant import QdrantVDB as qdrant
+from config.weaviate import WeaviateVDB as weaviate
+from constant import config
+from pkg.logging import logger
+
+from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest
+from .helper import combine_job_content
 
 admin_router = APIRouter(
     prefix="/admin/api",

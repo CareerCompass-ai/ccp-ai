@@ -4,14 +4,12 @@ from typing import List, Optional
 from qdrant_client.conversions import common_types as types
 from qdrant_client.http import models
 
+import constant.common
+from app.dto import job, mapper
 from config.qdrant import QdrantVDB
 from constant import config as cfg
-
-from app.dto import job
-from app.dto import mapper
-import constant.common
-
 from pkg.logging import logger
+
 
 class JobQdrantRepository:
     def __init__(self, index_name: str):

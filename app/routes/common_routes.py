@@ -1,17 +1,14 @@
-from fastapi import status, HTTPException, APIRouter, Depends
 import traceback
 
-from app.dto import common
-
-from app.repo.tag_repo import TagRepository 
-from app.repo.country_repo import CountryRepository
-from app.repo.city_repo import CityRepository
-
-from config.postgres import PostgresDB
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 import constant.common as constant
-
+from app.dto import common
+from app.repo.city_repo import CityRepository
+from app.repo.country_repo import CountryRepository
+from app.repo.tag_repo import TagRepository
+from config.postgres import PostgresDB
 from pkg.logging import logger
 
 common_router = APIRouter(

@@ -1,7 +1,6 @@
 import uvicorn
-from app.server import app
-import constant.config as cfg
 
+import constant.config as cfg
 from pkg.logging import logger
 
 if __name__ == "__main__":

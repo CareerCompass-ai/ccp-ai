@@ -1,18 +1,15 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Query
+import traceback
 from datetime import datetime
 from typing import Optional
-import traceback
 
-from app.repo.candidate_repo import CandidateRepository
-from app.repo.resume_repo import ResumeRepository
-from app.dto import candidate
-from app.dto import resume
-
-from config.postgres import PostgresDB
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.dto import candidate, resume
+from app.repo.candidate_repo import CandidateRepository
+from app.repo.resume_repo import ResumeRepository
+from config.postgres import PostgresDB
 from models.ccp_job_saved import JobSaved
-
 from pkg.logging import logger
 
 candidate_router = APIRouter(

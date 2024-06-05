@@ -1,13 +1,11 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Query
-from sqlalchemy.orm import Session
 import traceback
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
 from app.dto import analysis
-
 from app.repo.analysis_repo import AnalysisRepository
-
 from config.postgres import PostgresDB
-
 from pkg.logging import logger
 
 analysis_router = APIRouter(

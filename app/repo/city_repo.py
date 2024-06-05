@@ -1,10 +1,10 @@
 from typing import List
 
-from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
 
-from models.ccp_city import City
 from app.dto import city
+from models.ccp_city import City
+
 
 class CityRepository:
     async def get_by_id(self, db:Session, id):

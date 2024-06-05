@@ -1,6 +1,8 @@
-from typing import List, Optional
-from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel
+
 
 class CountryBase(BaseModel):
     id: int

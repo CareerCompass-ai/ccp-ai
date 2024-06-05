@@ -1,50 +1,48 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
-from sqlalchemy.orm import Session
-from config.postgres import PostgresDB
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-
-import PyPDF2
-import fitz
-from typing import Optional
 import os
-from io import BytesIO
+import traceback
 import uuid
 from datetime import datetime
-import traceback
-import pymupdf4llm 
+from io import BytesIO
+from typing import Optional
 
-from producer.producer import KafkaProducer
-
-from constant import config as cfg
-from config import postgres
-from config.qdrant import QdrantVDB as qdrant
-from pkg.logging import logger
-# from config.es import ElasticSearchDB as es
-
-
-# from app.repo.job_es_repo import JobESRepository
-from app.repo.job_qdrant_repo import JobQdrantRepository
-from app.repo.job_weaviate_repo import JobWeaviateRepository
-from app.repo.job_repo import JobRepository 
-from app.repo.jobtags_repo import JobTagsRepository
-from app.repo.resume_qdrant_repo import ResumeQdrantRepository
-from app.repo.minio_repo import MinioRepository
-from app.repo.application_repo import ApplicationRepository
-from app.repo.resume_repo import ResumeRepository
-from app.repo.candidate_repo import CandidateRepository
-from app.repo.address_repo import AddressRepository
-
-from models.ccp_application import Application
-
-from app.dto import job
-from app.dto import resume
-from app.dto import address
-from app.dto import minio
-
-from app.ai.ai_helper import AI
+import fitz
+import pymupdf4llm
+import PyPDF2
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, Path,
+                     Query, UploadFile, status)
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
 
 import constant.ai as constant
 import constant.config as minio_constant
+from app.ai.ai_helper import AI
+from app.dto import address, job, minio, resume
+from app.repo.address_repo import AddressRepository
+from app.repo.application_repo import ApplicationRepository
+from app.repo.candidate_repo import CandidateRepository
+# from app.repo.job_es_repo import JobESRepository
+from app.repo.job_qdrant_repo import JobQdrantRepository
+from app.repo.job_repo import JobRepository
+from app.repo.job_weaviate_repo import JobWeaviateRepository
+from app.repo.jobtags_repo import JobTagsRepository
+from app.repo.minio_repo import MinioRepository
+from app.repo.resume_qdrant_repo import ResumeQdrantRepository
+from app.repo.resume_repo import ResumeRepository
+from config import postgres
+from config.postgres import PostgresDB
+from config.qdrant import QdrantVDB as qdrant
+from constant import config as cfg
+from models.ccp_application import Application
+from pkg.logging import logger
+from producer.producer import KafkaProducer
+
+# from config.es import ElasticSearchDB as es
+
+
+
+
+
+
 
 
 job_router = APIRouter(
