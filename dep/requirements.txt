@@ -53,3 +53,4 @@ langchain-core==0.2.0
 langchain-openai==0.1.7
 langchain-text-splitters==0.2.0
 langsmith==0.1.59
+pymupdf4llm==0.0.5

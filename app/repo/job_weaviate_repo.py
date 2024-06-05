@@ -1,9 +1,8 @@
 from weaviate.classes.query import MetadataQuery
 
+from app.dto import job, mapper
 from config.weaviate import WeaviateVDB
 
-from app.dto import job
-from app.dto import mapper
 
 class JobWeaviateRepository:
     def __init__(self, collection_name: str):

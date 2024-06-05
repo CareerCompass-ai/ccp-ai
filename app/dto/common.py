@@ -1,6 +1,10 @@
-from pydantic import BaseModel
 from typing import List
+
+from pydantic import BaseModel
+
 from .tag import Tag
+
+
 class City(BaseModel):
     city_id: int
     city_name: str

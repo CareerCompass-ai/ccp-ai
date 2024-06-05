@@ -1,8 +1,9 @@
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from config.postgres import Base
+
 
 class City(Base):
     __tablename__ = "ccp_city"

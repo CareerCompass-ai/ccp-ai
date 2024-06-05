@@ -1,17 +1,14 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Query
-from sqlalchemy.orm import Session
-from config.postgres import PostgresDB
-
 import traceback
 from datetime import datetime
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
 from app.dto import recruiter
-
-from models.ccp_talent_saved import TalentSaved
-
 from app.repo.recruiter_repo import RecruiterRepository
 from app.repo.talent_saved_repo import TalentSavedRepository
-
+from config.postgres import PostgresDB
+from models.ccp_talent_saved import TalentSaved
 from pkg.logging import logger
 
 recruiter_router = APIRouter(

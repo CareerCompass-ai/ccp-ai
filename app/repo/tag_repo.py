@@ -1,10 +1,10 @@
-from config.postgres import SessionLocal
+from typing import List
+
 from sqlalchemy.orm import Session
 
-from models.ccp_tag import Tag
 from app.dto import tag
+from models.ccp_tag import Tag
 
-from typing import List
 
 class TagRepository:
     async def get_by_id(self, db:Session, id):

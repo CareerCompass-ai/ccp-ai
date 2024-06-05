@@ -4,6 +4,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from config.postgres import Base
 
+
 class Candidate(Base):
     __tablename__ = "ccp_candidate"
 

@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routes.admin import admin_router
-from .routes.job_routes import job_router
-from .routes.resume_routes import resume_router
-from .routes.common_routes import common_router
-from .routes.candidate_routes import candidate_router
-from .routes.recruiter_routes import recruiter_router
-from .routes.analysis_routes import analysis_router
 from .routes.ai_router import ai_router
+from .routes.analysis_routes import analysis_router
+from .routes.candidate_routes import candidate_router
+from .routes.common_routes import common_router
+from .routes.job_routes import job_router
+from .routes.recruiter_routes import recruiter_router
+from .routes.resume_routes import resume_router
 
 app = FastAPI()
 

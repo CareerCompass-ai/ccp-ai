@@ -1,11 +1,13 @@
-from typing import List, Optional
-from pydantic import BaseModel
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 from app.dto.certificate import CertificateBase
 from app.dto.education import EducationBase
 from app.dto.project import ProjectBase
 from app.dto.work_experience import WorkExperienceBase
+
 
 class ResumeBase(BaseModel):
     id: Optional[int] = None

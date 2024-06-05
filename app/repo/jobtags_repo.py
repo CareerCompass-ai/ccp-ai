@@ -1,9 +1,9 @@
-from config.postgres import SessionLocal
-from sqlalchemy.orm import Session
-from models.ccp_jobtag import JobTag
-from app.dto import job_tag
-
 from typing import List
+
+from sqlalchemy.orm import Session
+
+from app.dto import job_tag
+from models.ccp_jobtag import JobTag
 
 
 class JobTagsRepository:        

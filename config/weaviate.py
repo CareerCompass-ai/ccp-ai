@@ -1,7 +1,9 @@
 import weaviate
 from weaviate.classes.init import AdditionalConfig, Timeout
-import constant.config as constant
+
 import constant.ai as ai_constant
+import constant.config as constant
+
 
 class WeaviateVDB:
     WEAVIATE_URL = constant.WEAVIATE_URL

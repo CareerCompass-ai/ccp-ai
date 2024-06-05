@@ -1,14 +1,14 @@
-from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
-from models.ccp_job import Job
-from models.ccp_talent_saved import TalentSaved
-from models.ccp_address import Address
-from models.ccp_candidate import Candidate
-from models.ccp_user import User
-from models.ccp_city import City
-from models.ccp_country import Country
 
 from app.dto import recruiter
+from models.ccp_address import Address
+from models.ccp_candidate import Candidate
+from models.ccp_city import City
+from models.ccp_country import Country
+from models.ccp_job import Job
+from models.ccp_talent_saved import TalentSaved
+from models.ccp_user import User
+
 
 class RecruiterRepository:        
     async def get_jobs_posted(self, db:Session, id) -> recruiter.ListJobsPostedResponse:

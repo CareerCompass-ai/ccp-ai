@@ -1,9 +1,10 @@
-from config.postgres import SessionLocal
+from typing import List, Optional
+
 from sqlalchemy.orm import Session
 
-from models.ccp_resume import Resume
 from app.dto import resume
-from typing import List, Optional
+from models.ccp_resume import Resume
+
 
 class ResumeRepository:
     async def get_by_id(self, db:Session, id):

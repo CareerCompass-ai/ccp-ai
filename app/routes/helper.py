@@ -4,6 +4,7 @@ from sqlalchemy import text
 import os
 import pandas as pd
 
+
 async def combine_job_content(job_agg: job.JobAggregate, summarized_content: str, acronyms_and_abbreviations: str) -> str:
         combined_content = (
             summarized_content + " " +
