@@ -11,6 +11,7 @@ from io import BytesIO
 import uuid
 from datetime import datetime
 import traceback
+import pymupdf4llm 
 
 from producer.producer import KafkaProducer
 
@@ -180,9 +181,10 @@ async def list_recommend_jobs_from_qdrant(
     
     # map query params to req
     try:
+        # NOTE: Should we get from qdrant instead of gettin from db? Because in case that resume is existed in db but not in qdrant, the api will return error
         # get all user resumes
         resumes = await resume_repo.get_by_user_id(db=db, user_id=user_id)
-        
+
         resume_ids = []
         for resume in resumes:
             resume_ids.append(resume.id)
@@ -308,16 +310,14 @@ async def create(
         if file is not None:
             # Extract text with formatting from PDF using PyMuPDF
             pdf_file = BytesIO(file_content)
-            document = fitz.open(stream=pdf_file, filetype="pdf")
-            
-            extracted_text = ""
-            for page_num in range(len(document)):
-                page = document.load_page(page_num)
-                extracted_text += page.get_text("html")
 
-            # Store HTML formatted content in the record
-            record.display_content = extracted_text
+            pdf_document = fitz.open(stream=pdf_file, filetype="pdf")
 
+            markdown_content = pymupdf4llm.to_markdown(pdf_document)
+
+            record.display_content = markdown_content
+
+            # get text content from pdf
             pdf_reader = PyPDF2.PdfReader(pdf_file)
 
             text_content = ""
