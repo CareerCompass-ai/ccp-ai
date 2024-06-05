@@ -56,7 +56,7 @@ class ListRelatedJobRequest(BaseModel):
 class ListRecommendJobRequest(BaseModel):
     page: Optional[int]
     size: Optional[int]
-    resume_ids: Optional[int]
+    resume_ids: Optional[list[int]]
 
 class JobAggregate(JobBase):
     matching_score: Optional[float] = 0.0

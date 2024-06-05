@@ -174,11 +174,19 @@ async def list_related_jobs_from_qdrant(
 async def list_recommend_jobs_from_qdrant(
     page: Optional[int] = Query(None, description="Page number"),
     size: Optional[int] = Query(None, description="Page size"),
-    resume_ids: Optional[int] = Query(None, description="Job id"),
+    user_id: Optional[int] = Query(None, description="User id"),
+    db: Session = Depends(PostgresDB.get_db),
 ):
     
     # map query params to req
     try:
+        # get all user resumes
+        resumes = await resume_repo.get_by_user_id(db=db, user_id=user_id)
+        
+        resume_ids = []
+        for resume in resumes:
+            resume_ids.append(resume.id)
+
         req = job.ListRecommendJobRequest(
             page=page,
             size=size,
