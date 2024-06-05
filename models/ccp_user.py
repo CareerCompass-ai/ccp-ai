@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date
+from sqlalchemy import Boolean, Column, Date, Integer, String
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from config.postgres import Base
+
 
 class User(Base):
     __tablename__ = "ccp_user"

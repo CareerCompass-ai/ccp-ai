@@ -1,5 +1,6 @@
 from app.dto import job, resume
 
+
 def toJobDTO(payload: dict) -> job.JobAggregate:
     return job.JobAggregate(
         id=payload["id"],

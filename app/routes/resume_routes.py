@@ -1,22 +1,22 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Query, Path, UploadFile, File, Form
-from sqlalchemy.orm import Session
-from config.postgres import PostgresDB
-from datetime import datetime
-import os, PyPDF2
-import uuid
-from io import BytesIO
-import constant.config as minio_constant
+import os
 import traceback
+import uuid
+from datetime import datetime
+from io import BytesIO
+
+import PyPDF2
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, Path,
+                     Query, UploadFile, status)
 from sqlalchemy.exc import SQLAlchemyError
-from config.qdrant import QdrantVDB as qdrant
+from sqlalchemy.orm import Session
 
-
-from app.repo.resume_qdrant_repo import ResumeQdrantRepository
+import constant.config as minio_constant
+from app.dto import minio, resume
 from app.repo.minio_repo import MinioRepository
+from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.resume_repo import ResumeRepository
-from app.dto import resume
-from app.dto import minio
-
+from config.postgres import PostgresDB
+from config.qdrant import QdrantVDB as qdrant
 from pkg.logging import logger
 
 resume_router = APIRouter(

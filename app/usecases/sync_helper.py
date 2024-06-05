@@ -1,9 +1,10 @@
 from qdrant_client import QdrantClient
+from qdrant_client.http.models import PointStruct
 from weaviate import WeaviateClient
 from weaviate.classes.query import Filter
+
 # from elasticsearch import Elasticsearch
 
-from qdrant_client.http.models import PointStruct
 
 class SyncHelper:
     def __init__(self, qdrant_client: QdrantClient, weaviate_client: WeaviateClient):

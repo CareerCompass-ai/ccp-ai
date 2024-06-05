@@ -1,11 +1,10 @@
-from config.postgres import SessionLocal
+from typing import List
+
 from sqlalchemy.orm import Session
 
+from app.dto import country
 from models.ccp_country import Country
 
-from app.dto import country
-
-from typing import List
 
 class CountryRepository:
     async def get_by_id(self, db:Session, id):

@@ -2,14 +2,12 @@ from typing import List, Optional
 
 from qdrant_client.conversions import common_types as types
 from qdrant_client.http import models
-from config.qdrant import QdrantVDB
-
-from app.dto import resume
-from app.dto import mapper
 
 import constant.config as constant
-
+from app.dto import mapper, resume
+from config.qdrant import QdrantVDB
 from pkg.logging import logger
+
 
 class ResumeQdrantRepository:
     def __init__(self, index_name: str):

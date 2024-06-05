@@ -1,10 +1,10 @@
-from config.postgres import SessionLocal
+from typing import List, Optional
+
 from sqlalchemy.orm import Session
 
-from models.ccp_address import Address
 from app.dto import address
+from models.ccp_address import Address
 
-from typing import List, Optional
 
 class AddressRepository:        
     async def get_by_id(self, db:Session, id):

@@ -1,14 +1,13 @@
-from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
 
-from models.ccp_candidate import Candidate
-from models.ccp_resume import Resume
+from app.dto import candidate
 from models.ccp_application import Application
-from models.ccp_job_saved import JobSaved
+from models.ccp_candidate import Candidate
 from models.ccp_job import Job
+from models.ccp_job_saved import JobSaved
+from models.ccp_resume import Resume
 from models.ccp_viewedjob import ViewedJob
 
-from app.dto import candidate
 
 class CandidateRepository:      
     async def get_by_id(self, db:Session, id):

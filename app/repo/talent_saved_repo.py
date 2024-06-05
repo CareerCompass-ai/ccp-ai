@@ -1,6 +1,8 @@
-from config.postgres import SessionLocal
-from models.ccp_talent_saved import TalentSaved
 from sqlalchemy.orm import Session
+
+from models.ccp_talent_saved import TalentSaved
+
+
 class TalentSavedRepository:
     async def create_saved_talent(self, db:Session, record: TalentSaved) -> TalentSaved:
         db.add(record)

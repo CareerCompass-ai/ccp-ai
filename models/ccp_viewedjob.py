@@ -4,6 +4,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from config.postgres import Base
 
+
 class ViewedJob(Base):
     __tablename__ = "ccp_recently_viewed_job"
     candidate_id = Column(Integer, primary_key=True, nullable=False)

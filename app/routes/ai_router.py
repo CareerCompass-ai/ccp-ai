@@ -1,22 +1,23 @@
 import os
-from fastapi import status, HTTPException, APIRouter
 import traceback
 from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from qdrant_client.http.models import PointStruct
-from qdrant_client.conversions.common_types import VectorParams
 
-from pkg.logging import logger
+from fastapi import APIRouter, HTTPException, status
+from qdrant_client.conversions.common_types import VectorParams
+from qdrant_client.http.models import PointStruct
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
 from app.dto import ai, minio
-from config.qdrant import QdrantVDB as qdrant
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.minio_repo import MinioRepository
+from config.qdrant import QdrantVDB as qdrant
+from pkg.logging import logger
 
+from ..ai.ai_helper import AI
 # AI
 from .ai_helper import load_docs, split_docs
-from ..ai.ai_helper import AI
 
 ai_router = APIRouter(
     prefix="/api",
