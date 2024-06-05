@@ -8,6 +8,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from qdrant_client.http.models import PointStruct
 from qdrant_client.conversions.common_types import VectorParams
+from sqlalchemy.exc import SQLAlchemyError
 
 from pkg.logging import logger
 from app.dto import ai, minio
@@ -15,6 +16,8 @@ from config.qdrant import QdrantVDB as qdrant
 from app.repo.job_qdrant_repo import JobQdrantRepository
 from app.repo.minio_repo import MinioRepository
 from app.repo.assistant_repo import AssistantRepository
+
+from app.dto import assistant
 
 from config.postgres import PostgresDB
 from sqlalchemy.orm import Session
@@ -44,34 +47,45 @@ async def generate_assistant (
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-
-        #Check if csv exist?
         _file_name = time_from + '-' + time_to + '.csv'
-        _file = await assistant_repo.get_by_file_name(db=db, name=_file_name)
 
-        if _file is not None:
-            return ai.AssistantResponse(tmp="Get go!")
-        
-        #Create analysis file > Upload to MinIO
-        try: 
-            await generate_analysis_file(db=db, time_from=time_from, time_to=time_to, file_name=_file_name)
-            upload_response = await minio_repo.upload(
-                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT, temp_path=_file_name, file_name=_file_name)
-            )
-            public_url = upload_response.url
-            os.remove(_file_name)
+        with db.begin():
+            try: 
+                await generate_analysis_file(db=db, time_from=time_from, time_to=time_to, file_name=_file_name)
 
-        except Exception:
-            logger.error(f"generate_analysis_file failed error = {traceback.format_exc()}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+            except SQLAlchemyError:
+                db.rollback()
+                logger.error(f"generate analysis file failed error = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+            
         #Create assistant
 
+        assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name)
+
+        thread_id = await ai_helper.create_thread()
+
+        os.remove(_file_name)
+
         #Add assistant record to db
+        now = datetime.now()
 
-        return ai.AssistantResponse(tmp="Create asssitant successfully!")
-
-        
-
+        record = assistant.AssistantBase (
+            assistant_id=assistant_id,
+            thread_id=thread_id,
+            file_id=file_id,
+            time_from=now,
+            time_to=now,
+            created_at=now,
+            updated_at=now
+        )
+        with db.begin():
+            try:
+                await assistant_repo.create(session=db, input=record)
+                return ai.AssistantResponse(tmp="Create asssitant successfully!")
+            except SQLAlchemyError:
+                db.rollback()
+                logger.error(f"generate assistant failed error = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     except Exception:
         logger.error(f"generate_assistant failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
