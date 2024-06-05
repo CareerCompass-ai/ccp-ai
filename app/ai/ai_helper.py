@@ -26,7 +26,6 @@ class AI:
                     file=open(file_path, "rb"),
                     purpose='assistants'
                 )
-                ass = self.openai_client.beta.assistants.l
                 assistant = self.openai_client.beta.assistants.create(
                     name="Data Visualization",
                     instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
