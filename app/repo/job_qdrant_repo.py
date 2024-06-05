@@ -24,7 +24,7 @@ class JobQdrantRepository:
 
         hits = self.client.recommend(
             collection_name=self.index_name,
-            positive=[input.resume_ids],
+            positive=input.resume_ids,
             lookup_from=models.LookupLocation(
                 collection=cfg.QDRANT_INDEX_RESUME_SEARCH
             ),
