@@ -102,7 +102,8 @@ async def generate_assistant (
             time_from=now,
             time_to=now,
             created_at=now,
-            updated_at=now
+            updated_at=now,
+            file_name=_file_name
         )
 
         os.remove(_file_name)
@@ -110,6 +111,7 @@ async def generate_assistant (
         with db.begin():
             try:
                 await assistant_repo.create(session=db, input=record)
+                db.commit()
                 return ai.AssistantResponse (
                     assistant_id=assistant_id,
                     thread_id=thread_id,
@@ -117,6 +119,7 @@ async def generate_assistant (
                 )
             except SQLAlchemyError:
                 db.rollback()
+                #TODO: Remove Assistant and Thread
                 logger.error(f"generate assistant failed error = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
     except Exception:
