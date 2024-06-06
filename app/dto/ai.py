@@ -23,7 +23,7 @@ class PreviousContextItem(BaseModel):
 class JobQnARequest(BaseModel):
     job_ids: list[int]
     question: str = ""
-    previous_context: list[PreviousContextItem] = []
+    prev: list[PreviousContextItem] = []
 
 class JobQnAResponse(BaseModel):
     answer: str = ""
