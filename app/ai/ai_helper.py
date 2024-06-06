@@ -1,13 +1,15 @@
 import json
+import os
 import time
-
+import requests
 import httpx
 import numpy as np
 from openai import OpenAI
-
+from app.repo.minio_repo import MinioRepository
 import constant.ai as constant
+import constant.config as minio_constant
 from pkg.logging import logger
-from app.dto import ai
+from app.dto import ai, minio
 class AI:
     def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL):
         self.openai_client = OpenAI(api_key=api_key)
@@ -15,6 +17,7 @@ class AI:
         self.completion_model = completion_model
         self.beast_completion_model = constant.OPENAI_BEAST_COMPLETION_MODEL
         self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
+        self.minio_repo = MinioRepository()
 
     async def create_assistant(self, file_path, max_retries=3):
         retries = 0
@@ -112,7 +115,26 @@ class AI:
                     if content_block.type == "text":
                         _res.message = content_block.text.value
                     elif content_block.type == "image_file":
-                        _res.image = content_block.image_file.file_id
+                        
+                        # Call API to get image
+                        url = f'https://api.openai.com/v1/files/{content_block.image_file.file_id}/content'
+                        image_response = requests.get(url, headers={'Authorization': f'Bearer {constant.OPENAI_API_KEY}'})
+                        image_path = f'{content_block.image_file.file_id}.png'
+                        if image_response.status_code == 200:
+                            with open(image_path, 'wb') as f:
+                                f.write(image_response.content)
+
+                            # Upload image to Minio
+                            minio_req = minio.UploadMinioRequest(
+                                bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT,
+                                temp_path=image_path,
+                                file_name=image_path
+                            )
+                            image_url = await self.minio_repo.upload(
+                                input=minio_req
+                            )
+                            _res.image = image_url.url
+                os.remove(image_path)
                 return _res
 
             except httpx.HTTPStatusError as e:
