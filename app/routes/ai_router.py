@@ -392,7 +392,7 @@ async def questioning(req: ai.JobQnARequest):
 
         previous_context_formatted = "\n".join(
             [
-                f"user_question: {item.user_question}\nyour_answer: {item.your_answer}\n"
+                f"user_question: {item.question}\nyour_answer: {item.answer}\n"
                 for item in req.previous_context
             ]
         )
