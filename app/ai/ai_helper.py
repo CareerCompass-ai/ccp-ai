@@ -7,8 +7,7 @@ from openai import OpenAI
 
 import constant.ai as constant
 from pkg.logging import logger
-
-
+from app.dto import ai
 class AI:
     def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL):
         self.openai_client = OpenAI(api_key=api_key)
@@ -68,6 +67,57 @@ class AI:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
                     time.sleep(2)
+        logger.info("Exceeded maximum number of retries. Please try again later.")
+        return None
+
+    async def get_assistant_answer(self, max_retries=3, input=ai.AssistantQuestionRequest) -> ai.ListAssistantResponse:
+        retries = 0
+        while retries < max_retries:
+            try:
+                # Create the user message in the thread
+                self.openai_client.beta.threads.messages.create(
+                    thread_id=input.thread_id,
+                    role="user",
+                    content=input.message
+                )
+
+                # Create the run for the assistant
+                run = self.openai_client.beta.threads.runs.create(
+                    thread_id=input.thread_id,
+                    assistant_id=input.assistant_id,
+                )
+
+                # Poll the run status until it is completed
+                is_running = True
+                while is_running:
+                    run_status = self.openai_client.beta.threads.runs.retrieve(
+                        thread_id=input.thread_id, 
+                        run_id=run.id
+                    )
+                    is_running = run_status.status != "completed"
+                    if is_running:
+                        time.sleep(1)  # Sleep for a bit before checking again
+
+                # Retrieve the messages after the run is completed
+                response = []
+                messages = self.openai_client.beta.threads.messages.list(
+                    thread_id=input.thread_id
+                )
+                for message in messages.data:
+                    if message.run_id == run.id and message.role == "assistant":
+                        response.append(
+                            ai.AssistantResponse(message=message.content[0].text.value)
+                        )
+                return ai.ListAssistantResponse(data=response)
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying... ({retries+1}/{max_retries})")
+                    retries += 1
+                    time.sleep(2)
+
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 

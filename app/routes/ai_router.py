@@ -48,7 +48,7 @@ minio_repo = MinioRepository()
 assistant_repo = AssistantRepository()
 
 # Assistant
-@ai_router.post("/assistant/generate", response_model=ai.AssistantResponse)
+@ai_router.post("/assistant/generate", response_model=ai.GenerateAssistantResponse)
 async def generate_assistant (
     time_from: str = Form(None),
     time_to: str = Form(None),
@@ -89,6 +89,7 @@ async def generate_assistant (
 
         #Create assistant & thread
         #Insert into db
+        #Remove all assistant exist??
         assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name)
 
         thread_id = await ai_helper.create_thread()
@@ -112,7 +113,7 @@ async def generate_assistant (
             try:
                 await assistant_repo.create(session=db, input=record)
                 db.commit()
-                return ai.AssistantResponse (
+                return ai.GenerateAssistantResponse (
                     assistant_id=assistant_id,
                     thread_id=thread_id,
                     tmp="Sucessfully!"
@@ -129,7 +130,16 @@ async def generate_assistant (
 
 
 
-@ai_router.post("/assistant/questioning", response_model=ai.AssistantResponse)
+@ai_router.post("/assistant/questioning", response_model=ai.ListAssistantResponse)
+async def assistant_questioning(
+    req: ai.AssistantQuestionRequest
+):
+    try:
+        res = await ai_helper.get_assistant_answer(input=req)
+        return res
+    except Exception:
+        logger.error(f"assistant_questioning failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 # Flow:
 # Note: different date time range will have different assistant
 # 1. call load_analysis to get file, save file_name to database, next time check exist? if exist note: file has named follow date range then upload the analysis.file to openai -> file.id
