@@ -390,14 +390,34 @@ async def questioning(req: ai.JobQnARequest):
 
             modified_data.append(job_dict)
 
-        previous_context_formatted = "\n".join(
-            [
-                f"user_question: {item.question}\nyour_answer: {item.answer}\n"
-                for item in req.prev
-            ]
-        )
+        # previous_context_formatted = "\n".join(
+        #     [
+        #         f"user_question: {item.question}\nyour_answer: {item.answer}\n"
+        #         for item in req.prev
+        #     ]
+        # )
+        
+        # previous_context_formatted = "\n".join(
+        #     [
+        #         f"user_question: {item.question}\nyour_answer: {item.answer}\n"
+        #         for item in req.prev
+        #     ]
+        # ) + f"\nFocus specifically on the job discussed previously: {req.prev[-1].answer if req.prev else ''}"
 
-        answer = await ai_helper.get_answer(modified_data, previous_context_formatted, req.question)
+        # answer = await ai_helper.get_answer(modified_data, previous_context_formatted, req.question)
+
+        if req.prev:
+            previous_context_formatted = "\n".join(
+                [
+                    f"user_question: {item.question}\nyour_answer: {item.answer}\n"
+                    for item in req.prev
+                ]
+            )
+            previous_context_section = f"Previous conversation:\n{previous_context_formatted}\nFocus specifically on the job discussed previously: {req.prev[-1].answer}"
+        else:
+            previous_context_section = ""
+
+        answer = await ai_helper.get_answer(modified_data, previous_context_section, req.question)
 
         # TODO: Remove this debug log later
         logger.info("===================BEGIN=====================\n")
