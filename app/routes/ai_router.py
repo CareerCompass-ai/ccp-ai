@@ -393,7 +393,7 @@ async def questioning(req: ai.JobQnARequest):
         previous_context_formatted = "\n".join(
             [
                 f"user_question: {item.question}\nyour_answer: {item.answer}\n"
-                for item in req.previous_context
+                for item in req.prev
             ]
         )
 
@@ -405,7 +405,7 @@ async def questioning(req: ai.JobQnARequest):
         logger.info("---------------------------------------------\n")
         logger.info(f"question = {req.question}\n")
         logger.info("---------------------------------------------\n")
-        logger.info(f"previous_context = {req.previous_context}\n")
+        logger.info(f"previous_context = {req.prev}\n")
         logger.info("===================END======================\n")
 
         # TODO: Count remain token -> return a field to indicate whether the user has run out of tokens
