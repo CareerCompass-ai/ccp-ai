@@ -476,7 +476,7 @@ async def questioning_v1(req: ai.QuestionAndAnswerRequest):
         logger.error(f"questioning failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
     
-@ai_router.post("/qna/questioning", response_model=ai.JobQnAResponse)
+@ai_router.post("/ai/jobs/questioning", response_model=ai.JobQnAResponse)
 async def questioning(req: ai.JobQnARequest):
     try:
         data = await job_qdrant_repo.list_jobs_by_ids(req.job_ids)
@@ -498,23 +498,34 @@ async def questioning(req: ai.JobQnARequest):
 
             modified_data.append(job_dict)
 
-        previous_context_formatted = "\n".join(
-            [
-                f"user_question: {item.user_question}\nyour_answer: {item.your_answer}\n"
-                for item in req.previous_context
-            ]
-        )
+        # previous_context_formatted = "\n".join(
+        #     [
+        #         f"user_question: {item.question}\nyour_answer: {item.answer}\n"
+        #         for item in req.prev
+        #     ]
+        # )
+        
+        # previous_context_formatted = "\n".join(
+        #     [
+        #         f"user_question: {item.question}\nyour_answer: {item.answer}\n"
+        #         for item in req.prev
+        #     ]
+        # ) + f"\nFocus specifically on the job discussed previously: {req.prev[-1].answer if req.prev else ''}"
 
-        answer = await ai_helper.get_answer(modified_data, previous_context_formatted, req.question)
+        # answer = await ai_helper.get_answer(modified_data, previous_context_formatted, req.question)
 
-        # TODO: Remove this debug log later
-        logger.info("===================BEGIN=====================\n")
-        logger.info(f"answer = {answer}\n")
-        logger.info("---------------------------------------------\n")
-        logger.info(f"question = {req.question}\n")
-        logger.info("---------------------------------------------\n")
-        logger.info(f"previous_context = {req.previous_context}\n")
-        logger.info("===================END======================\n")
+        if req.prev:
+            previous_context_formatted = "\n".join(
+                [
+                    f"user_question: {item.question}\nyour_answer: {item.answer}\n"
+                    for item in req.prev
+                ]
+            )
+            previous_context_section = f"Previous conversation:\n{previous_context_formatted}\nFocus specifically on the job discussed previously: {req.prev[-1].answer}"
+        else:
+            previous_context_section = ""
+
+        answer = await ai_helper.get_answer(modified_data, previous_context_section, req.question)
 
         # TODO: Count remain token -> return a field to indicate whether the user has run out of tokens
 

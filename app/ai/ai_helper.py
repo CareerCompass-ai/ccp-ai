@@ -199,9 +199,9 @@ class AI:
         
         prompt = (
             f"{self.job_question_and_answering_prompt}"
-            f"Previous chat:\n"
+            f"Previous conversation:\n"
             f"{previous_context}\n\n"
-            f"Data:\n"
+            f"Current data:\n"
             f"{input_text}\n\n"
             f"Question:\n"
             f"{question}\n\n"
@@ -224,7 +224,7 @@ class AI:
                         {"role": "user", "content": prompt}
                     ],
                     model=self.beast_completion_model,
-                    max_tokens=4096,
+                    # max_tokens=4096,
                     temperature=0.2
                 )
                 answer = response.choices[0].message.content.strip()
