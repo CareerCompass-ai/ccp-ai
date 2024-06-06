@@ -70,7 +70,7 @@ class AI:
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
-    async def get_assistant_answer(self, max_retries=3, input=ai.AssistantQuestionRequest) -> ai.ListAssistantResponse:
+    async def get_assistant_answer(self, max_retries=3, input=ai.AssistantQuestionRequest) -> ai.AssistantResponse:
         retries = 0
         while retries < max_retries:
             try:
@@ -96,19 +96,25 @@ class AI:
                     )
                     is_running = run_status.status != "completed"
                     if is_running:
-                        time.sleep(1)  # Sleep for a bit before checking again
+                        #TODO: Check 
+                        time.sleep(0.5)  # Sleep for a bit before checking again
 
                 # Retrieve the messages after the run is completed
-                response = []
                 messages = self.openai_client.beta.threads.messages.list(
                     thread_id=input.thread_id
                 )
-                for message in messages.data:
-                    if message.run_id == run.id and message.role == "assistant":
-                        response.append(
-                            ai.AssistantResponse(message=message.content[0].text.value)
-                        )
-                return ai.ListAssistantResponse(data=response)
+                
+                # Get the latest message from assistant
+                latest_message = messages.data[0] if messages.data and messages.data[0].role == 'assistant' else None
+
+                _res = ai.AssistantResponse()
+                for content_block in latest_message.content:
+                    if content_block.type == "text":
+                        _res.message = content_block.text.value
+                    elif content_block.type == "image_file":
+                        _res.image = content_block.image_file.file_id
+                return _res
+
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
                     logger.error(f"Bad request error: {e}")

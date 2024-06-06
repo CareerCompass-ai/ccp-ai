@@ -130,7 +130,7 @@ async def generate_assistant (
 
 
 
-@ai_router.post("/assistant/questioning", response_model=ai.ListAssistantResponse)
+@ai_router.post("/assistant/questioning", response_model=ai.AssistantResponse)
 async def assistant_questioning(
     req: ai.AssistantQuestionRequest
 ):
