@@ -368,7 +368,7 @@ async def questioning_v1(req: ai.QuestionAndAnswerRequest):
         logger.error(f"questioning failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
     
-@ai_router.post("/qna/questioning", response_model=ai.JobQnAResponse)
+@ai_router.post("/ai/jobs/questioning", response_model=ai.JobQnAResponse)
 async def questioning(req: ai.JobQnARequest):
     try:
         data = await job_qdrant_repo.list_jobs_by_ids(req.job_ids)
@@ -418,15 +418,6 @@ async def questioning(req: ai.JobQnARequest):
             previous_context_section = ""
 
         answer = await ai_helper.get_answer(modified_data, previous_context_section, req.question)
-
-        # TODO: Remove this debug log later
-        logger.info("===================BEGIN=====================\n")
-        logger.info(f"answer = {answer}\n")
-        logger.info("---------------------------------------------\n")
-        logger.info(f"question = {req.question}\n")
-        logger.info("---------------------------------------------\n")
-        logger.info(f"previous_context = {req.prev}\n")
-        logger.info("===================END======================\n")
 
         # TODO: Count remain token -> return a field to indicate whether the user has run out of tokens
 
