@@ -368,7 +368,7 @@ async def questioning_v1(req: ai.QuestionAndAnswerRequest):
         logger.error(f"questioning failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
     
-@ai_router.post("/qna/questioning", response_model=ai.JobQnAResponse)
+@ai_router.post("/ai/jobs/questioning", response_model=ai.JobQnAResponse)
 async def questioning(req: ai.JobQnARequest):
     try:
         data = await job_qdrant_repo.list_jobs_by_ids(req.job_ids)
