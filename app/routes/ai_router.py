@@ -419,15 +419,6 @@ async def questioning(req: ai.JobQnARequest):
 
         answer = await ai_helper.get_answer(modified_data, previous_context_section, req.question)
 
-        # TODO: Remove this debug log later
-        logger.info("===================BEGIN=====================\n")
-        logger.info(f"answer = {answer}\n")
-        logger.info("---------------------------------------------\n")
-        logger.info(f"question = {req.question}\n")
-        logger.info("---------------------------------------------\n")
-        logger.info(f"previous_context = {req.prev}\n")
-        logger.info("===================END======================\n")
-
         # TODO: Count remain token -> return a field to indicate whether the user has run out of tokens
 
         return ai.JobQnAResponse(
