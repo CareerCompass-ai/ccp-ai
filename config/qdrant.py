@@ -2,6 +2,7 @@ from qdrant_client import QdrantClient
 
 import constant.config as constant
 
+
 class QdrantVDB:
     QDRANT_URL = constant.QDRANT_URL
     QDRANT_INDEX_JOB_SEARCH = constant.QDRANT_INDEX_JOB_SEARCH

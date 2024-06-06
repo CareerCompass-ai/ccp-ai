@@ -1,8 +1,9 @@
-from sqlalchemy import Boolean, Column, Integer, String, Float
+from sqlalchemy import Boolean, Column, Float, Integer, String
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 from config.postgres import Base
+
 
 class Job(Base):
     __tablename__ = "ccp_job"

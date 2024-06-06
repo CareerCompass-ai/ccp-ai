@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class UploadMinioRequest(BaseModel):
     bucket_name: str
     temp_path: str

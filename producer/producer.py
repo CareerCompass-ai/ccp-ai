@@ -1,7 +1,8 @@
-from confluent_kafka import Producer
 import json
-import constant.config as cfg
 
+from confluent_kafka import Producer
+
+import constant.config as cfg
 from pkg.logging import logger
 
 

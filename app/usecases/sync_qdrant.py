@@ -1,20 +1,23 @@
-import json
 import hashlib
+import json
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
 
 import constant.config as constant
+from app.ai.ai_helper import AI
+from app.dto import application
+from app.repo.aggregate import Aggregate
+from config.postgres import PostgresDB
 from config.qdrant import QdrantVDB
 from config.weaviate import WeaviateVDB
+
+from .sync_helper import SyncHelper
+
 # from elasticsearch import Elasticsearch
 
-from app.repo.aggregate import Aggregate
 
-from app.ai.ai_helper import AI
-from .sync_helper import SyncHelper
-from app.dto import application
 
-from fastapi import status, HTTPException, Depends, APIRouter, Query
-from config.postgres import PostgresDB
-from sqlalchemy.orm import Session
 
 class SyncUsecase:
     def __init__(self):

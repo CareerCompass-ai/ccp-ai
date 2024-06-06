@@ -1,7 +1,9 @@
-from fastapi import UploadFile, File, Form
-from typing import List, Optional
-from pydantic import BaseModel
 from datetime import datetime
+from typing import List, Optional
+
+from fastapi import File, Form, UploadFile
+from pydantic import BaseModel
+
 
 class JobBase(BaseModel):
     id: Optional[int] = None
@@ -21,7 +23,6 @@ class JobBase(BaseModel):
     work_place: Optional[str] = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    work_place: Optional[str] = ""
     common_job_title: Optional[str] = ""
     recruiter_id: Optional[int] = None
     file_name: Optional[str] = None

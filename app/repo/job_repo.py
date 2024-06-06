@@ -1,10 +1,12 @@
 from typing import Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import desc
 
+from sqlalchemy import desc
+from sqlalchemy.orm import Session
+
+from app.dto import job
 from config.postgres import SessionLocal
 from models.ccp_job import Job
-from app.dto import job
+
 
 class JobRepository:
     async def get_by_id(self, db:Session, id):

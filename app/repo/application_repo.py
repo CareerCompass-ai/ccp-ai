@@ -1,8 +1,7 @@
-from config.postgres import SessionLocal
-
 from sqlalchemy.orm import Session
 
 from models.ccp_application import Application
+
 
 class ApplicationRepository:
     async def get_job_ids_by_resume_id(self, db:Session, resume_id):

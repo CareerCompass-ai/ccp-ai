@@ -1,6 +1,7 @@
-from config.postgres import SessionLocal
 from sqlalchemy.orm import Session
+
 from models.ccp_candidate_skills import Candidate_Skills
+
 
 class CandidateSkillsRepository:
     async def get_by_id(self, db:Session, id):

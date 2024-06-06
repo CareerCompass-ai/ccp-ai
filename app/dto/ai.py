@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class CreateQnARequest(BaseModel):
     list_job_ids: list[int]
 
@@ -16,8 +17,8 @@ class QuestionAndAnswerResponse(BaseModel):
     answer: str = ""
 
 class PreviousContextItem(BaseModel):
-    user_question: str
-    your_answer: str
+    question: str
+    answer: str
 
 class JobQnARequest(BaseModel):
     job_ids: list[int]
