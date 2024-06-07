@@ -19,7 +19,7 @@ class AI:
         self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
         self.minio_repo = MinioRepository()
 
-    async def create_assistant(self, file_path, max_retries=3):
+    async def create_assistant(self, file_path, time_from, time_to, max_retries=3):
         retries = 0
         while retries < max_retries:
             try:
@@ -31,6 +31,7 @@ class AI:
                 assistant = self.openai_client.beta.assistants.create(
                     name="Data Visualization",
                     instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
+                    f"This data is formatted using csv format. This file structure has 2 different schemas and are separated by 1 line. This file contains system data from {time_from} to {time_to}. The first Schema contains information about posted jobs. The 2nd Schema contains information about user accounts (including candidates and employers)." 
                     f"You have access to a sandboxed environment for writing and testing code."
                     f"When you are asked to create a visualization you should follow these steps:"
                     f"1. Write the code."
@@ -134,7 +135,7 @@ class AI:
                                 input=minio_req
                             )
                             _res.image = image_url.url
-                os.remove(image_path)
+                            os.remove(image_path)
                 return _res
 
             except httpx.HTTPStatusError as e:

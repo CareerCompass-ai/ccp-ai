@@ -90,7 +90,7 @@ async def generate_assistant (
         #Create assistant & thread
         #Insert into db
         #Remove all assistant exist??
-        assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name)
+        assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name, time_from=time_from, time_to=time_to)
 
         thread_id = await ai_helper.create_thread()
 
