@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import List, Optional
 
 class CreateQnARequest(BaseModel):
     list_job_ids: list[int]
@@ -28,5 +28,19 @@ class JobQnARequest(BaseModel):
 class JobQnAResponse(BaseModel):
     answer: str = ""
 
-class AssistantResponse(BaseModel):
+class GenerateAssistantResponse(BaseModel):
+    assistant_id: str
+    thread_id: str
     tmp: str = ""
+
+class AssistantQuestionRequest(BaseModel):
+    assistant_id: str
+    thread_id: str
+    message: str = ""
+
+class AssistantResponse(BaseModel):
+    message: Optional[str] = None
+    image: Optional[str] = None
+
+class ListAssistantResponse(BaseModel):
+    data: List[AssistantResponse]

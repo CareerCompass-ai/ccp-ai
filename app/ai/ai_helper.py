@@ -1,14 +1,16 @@
 import json
+import os
 import time
-
+import requests
 import httpx
 import numpy as np
+import asyncio
 from openai import OpenAI
-
+from app.repo.minio_repo import MinioRepository
 import constant.ai as constant
+import constant.config as minio_constant
 from pkg.logging import logger
-
-
+from app.dto import ai, minio
 class AI:
     def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL):
         self.openai_client = OpenAI(api_key=api_key)
@@ -16,29 +18,134 @@ class AI:
         self.completion_model = completion_model
         self.beast_completion_model = constant.OPENAI_BEAST_COMPLETION_MODEL
         self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
+        self.minio_repo = MinioRepository()
 
-    def create_assistant(self, prompt, max_retries=3):
-        try:
-            assistant = self.openai_client.beta.assistants.create(
-                name="Data Visualization",
-                instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
-                f"You have access to a sandboxed environment for writing and testing code."
-                f"When you are asked to create a visualization you should follow these steps:"
-                f"1. Write the code."
-                f"2. Anytime you write new code display a preview of the code to show your work."
-                f"3. Run the code to confirm that it runs."
-                f"4. If the code is successful display the visualization."
-                f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.",
-                tools=[{"type": "code_interpreter"}],
-                model=self.beast_completion_model
-            )
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 400:
-                logger.error(f"Bad request error: {e}")
-            else:
-                logger.info(f"Request to OpenAI API failed. Retrying...")
-                retries += 1
-                time.sleep(2)
+    async def create_assistant(self, file_path, time_from, time_to, max_retries=3):
+        retries = 0
+        while retries < max_retries:
+            try:
+
+                file = self.openai_client.files.create(
+                    file=open(file_path, "rb"),
+                    purpose='assistants'
+                )
+                assistant = self.openai_client.beta.assistants.create(
+                    name="Data Visualization",
+                    instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
+                    f"This data is formatted using csv format. This file structure has 2 different schemas and are separated by 1 line. This file contains system data from {time_from} to {time_to}. The first Schema contains information about posted jobs. The 2nd Schema contains information about user accounts (including candidates and employers)." 
+                    f"You have access to a sandboxed environment for writing and testing code."
+                    f"When you are asked to create a visualization you should follow these steps:"
+                    f"1. Write the code."
+                    f"2. Anytime you write new code display a preview of the code to show your work."
+                    f"3. Run the code to confirm that it runs."
+                    f"4. If the code is successful display the visualization."
+                    f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.",
+                    tools=[{"type": "code_interpreter"}],
+                    model=self.beast_completion_model,
+                    tool_resources={
+                        "code_interpreter": {
+                            "file_ids": [file.id]
+                        }
+                    }
+                )
+                return assistant.id, file.id
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error: {e}")
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    await asyncio.sleep(2)
+        logger.info("Exceeded maximum number of retries. Please try again later.")
+        return None
+    
+    async def create_thread(self, max_retries=3):
+        retries = 0
+        while retries < max_retries:
+            try:
+                thread = self.openai_client.beta.threads.create()
+                return thread.id
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error: {e}")
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    await asyncio.sleep(2)
+        logger.info("Exceeded maximum number of retries. Please try again later.")
+        return None
+
+    async def get_assistant_answer(self, max_retries=3, input=ai.AssistantQuestionRequest) -> ai.AssistantResponse:
+        retries = 0
+        while retries < max_retries:
+            try:
+                # Create the user message in the thread
+                self.openai_client.beta.threads.messages.create(
+                    thread_id=input.thread_id,
+                    role="user",
+                    content=input.message
+                )
+
+                # Create the run for the assistant
+                run = self.openai_client.beta.threads.runs.create(
+                    thread_id=input.thread_id,
+                    assistant_id=input.assistant_id,
+                )
+
+                # Poll the run status until it is completed
+                while True:
+                    run_status = self.openai_client.beta.threads.runs.retrieve(
+                        thread_id=input.thread_id, 
+                        run_id=run.id
+                    )
+                    if run_status.status == "completed":
+                        break
+                    await asyncio.sleep(0.5)  # Asynchronously sleep for a bit before checking again
+
+                # Retrieve the messages after the run is completed
+                messages = self.openai_client.beta.threads.messages.list(
+                    thread_id=input.thread_id
+                )
+                
+                # Get the latest message from assistant
+                latest_message = messages.data[0] if messages.data and messages.data[0].role == 'assistant' else None
+
+                _res = ai.AssistantResponse()
+                for content_block in latest_message.content:
+                    if content_block.type == "text":
+                        _res.message = content_block.text.value
+                    elif content_block.type == "image_file":
+                        
+                        # Call API to get image
+                        url = f'https://api.openai.com/v1/files/{content_block.image_file.file_id}/content'
+                        image_response = requests.get(url, headers={'Authorization': f'Bearer {constant.OPENAI_API_KEY}'})
+                        image_path = f'{content_block.image_file.file_id}.png'
+                        if image_response.status_code == 200:
+                            with open(image_path, 'wb') as f:
+                                f.write(image_response.content)
+
+                            # Upload image to Minio
+                            minio_req = minio.UploadMinioRequest(
+                                bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT,
+                                temp_path=image_path,
+                                file_name=image_path
+                            )
+                            image_url = await self.minio_repo.upload(
+                                input=minio_req
+                            )
+                            _res.image = image_url.url
+                            os.remove(image_path)
+                return _res
+
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying... ({retries+1}/{max_retries})")
+                    retries += 1
+                    await asyncio.sleep(2)  # Asynchronously sleep before retrying
+
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -82,7 +189,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2)
+                    await asyncio.sleep(2)
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -129,7 +236,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2)
+                    await asyncio.sleep(2)
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -147,7 +254,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -173,7 +280,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -205,7 +312,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -233,6 +340,6 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None

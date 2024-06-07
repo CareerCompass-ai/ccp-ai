@@ -50,3 +50,8 @@ class MinioRepository:
         else:
             logger.error(f"remove_object with bucket:[{bucket_name}] with file:[{file_name}] failed err: {traceback.format_exc()}")
 
+    async def get_object(self, bucket_name, file_name):
+        if self.client.bucket_exists(bucket_name):
+            self.client.fget_object(bucket_name=bucket_name, object_name=file_name, file_path=file_name)
+        else:
+            logger.error(f"get_object with bucket:[{bucket_name}] with file:[{file_name}] failed err: {traceback.format_exc()}")
