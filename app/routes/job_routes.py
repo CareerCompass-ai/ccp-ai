@@ -299,6 +299,8 @@ class JobRouter:
 
                 markdown_content = pymupdf4llm.to_markdown(pdf_document)
 
+                markdown_content = markdown_content.replace('---', '')
+
                 record.display_content = markdown_content
 
                 # get text content from pdf
