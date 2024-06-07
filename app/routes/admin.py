@@ -4,8 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 
-from app.ai.ai_helper import AI
-from app.repo.aggregate import Aggregate
+from app.factory.factory import RepositoryFactory as factory
 from app.usecases.sync_helper import SyncHelper
 from config.postgres import PostgresDB
 from config.qdrant import QdrantVDB as qdrant
@@ -16,102 +15,81 @@ from pkg.logging import logger
 from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest
 from .helper import combine_job_content
 
-admin_router = APIRouter(
-    prefix="/admin/api",
-    tags=['Admin']
-)
-
 security = HTTPBasic()
+class AdminRouter:
+    def __init__(self):
+        self.agg_repo = factory.get_aggregate_repo()
+        self.ai_helper = factory.get_ai_helper()
+        self.qdrant_client = qdrant.setup_qdrant_connection()
+        self.weaviate_client = weaviate.setup_weaviate_connection()
+        self.sync_helper = SyncHelper(qdrant_client=self.qdrant_client, weaviate_client=self.weaviate_client)
 
-agg_repo = Aggregate()
-ai_helper = AI()
-qdrant_client = qdrant.setup_qdrant_connection()
-weaviate_client = weaviate.setup_weaviate_connection()
-sync_helper = SyncHelper(qdrant_client=qdrant_client, weaviate_client=weaviate_client)
+        self.router = APIRouter(prefix="/admin/api", tags=['Admin'])
+        self.router.add_api_route("/protected", self.protected_route, methods=["GET"])
+        self.router.add_api_route("/weaviate/create-job-class", self.create_job_class, methods=["POST"])
+        self.router.add_api_route("/weaviate/create-jobqna-class", self.create_jobqna_class, methods=["POST"])
+        self.router.add_api_route("/weaviate/delete-class", self.delete_class, methods=["DELETE"])
+        self.router.add_api_route("/manual-sync-job", self.manual_sync_job, methods=["POST"])
 
-def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
-    correct_username = config.HTTP_ADMIN_USER_NAME
-    correct_password = config.HTTP_ADMIN_PASSWORD
-    if credentials.username != correct_username or credentials.password != correct_password:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Wrong way",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return True
+    async def authenticate_user(self, credentials: HTTPBasicCredentials = Depends(security)):
+        correct_username = config.HTTP_ADMIN_USER_NAME
+        correct_password = config.HTTP_ADMIN_PASSWORD
+        if credentials.username != correct_username or credentials.password != correct_password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Wrong way",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+        return True
 
-@admin_router.get("/protected")
-async def protected_route(is_authenticated: bool = Depends(authenticate_user)):
-    return {"message": "You are authorized to access this resource"}
+    async def protected_route(self, is_authenticated: bool = Depends(authenticate_user)):
+        return {"message": "You are authorized to access this resource"}
 
-@admin_router.post("/weaviate/create-job-class")
-async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
-    client = weaviate.setup_weaviate_connection()
+    async def create_job_class(self, is_authenticated: bool = Depends(authenticate_user)):
+        try:
+            self.weaviate_client.collections.create_from_dict(weaviate.jobClass)
+            return {"message": "Job class created successfully"}
+        except Exception:
+            logger.error(f"weaviate create_job_class failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
-    try:
-        # client.schema.create_from_config(weaviate.jobClass)
-        # client.collections.create(
-        #     "Job",
-        #     "Job collection",
-        # )
-        client.collections.create_from_dict(weaviate.jobClass)
-        return {"message": "Job class created successfully"}
-    except Exception:
-        logger.error(f"weaviate create_job_class failed error = {traceback.format_exc()}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    async def create_jobqna_class(self, is_authenticated: bool = Depends(authenticate_user)):
+        try:
+            self.weaviate_client.collections.create_from_dict(weaviate.jobQnAClass)
+            return {"message": "JobQnA class created successfully"}
+        except Exception:
+            logger.error(f"weaviate create_jobqna_class failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
-@admin_router.post("/weaviate/create-jobqna-class")
-async def create_job_class(is_authenticated: bool = Depends(authenticate_user)):
-    client = weaviate.setup_weaviate_connection()
+    async def delete_class(self, payload: DeleteClassRequest, is_authenticated: bool = Depends(authenticate_user)):
+        try:
+            self.weaviate_client.collections.delete(payload.collection_name)
+            return {"message": "Class deleted successfully"}
+        except Exception:
+            logger.error(f"weaviate delete_class failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
-    try:
-        client.collections.create_from_dict(weaviate.jobQnAClass)
-        return {"message": "JobQnA class created successfully"}
-    except Exception:
-        logger.error(f"weaviate create_job_class failed error = {traceback.format_exc()}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-    
-@admin_router.delete("/weaviate/class")
-async def delete_class(payload: DeleteClassRequest, is_authenticated: bool = Depends(authenticate_user)):
-    client = weaviate.setup_weaviate_connection()
+    async def manual_sync_job(self, req: ManualSyncJobRequest, is_authenticated: bool = Depends(authenticate_user), db: Session = Depends(PostgresDB.get_db)):
+        try:
+            for id in req.ids:
+                job_agg = await self.agg_repo.get_job(db=db, id=id)
+                summarized_content = await self.ai_helper.get_job_summarized(job_agg.content)
+                vector = await self.ai_helper.get_embedding(summarized_content)
+                job_agg.s_content = summarized_content
 
-    try:
-        client.collections.delete(payload.collection_name)
-        return {"message": "JobQnA class created successfully"}
-    except Exception:
-        logger.error(f"weaviate delete_job_class failed error = {traceback.format_exc()}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-    
-@admin_router.post("/manual-sync-job")
-async def manual_sync_job(
-    req: ManualSyncJobRequest, 
-    is_authenticated: bool = Depends(authenticate_user), 
-    db: Session = Depends(PostgresDB.get_db)
-):
-    try:
-        for id in req.ids:
-            job_agg = await agg_repo.get_job(db=db, id=id)
-            summarized_content = await ai_helper.get_job_summarized(job_agg.content)
-            vector = await ai_helper.get_embedding(summarized_content)
-            job_agg.s_content = summarized_content
+                acronyms_and_abbreviations = await self.ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
 
-            summarized_content = await ai_helper.get_job_summarized(job_agg.content)
+                combined_content = await combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
+                vector = await self.ai_helper.get_embedding(combined_content)
 
-            acronyms_and_abbreviations = await ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
+                job_agg.s_content = summarized_content
+                job_agg.combined_content = combined_content
 
-            # combine content
-            combined_content = await combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
+                await self.sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
 
-            # vectorize the combined content
-            vector = await ai_helper.get_embedding(combined_content)
+            return {"message": "Manual job sync completed successfully"}
+        except Exception:
+            logger.error(f"manual_sync_job failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
-            job_agg.s_content = summarized_content
-            job_agg.combined_content = combined_content
-            
-            await sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
-
-        return {"message": "ok"}
-    except Exception:
-        logger.error(f"manual-sync-job failed error = {traceback.format_exc()}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-    
+admin_router = AdminRouter().router
