@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from io import BytesIO
 from typing import Optional
+import re
 
 import fitz
 import pymupdf4llm
@@ -299,6 +300,9 @@ class JobRouter:
 
                 markdown_content = pymupdf4llm.to_markdown(pdf_document)
 
+                markdown_content = markdown_content.replace('\n--\n', '\n')
+                markdown_content = re.sub(r'\n-+\n', '\n', markdown_content)
+                
                 record.display_content = markdown_content
 
                 # get text content from pdf
