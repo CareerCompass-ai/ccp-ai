@@ -1,6 +1,14 @@
 import os
+from fastapi import status, HTTPException, APIRouter, Form, Depends
 import traceback
+import constant.config as minio_constant
 from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from qdrant_client.http.models import PointStruct
+from qdrant_client.conversions.common_types import VectorParams
+from sqlalchemy.exc import SQLAlchemyError
 
 from fastapi import APIRouter, HTTPException, status
 from qdrant_client.conversions.common_types import VectorParams
@@ -10,12 +18,19 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from app.dto import ai, minio
+
+from app.dto import assistant
+
+from config.postgres import PostgresDB
+from sqlalchemy.orm import Session
+from datetime import datetime
 from app.factory.factory import RepositoryFactory as factory
 from config.qdrant import QdrantVDB as qdrant
 from pkg.logging import logger
 
 # AI
 from .ai_helper import load_docs, split_docs
+from .helper import generate_analysis_file
 
 ai_router = APIRouter(
     prefix="/api",
@@ -26,10 +41,101 @@ ai_helper = factory.get_ai_helper()
 job_qdrant_repo = factory.get_job_qdrant_repo()
 minio_repo = factory.get_minio_repo()
 qdrant_client = qdrant.setup_qdrant_connection()
+assistant_repo = factory.get_analysis_repo()
 
 # Assistant
-@ai_router.post("/assistant/generate", response_model=ai.AssistantResponse)
+@ai_router.post("/assistant/generate", response_model=ai.GenerateAssistantResponse)
+async def generate_assistant (
+    time_from: str = Form(None),
+    time_to: str = Form(None),
+    db: Session = Depends(PostgresDB.get_db)
+):
+    try:
+        _file_name = time_from + '-' + time_to + '.csv'
+
+        # Check if CSV exist?
+        with db.begin():
+            try: 
+                _file = await assistant_repo.get_by_file_name(db=db, name=_file_name)
+            except SQLAlchemyError:
+                db.rollback()
+                logger.error(f"get analysis file failed error = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+
+
+        #If exist
+        if _file is not None:
+            #Get file from minio
+            await minio_repo.get_object(minio_constant.MINIO_BUCKET_ASSISTANT, _file_name)
+        else:
+            #Generate CSV
+            with db.begin():
+                try: 
+                    await generate_analysis_file(db=db, time_from=time_from, time_to=time_to, file_name=_file_name)
+
+                except SQLAlchemyError:
+                    db.rollback()
+                    logger.error(f"generate analysis file failed error = {traceback.format_exc()}")
+                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+                
+            #Upload MinIO
+            upload_response = await minio_repo.upload(
+                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT, temp_path=_file_name, file_name=_file_name)
+            )
+
+        #Create assistant & thread
+        #Insert into db
+        #Remove all assistant exist??
+        assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name, time_from=time_from, time_to=time_to)
+
+        thread_id = await ai_helper.create_thread()
+
+        now = datetime.now()
+
+        record = assistant.AssistantBase (
+            assistant_id=assistant_id,
+            thread_id=thread_id,
+            file_id=file_id,
+            time_from=now,
+            time_to=now,
+            created_at=now,
+            updated_at=now,
+            file_name=_file_name
+        )
+
+        os.remove(_file_name)
+        
+        with db.begin():
+            try:
+                await assistant_repo.create(session=db, input=record)
+                db.commit()
+                return ai.GenerateAssistantResponse (
+                    assistant_id=assistant_id,
+                    thread_id=thread_id,
+                    tmp="Sucessfully!"
+                )
+            except SQLAlchemyError:
+                db.rollback()
+                #TODO: Remove Assistant and Thread
+                logger.error(f"generate assistant failed error = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+    except Exception:
+        logger.error(f"generate_assistant failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+        
+
+
+
 @ai_router.post("/assistant/questioning", response_model=ai.AssistantResponse)
+async def assistant_questioning(
+    req: ai.AssistantQuestionRequest
+):
+    try:
+        res = await ai_helper.get_assistant_answer(input=req)
+        return res
+    except Exception:
+        logger.error(f"assistant_questioning failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 # Flow:
 # Note: different date time range will have different assistant
 # 1. call load_analysis to get file, save file_name to database, next time check exist? if exist note: file has named follow date range then upload the analysis.file to openai -> file.id
