@@ -4,6 +4,7 @@ import time
 import requests
 import httpx
 import numpy as np
+import asyncio
 from openai import OpenAI
 from app.repo.minio_repo import MinioRepository
 import constant.ai as constant
@@ -54,7 +55,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2)
+                    await asyncio.sleep(2)
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -70,7 +71,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2)
+                    await asyncio.sleep(2)
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -92,16 +93,14 @@ class AI:
                 )
 
                 # Poll the run status until it is completed
-                is_running = True
-                while is_running:
+                while True:
                     run_status = self.openai_client.beta.threads.runs.retrieve(
                         thread_id=input.thread_id, 
                         run_id=run.id
                     )
-                    is_running = run_status.status != "completed"
-                    if is_running:
-                        #TODO: Check 
-                        time.sleep(0.5)  # Sleep for a bit before checking again
+                    if run_status.status == "completed":
+                        break
+                    await asyncio.sleep(0.5)  # Asynchronously sleep for a bit before checking again
 
                 # Retrieve the messages after the run is completed
                 messages = self.openai_client.beta.threads.messages.list(
@@ -145,7 +144,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying... ({retries+1}/{max_retries})")
                     retries += 1
-                    time.sleep(2)
+                    await asyncio.sleep(2)  # Asynchronously sleep before retrying
 
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
@@ -190,7 +189,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2)
+                    await asyncio.sleep(2)
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -237,7 +236,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2)
+                    await asyncio.sleep(2)
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -255,7 +254,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -281,7 +280,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -313,7 +312,7 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -341,6 +340,6 @@ class AI:
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying...")
                     retries += 1
-                    time.sleep(2) 
+                    await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
