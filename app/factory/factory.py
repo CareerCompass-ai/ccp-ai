@@ -1,7 +1,3 @@
-
-
-from app.repo.recruiter_repo import RecruiterRepository
-from app.repo.talent_saved_repo import TalentSavedRepository
 import constant.config as cfg
 from app.ai.ai_helper import AI
 from app.repo.address_repo import AddressRepository
@@ -16,9 +12,11 @@ from app.repo.job_repo import JobRepository
 from app.repo.job_weaviate_repo import JobWeaviateRepository
 from app.repo.jobtags_repo import JobTagsRepository
 from app.repo.minio_repo import MinioRepository
+from app.repo.recruiter_repo import RecruiterRepository
 from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.resume_repo import ResumeRepository
 from app.repo.tag_repo import TagRepository
+from app.repo.talent_saved_repo import TalentSavedRepository
 from producer.producer import KafkaProducer
 
 
