@@ -10,12 +10,16 @@ from config.qdrant import QdrantVDB
 from constant import config as cfg
 from pkg.logging import logger
 
+import asyncio
 
 class JobQdrantRepository:
     def __init__(self, index_name: str):
         self.qdrant_setup = QdrantVDB()
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
+
+    async def process_batch(self, batch, dynamic_filters):
+        await self.update_dynamic_filters(batch, dynamic_filters)
         
     async def list_recommend_jobs(self, input: job.ListRecommendJobRequest) -> List[job.JobAggregate]:
         records = []
@@ -133,18 +137,31 @@ class JobQdrantRepository:
                 dynamic_filters['work_places'][payload["work_place"]] += 1
             if "company_type" in payload:
                 dynamic_filters['company_types'][payload["company_type"]] += 1
+            if "city_name" in payload:
+                dynamic_filters['cities'][payload["city_name"]] += 1
+            if "country_name" in payload:
+                dynamic_filters['countries'][payload["country_name"]] += 1
+            if "job_tags" in payload:
+                for tag in payload["job_tags"]:
+                    dynamic_filters['job_tags'][tag] += 1
 
     async def build_dynamic_filters(self, dynamic_filters):
         hiring_levels_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['hiring_levels'].items()]
         job_types_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['job_types'].items()]
         work_places_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['work_places'].items()]
         company_types_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['company_types'].items()]
+        cities_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['cities'].items()]
+        countries_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['countries'].items()]
+        job_tags_list = [job.DynamicFilterCommonField(name=name, count=count) for name, count in dynamic_filters['job_tags'].items()]
 
         return job.DynamicFilters(
             hiring_levels=hiring_levels_list,
             job_types=job_types_list,
             work_places=work_places_list,
-            company_types=company_types_list
+            company_types=company_types_list,
+            cities=cities_list,
+            countries=countries_list,
+            job_tags=job_tags_list
         )
 
     async def reduce_ranges(self, temp_range):
@@ -192,9 +209,13 @@ class JobQdrantRepository:
             'job_types': defaultdict(int),
             'work_places': defaultdict(int),
             'company_types': defaultdict(int),
+            'cities': defaultdict(int),
+            'countries': defaultdict(int),
+            'job_tags': defaultdict(int),
         }
         
         temp_range = []
+        async_tasks = []
         records = []
 
         if input.salary is not None:
@@ -524,6 +545,7 @@ class JobQdrantRepository:
                     result.matching_score = score
 
                     records.append(result)  
+                    async_tasks.append(self.process_batch([item], dynamic_filters))
                     del result
 
                 hits = self.client.search(
@@ -560,8 +582,8 @@ class JobQdrantRepository:
                 for item in result[0]:
                     if item is not None:
                         payload = item.payload
-
                         records.append(mapper.toJobDTO(payload))
+                        async_tasks.append(self.process_batch([item], dynamic_filters))
 
                 result = self.client.scroll(
                     collection_name=self.index_name,
@@ -575,10 +597,15 @@ class JobQdrantRepository:
             del hits
             del filter
 
+        await asyncio.gather(*async_tasks)
+
         dynamic_filters['hiring_levels'] = dict(dynamic_filters['hiring_levels'])
         dynamic_filters['job_types'] = dict(dynamic_filters['job_types'])
         dynamic_filters['work_places'] = dict(dynamic_filters['work_places'])
         dynamic_filters['company_types'] = dict(dynamic_filters['company_types'])
+        dynamic_filters['cities'] = dict(dynamic_filters['cities'])
+        dynamic_filters['countries'] = dict(dynamic_filters['countries'])
+        dynamic_filters['job_tags'] = dict(dynamic_filters['job_tags'])
         dynamic_filters_obj = await self.build_dynamic_filters(dynamic_filters)
 
         return job.ListJobResponse(
