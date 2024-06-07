@@ -1001,14 +1001,18 @@ class JobQdrantRepository:
 
                     job_dto = mapper.toJobDTO(payload)
                     job_dto.matching_score = score
+
+                    records.append(job_dto)
             else:
                 for result in results[0][0]:
                     payload = result.payload
                     job_dto = mapper.toJobDTO(payload)
 
-            records.append(job_dto)
+                    records.append(job_dto)
+            
             async_get_df_tasks.append(self.process_batch([result], dynamic_filters))
 
+            # NOTE: results[0] - first task, result 1 - second task
             if input.vectors is not None:
                 await self.update_dynamic_filters(results[1], dynamic_filters)
             else:
