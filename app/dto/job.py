@@ -81,6 +81,9 @@ class DynamicFilters(BaseModel):
     job_types: List[DynamicFilterCommonField] = []
     work_places: List[DynamicFilterCommonField] = []
     company_types: List[DynamicFilterCommonField] = []
+    cities: List[DynamicFilterCommonField] = []
+    countries: List[DynamicFilterCommonField] = []
+    job_tags: List[DynamicFilterCommonField] = []
 
 class ListJobResponse(BaseModel):
     count: int
@@ -122,3 +125,6 @@ class CloseJobRequest(BaseModel):
 
 class CloseJobResponse(BaseModel):
     message: str = "Job closed successfully"
+
+class UpdateJobResponse(BaseModel):
+    message: str = "Job updated successfully"

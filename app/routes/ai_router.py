@@ -18,22 +18,18 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from app.dto import ai, minio
-from app.repo.job_qdrant_repo import JobQdrantRepository
-from app.repo.minio_repo import MinioRepository
-from app.repo.assistant_repo import AssistantRepository
 
 from app.dto import assistant
 
 from config.postgres import PostgresDB
 from sqlalchemy.orm import Session
 from datetime import datetime
+from app.factory.factory import RepositoryFactory as factory
 from config.qdrant import QdrantVDB as qdrant
 from pkg.logging import logger
 
-from ..ai.ai_helper import AI
 # AI
 from .ai_helper import load_docs, split_docs
-from ..ai.ai_helper import AI
 from .helper import generate_analysis_file
 
 ai_router = APIRouter(
@@ -41,11 +37,11 @@ ai_router = APIRouter(
     tags=['AI']
 )
 
-ai_helper = AI()
-job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
+ai_helper = factory.get_ai_helper()
+job_qdrant_repo = factory.get_job_qdrant_repo()
+minio_repo = factory.get_minio_repo()
 qdrant_client = qdrant.setup_qdrant_connection()
-minio_repo = MinioRepository()
-assistant_repo = AssistantRepository()
+assistant_repo = factory.get_analysis_repo()
 
 # Assistant
 @ai_router.post("/assistant/generate", response_model=ai.GenerateAssistantResponse)
@@ -475,7 +471,7 @@ async def questioning_v1(req: ai.QuestionAndAnswerRequest):
     except Exception:
         logger.error(f"questioning failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
-    
+
 @ai_router.post("/ai/jobs/questioning", response_model=ai.JobQnAResponse)
 async def questioning(req: ai.JobQnARequest):
     try:
