@@ -10,12 +10,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from app.dto import ai, minio
-from app.repo.job_qdrant_repo import JobQdrantRepository
-from app.repo.minio_repo import MinioRepository
+from app.factory.factory import RepositoryFactory as factory
 from config.qdrant import QdrantVDB as qdrant
 from pkg.logging import logger
 
-from ..ai.ai_helper import AI
 # AI
 from .ai_helper import load_docs, split_docs
 
@@ -24,10 +22,10 @@ ai_router = APIRouter(
     tags=['AI']
 )
 
-ai_helper = AI()
-job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
+ai_helper = factory.get_ai_helper()
+job_qdrant_repo = factory.get_job_qdrant_repo()
+minio_repo = factory.get_minio_repo()
 qdrant_client = qdrant.setup_qdrant_connection()
-minio_repo = MinioRepository()
 
 # Assistant
 @ai_router.post("/assistant/generate", response_model=ai.AssistantResponse)

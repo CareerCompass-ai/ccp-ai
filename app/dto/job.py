@@ -122,3 +122,6 @@ class CloseJobRequest(BaseModel):
 
 class CloseJobResponse(BaseModel):
     message: str = "Job closed successfully"
+
+class UpdateJobResponse(BaseModel):
+    message: str = "Job updated successfully"
