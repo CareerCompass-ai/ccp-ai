@@ -5,8 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.dto import recruiter
-from app.repo.recruiter_repo import RecruiterRepository
-from app.repo.talent_saved_repo import TalentSavedRepository
+from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from models.ccp_talent_saved import TalentSaved
 from pkg.logging import logger
@@ -16,8 +15,8 @@ recruiter_router = APIRouter(
     tags=['Recruiter']
 )
 
-recruiter_repo = RecruiterRepository()
-talent_repo = TalentSavedRepository()
+recruiter_repo = factory.get_recruiter_repo()
+talent_repo = factory.get_talent_saved_repo()
 
 @recruiter_router.get("/recruiter/jobs-posted", response_model=recruiter.ListJobsPostedResponse)
 async def list_jobs_posted(

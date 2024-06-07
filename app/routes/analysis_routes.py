@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.dto import analysis
-from app.repo.analysis_repo import AnalysisRepository
+from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from pkg.logging import logger
 
@@ -13,7 +13,7 @@ analysis_router = APIRouter(
     tags=['Analysis']
 )
 
-analysis_repo = AnalysisRepository()
+analysis_repo = factory.get_analysis_repo()
 
 #1
 @analysis_router.get("/analysis/top-job-titles", response_model=analysis.ListTopJobTitlesResponse)

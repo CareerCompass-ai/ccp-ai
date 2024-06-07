@@ -15,35 +15,15 @@ from sqlalchemy.orm import Session
 
 import constant.ai as constant
 import constant.config as minio_constant
-from app.ai.ai_helper import AI
 from app.dto import address, job, minio, resume
-from app.repo.address_repo import AddressRepository
-from app.repo.application_repo import ApplicationRepository
-from app.repo.candidate_repo import CandidateRepository
-# from app.repo.job_es_repo import JobESRepository
-from app.repo.job_qdrant_repo import JobQdrantRepository
-from app.repo.job_repo import JobRepository
-from app.repo.job_weaviate_repo import JobWeaviateRepository
-from app.repo.jobtags_repo import JobTagsRepository
-from app.repo.minio_repo import MinioRepository
-from app.repo.resume_qdrant_repo import ResumeQdrantRepository
-from app.repo.resume_repo import ResumeRepository
+from app.factory.factory import RepositoryFactory as factory
 from config import postgres
 from config.postgres import PostgresDB
-from config.qdrant import QdrantVDB as qdrant
 from constant import config as cfg
 from models.ccp_application import Application
 from pkg.logging import logger
-from producer.producer import KafkaProducer
 
 # from config.es import ElasticSearchDB as es
-
-
-
-
-
-
-
 
 job_router = APIRouter(
     prefix="/api",
@@ -51,19 +31,18 @@ job_router = APIRouter(
 )
 
 # job_es_repo = JobESRepository(index_name=es.ES_INDEX_JOB_SEARCH)
-job_qdrant_repo = JobQdrantRepository(index_name=qdrant.QDRANT_INDEX_JOB_SEARCH)
-job_weaviate_repo = JobWeaviateRepository(collection_name="Job")
-resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
-job_repo = JobRepository()
-jobtag_repo = JobTagsRepository()
-minio_repo = MinioRepository()
-application_repo = ApplicationRepository()
-resume_repo = ResumeRepository()
-candidate_repo = CandidateRepository()
-address_repo = AddressRepository()
-
-ai_helper = AI()
-kafka_producer = KafkaProducer()
+job_qdrant_repo = factory.get_job_qdrant_repo()
+job_weaviate_repo = factory.get_job_weaviate_repo()
+resume_qdrant_repo = factory.get_resume_qdrant_repo()
+job_repo = factory.get_job_repo()
+jobtag_repo = factory.get_jobtag_repo()
+minio_repo = factory.get_minio_repo()
+application_repo = factory.get_application_repo()
+resume_repo = factory.get_resume_repo()
+candidate_repo = factory.get_candidate_repo()
+address_repo = factory.get_address_repo()
+ai_helper = factory.get_ai_helper()
+kafka_producer = factory.get_kafka_producer()
 
 
 @job_router.get("/jobs", response_model=job.ListJobResponse)

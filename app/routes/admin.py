@@ -4,8 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 
-from app.ai.ai_helper import AI
-from app.repo.aggregate import Aggregate
+from app.factory.factory import RepositoryFactory as factory
 from app.usecases.sync_helper import SyncHelper
 from config.postgres import PostgresDB
 from config.qdrant import QdrantVDB as qdrant
@@ -23,8 +22,9 @@ admin_router = APIRouter(
 
 security = HTTPBasic()
 
-agg_repo = Aggregate()
-ai_helper = AI()
+agg_repo = factory.get_aggregate_repo()
+ai_helper = factory.get_ai_helper()
+
 qdrant_client = qdrant.setup_qdrant_connection()
 weaviate_client = weaviate.setup_weaviate_connection()
 sync_helper = SyncHelper(qdrant_client=qdrant_client, weaviate_client=weaviate_client)

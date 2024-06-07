@@ -5,9 +5,7 @@ from sqlalchemy.orm import Session
 
 import constant.common as constant
 from app.dto import common
-from app.repo.city_repo import CityRepository
-from app.repo.country_repo import CountryRepository
-from app.repo.tag_repo import TagRepository
+from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from pkg.logging import logger
 
@@ -16,9 +14,9 @@ common_router = APIRouter(
     tags=['Common']
 )
 
-tag_repo = TagRepository()
-country_repo = CountryRepository()
-city_repo = CityRepository()
+tag_repo = factory.get_tag_repo()
+country_repo = factory.get_country_repo()
+city_repo = factory.get_city_repo()
 
 @common_router.get("/common/types", response_model=common.ListCommonTypes)
 async def list_common_types(

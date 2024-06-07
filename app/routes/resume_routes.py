@@ -5,18 +5,14 @@ from datetime import datetime
 from io import BytesIO
 
 import PyPDF2
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, Path,
-                     Query, UploadFile, status)
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile, status)
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 import constant.config as minio_constant
 from app.dto import minio, resume
-from app.repo.minio_repo import MinioRepository
-from app.repo.resume_qdrant_repo import ResumeQdrantRepository
-from app.repo.resume_repo import ResumeRepository
+from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
-from config.qdrant import QdrantVDB as qdrant
 from pkg.logging import logger
 
 resume_router = APIRouter(
@@ -24,9 +20,9 @@ resume_router = APIRouter(
     tags=['Resume']
 )
 
-resume_qdrant_repo = ResumeQdrantRepository(index_name=qdrant.QDRANT_INDEX_RESUME_SEARCH)
-resume_repo = ResumeRepository()
-minio_repo = MinioRepository()
+resume_qdrant_repo = factory.get_resume_qdrant_repo()
+resume_repo = factory.get_resume_repo()
+minio_repo = factory.get_minio_repo()
 
 @resume_router.post("/resume/create", response_model=resume.CreateResumePostResponse)
 async def upload(
