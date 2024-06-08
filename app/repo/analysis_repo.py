@@ -164,29 +164,6 @@ class AnalysisRepository:
         db.close()
         
         return analysis.GetTopSkillResponse(data=data) 
-
-    # async def get_top_skills (self, db:Session, top_number:int) -> analysis.GetTopSkillResponse:
-    #     records = db.query(Tag.id, Tag.tag_name, func.count(Tag.id).label('skill_count')) \
-    #                     .join(JobTag, Tag.id == JobTag.tag_id) \
-    #                     .group_by(Tag.id, Tag.tag_name) \
-    #                     .order_by(desc('skill_count')) \
-    #                     .limit(top_number) \
-    #                     .all()
-        
-    #     data = []
-
-    #     for item in records:
-    #         data.append (
-    #             analysis.TopSkillResponse(
-    #                 id=item.id,
-    #                 skill=item.tag_name,
-    #                 count=item.count
-    #             )
-    #         )
-        
-    #     db.close()
-        
-    #     return analysis.GetTopSkillResponse(data=data)        
     
     async def number_of_company_type (self, db:Session) -> analysis.GetNumberOfCompanyTypeResponse:
         records = db.query(Job.company_type, func.count(Job.id).label('company_type_count')).group_by(Job.company_type).all()
