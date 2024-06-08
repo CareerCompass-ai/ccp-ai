@@ -959,6 +959,15 @@ class JobQdrantRepository:
             _res = await self.count_total_record(filter)
             total_record += _res.count
 
+            # Handle case when total_record = 0
+            if total_record == 0:
+                return job.ListJobResponse(
+                    count=0,
+                    page=input.page,
+                    size=input.size,
+                    records=[]
+                )
+
             async def search_task(limit):
                 hits = self.client.search(
                     collection_name=self.index_name,
@@ -1022,13 +1031,13 @@ class JobQdrantRepository:
 
         await asyncio.gather(*async_get_df_tasks)
 
-        dynamic_filters['hiring_levels'] = dict(dynamic_filters['hiring_levels'])
-        dynamic_filters['job_types'] = dict(dynamic_filters['job_types'])
-        dynamic_filters['work_places'] = dict(dynamic_filters['work_places'])
-        dynamic_filters['company_types'] = dict(dynamic_filters['company_types'])
-        dynamic_filters['cities'] = dict(dynamic_filters['cities'])
-        dynamic_filters['countries'] = dict(dynamic_filters['countries'])
-        dynamic_filters['job_tags'] = dict(dynamic_filters['job_tags'])
+        # dynamic_filters['hiring_levels'] = dict(dynamic_filters['hiring_levels'])
+        # dynamic_filters['job_types'] = dict(dynamic_filters['job_types'])
+        # dynamic_filters['work_places'] = dict(dynamic_filters['work_places'])
+        # dynamic_filters['company_types'] = dict(dynamic_filters['company_types'])
+        # dynamic_filters['cities'] = dict(dynamic_filters['cities'])
+        # dynamic_filters['countries'] = dict(dynamic_filters['countries'])
+        # dynamic_filters['job_tags'] = dict(dynamic_filters['job_tags'])
         dynamic_filters_obj = await self.build_dynamic_filters(dynamic_filters)
 
         end_time = time.time()
