@@ -43,8 +43,8 @@ class JobRouter:
 
         self.router = APIRouter(prefix="/api", tags=['Job'])
         self.router.add_api_route("/jobs", self.list_jobs_from_qdrant, methods=["GET"], response_model=job.ListJobResponse)
-        self.router.add_api_route("/related_jobs", self.list_related_jobs_from_qdrant, methods=["GET"], response_model=job.ListRelatedJobResponse)
-        self.router.add_api_route("/recommend_jobs", self.list_recommend_jobs_from_qdrant, methods=["GET"], response_model=job.ListRelatedJobResponse)
+        self.router.add_api_route("/related-jobs", self.list_related_jobs_from_qdrant, methods=["GET"], response_model=job.ListRelatedJobResponse)
+        self.router.add_api_route("/recommend-jobs", self.list_recommend_jobs_from_qdrant, methods=["GET"], response_model=job.ListRelatedJobResponse)
         self.router.add_api_route("/job", self.get_job_from_qdrant, methods=["GET"], response_model=job.JobAggregate)
         self.router.add_api_route("/job/create", self.create, methods=["POST"], response_model=job.CreateJobPostResponse)
         self.router.add_api_route("/job/apply", self.apply, methods=["POST"], response_model=job.ApplyJobResponse)
