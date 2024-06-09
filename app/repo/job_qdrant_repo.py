@@ -413,14 +413,16 @@ class JobQdrantRepository:
 
             if input.job_tags is not None:
                 input.job_tags = input.job_tags.split(',')
-                filter.must.append(
-                    models.FieldCondition(
-                        key="job_tags",
-                        match=models.Match(
-                            any=input.job_tags,
-                        ),
+
+                for tag in input.job_tags:
+                    filter.must.append(
+                        models.FieldCondition(
+                            key="job_tags",
+                            match=models.MatchValue(
+                                value=tag,
+                            ),
+                        )
                     )
-                )
 
             if input.hiring_level is not None:
                 input.hiring_level = input.hiring_level.split(',')
