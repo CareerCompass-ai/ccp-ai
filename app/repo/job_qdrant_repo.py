@@ -128,11 +128,9 @@ class JobQdrantRepository:
         )
     
     async def update_dynamic_filters(self, hits, dynamic_filters):
-        logger.info(f"hits: {len(hits)}")
         for item in hits:
             payload = item.payload
             if "hiring_level" in payload:
-                logger.info(f"hiring_levels: {payload['hiring_level']}")
                 dynamic_filters['hiring_levels'][payload["hiring_level"]] += 1
             if "job_type" in payload:
                 dynamic_filters['job_types'][payload["job_type"]] += 1
