@@ -32,7 +32,7 @@ class MinioRepository:
 
             # NOTE: /minio for nginx reverse proxy
             return minio.UploadMinioResponse(
-                url=f"{constant.MINIO_URL}/minio/{input.bucket_name}/{input.file_name}"
+                url=f"{constant.SERVER_DOMAIN}/minio/{input.bucket_name}/{input.file_name}"
             )
 
         except S3Error as e:
