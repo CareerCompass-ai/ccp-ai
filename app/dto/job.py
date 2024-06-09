@@ -128,3 +128,11 @@ class CloseJobResponse(BaseModel):
 
 class UpdateJobResponse(BaseModel):
     message: str = "Job updated successfully"
+
+class CheckAppliedOrSavedRequest(BaseModel):
+    user_id: int
+    job_id: int
+
+class CheckAppliedOrSavedResponse(BaseModel):
+    is_applied: bool
+    is_saved: bool
