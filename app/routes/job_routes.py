@@ -51,6 +51,7 @@ class JobRouter:
         self.router.add_api_route("/job/close", self.close, methods=["POST"], response_model=job.CloseJobResponse)
         self.router.add_api_route("/job/update", self.update_job, methods=["PUT"]) # TODO: , response_model=job.UpdateJobResponse
         self.router.add_api_route("/job/{id}/resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
+        self.router.add_api_route("/job/check-saved-or-applied", self.check_is_saved_or_applied, methods=["POST"], response_model=job.CheckAppliedOrSavedResponse)
 
     async def list_jobs_from_qdrant(
         self,
@@ -191,7 +192,6 @@ class JobRouter:
         self,
         id: int = Query(None, description="Job ID"),
         user_id: Optional[int] = Query(None, description="User ID"),
-        db: Session = Depends(PostgresDB.get_db)
     ):
         try:
             req = job.GetJobRequest(
@@ -200,22 +200,6 @@ class JobRouter:
 
             data = await self.job_qdrant_repo.get_job(input=req)
 
-            # Check whether this user applied to this job or not
-            resumes = await self.resume_repo.get_by_user_id(db=db, user_id=user_id)
-            resume_ids = []
-            for resume in resumes:
-                resume_ids.append(resume.id)
-            applications = await self.application_repo.list_by_resume_ids(db=db, resume_ids=resume_ids, job_id=id)
-
-            # Check whether this user saved this job or not
-            job_saved = await self.candidate_repo.get_job_saved_by_candidate_id(db=db, user_id=user_id, job_id=req.id)
-
-            if len(applications) > 0:
-                data.is_applied = True
-
-            if job_saved is not None:
-                data.is_saved = True
-
             # TODO: push message to kafka
             payload = {
                 "user_id": user_id,
@@ -223,7 +207,6 @@ class JobRouter:
             }
 
             self.kafka_producer.produce_message(cfg.KAFKA_TOPIC_JOB_VIEW, payload)
-
 
             return data
         except Exception:
@@ -562,5 +545,41 @@ class JobRouter:
         except Exception:
             logger.error(f"update_job failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        
     
+    async def check_is_saved_or_applied(
+        self,
+        req: Optional[job.CheckAppliedOrSavedRequest],
+        db: Session = Depends(postgres.PostgresDB.get_db)
+    ):
+        try:
+            req = job.CheckAppliedOrSavedRequest(
+                user_id=req.user_id,
+                job_id=req.job_id
+            )
+
+            # Check whether this user applied to this job or not
+            resumes = await self.resume_repo.get_by_user_id(db=db, user_id=req.user_id)
+            resume_ids = []
+            for resume in resumes:
+                resume_ids.append(resume.id)
+
+            applications = await self.application_repo.list_by_resume_ids(db=db, resume_ids=resume_ids, job_id=req.job_id)
+
+            # Check whether this user saved this job or not
+            job_saved = await self.candidate_repo.get_job_saved_by_candidate_id(db=db, user_id=req.user_id, job_id=req.job_id)
+
+            resp = job.CheckAppliedOrSavedResponse()
+
+            if len(applications) > 0:
+                resp.is_applied = True
+
+            if job_saved is not None:
+                resp.is_saved = True
+
+            return resp
+        except Exception:
+            logger.error(f"check_is_saved_or_applied failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+
 job_router = JobRouter().router
