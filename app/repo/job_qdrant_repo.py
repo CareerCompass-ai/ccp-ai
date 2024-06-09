@@ -219,7 +219,6 @@ class JobQdrantRepository:
         }
         
         temp_range = []
-        async_get_df_tasks = []
         records = []
 
         if input.salary is not None:
@@ -397,7 +396,6 @@ class JobQdrantRepository:
                         job_dto = mapper.toJobDTO(payload)
 
                     records.append(job_dto)
-                    async_get_df_tasks.append(self.process_batch([result], dynamic_filters))
 
                 await self.update_dynamic_filters(results[1], dynamic_filters)
                 del filter
@@ -592,8 +590,6 @@ class JobQdrantRepository:
                     job_dto = mapper.toJobDTO(payload)
 
                     records.append(job_dto)
-            
-            async_get_df_tasks.append(self.process_batch([result], dynamic_filters))
 
             # NOTE: results[0] - first task, result 1 - second task
             if input.vectors is not None:
@@ -603,15 +599,6 @@ class JobQdrantRepository:
             del filter
             del results
 
-        await asyncio.gather(*async_get_df_tasks)
-
-        # dynamic_filters['hiring_levels'] = dict(dynamic_filters['hiring_levels'])
-        # dynamic_filters['job_types'] = dict(dynamic_filters['job_types'])
-        # dynamic_filters['work_places'] = dict(dynamic_filters['work_places'])
-        # dynamic_filters['company_types'] = dict(dynamic_filters['company_types'])
-        # dynamic_filters['cities'] = dict(dynamic_filters['cities'])
-        # dynamic_filters['countries'] = dict(dynamic_filters['countries'])
-        # dynamic_filters['job_tags'] = dict(dynamic_filters['job_tags'])
         dynamic_filters_obj = await self.build_dynamic_filters(dynamic_filters)
 
         end_time = time.time()
