@@ -113,8 +113,8 @@ class AnalysisRepository:
     async def get_most_applied_job_titles(self, db:Session, top_number, time_from=None, time_to=None)-> analysis.ListTopAppliedJobTitlesResponse:
         query = db.query(Job.common_job_title, func.count().label('job_count')) \
                     .join(Application, Job.id == Application.job_id)
-        if time_from and time_from != 'None' and time_to and time_to != None:
-            query = query.filter(and_( Application.updated_at >= time_from, Application.updated_at<= time_to )) 
+        if time_from and time_from != 'None' and time_to and time_to != 'None':
+            query = query.filter(Application.updated_at >= time_from) 
 
         query = query.group_by(Job.common_job_title) \
                     .order_by(func.count().desc()).limit(top_number)
