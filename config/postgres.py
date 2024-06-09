@@ -6,7 +6,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from constant.config import DATABASE_URL
 
-MAX_CONNECTIONS = 20
+MAX_CONNECTIONS = 50
 
 engine = create_engine(DATABASE_URL, pool_size=MAX_CONNECTIONS)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
