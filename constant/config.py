@@ -8,6 +8,7 @@ dotenv_path = os.path.join(cfg.ROOT_FOLDER, "builders", ".base.env")
 load_dotenv(dotenv_path=dotenv_path)
 
 # Hosting server
+SERVER_DOMAIN = os.getenv("SERVER_DOMAIN")
 SERVER_IP = os.getenv("SERVER_IP")
 KAFKA_SERVER_IP = os.getenv("KAFKA_SERVER_IP")
 DB_SERVER_IP = os.getenv("DB_SERVER_IP")
