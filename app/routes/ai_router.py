@@ -41,7 +41,7 @@ ai_helper = factory.get_ai_helper()
 job_qdrant_repo = factory.get_job_qdrant_repo()
 minio_repo = factory.get_minio_repo()
 qdrant_client = qdrant.setup_qdrant_connection()
-assistant_repo = factory.get_analysis_repo()
+assistant_repo = factory.get_assistant_repo()
 
 # Assistant
 @ai_router.post("/assistant/generate", response_model=ai.GenerateAssistantResponse)
