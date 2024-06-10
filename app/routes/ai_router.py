@@ -39,6 +39,7 @@ ai_router = APIRouter(
 
 ai_helper = factory.get_ai_helper()
 job_qdrant_repo = factory.get_job_qdrant_repo()
+resume_qdrant_repo = factory.get_resume_qdrant_repo()
 minio_repo = factory.get_minio_repo()
 qdrant_client = qdrant.setup_qdrant_connection()
 assistant_repo = factory.get_analysis_repo()
@@ -526,6 +527,44 @@ async def questioning(req: ai.JobQnARequest):
         # TODO: Count remain token -> return a field to indicate whether the user has run out of tokens
 
         return ai.JobQnAResponse(
+            answer=answer
+        )
+
+    except Exception:
+        logger.error(f"questioning failed error = {traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+    
+@ai_router.post("/ai/resumes/questioning", response_model=ai.ResumeQnAResponse)
+async def resumes_questioning(req: ai.ResumeQnARequest):
+    try:
+        data = await resume_qdrant_repo.list_resumes_by_ids(req.resume_ids)
+
+        # Remove unnecessary fields
+        modified_data = []
+        for resume in data:
+            resume_dict = resume.model_dump()
+            resume_dict.pop('matching_score', None)
+            resume_dict.pop('s_content', None)
+            resume_dict.pop('matching_score', None)
+            resume_dict.pop('resume_link', None)
+            modified_data.append(resume_dict)
+
+        if req.prev:
+            previous_context_formatted = "\n".join(
+                [
+                    f"user_question: {item.question}\nyour_answer: {item.answer}\n"
+                    for item in req.prev
+                ]
+            )
+            previous_context_section = f"Previous conversation:\n{previous_context_formatted}\nFocus specifically on the resumes or candidates discussed previously: {req.prev[-1].answer}"
+        else:
+            previous_context_section = ""
+
+        answer = await ai_helper.get_resume_answer(modified_data, previous_context_section, req.question)
+
+        # TODO: Count remain token -> return a field to indicate whether the user has run out of tokens
+
+        return ai.ResumeQnAResponse(
             answer=answer
         )
 
