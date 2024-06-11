@@ -404,14 +404,10 @@ class JobQdrantRepository:
             filter = models.Filter(must=[], should=[], must_not=[])
 
             if input.exclude:
-                input.exclude = input.exclude.split(',')
-                for id in input.exclude:
-                    filter.must_not.append(
-                        models.FieldCondition(
-                            key="id",
-                            match=models.MatchValue(value=id)
-                        )
-                    )
+                exclude_ids = [int(id) for id in input.exclude.split(',')]
+                filter.must_not.append(
+                    models.HasIdCondition(has_id=exclude_ids)
+                )
 
             if input.job_tags:
                 input.job_tags = input.job_tags.split(',')
@@ -608,3 +604,4 @@ class JobQdrantRepository:
             records=records,
             dynamic_filters=dynamic_filters_obj
         )
+
