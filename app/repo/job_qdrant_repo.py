@@ -543,6 +543,8 @@ class JobQdrantRepository:
 
             tasks = []
             if input.vectors is not None:
+                filter.must_not=[]
+                
                 tasks.append(search_task(input.size))
                 tasks.append(search_task(total_record))
             else:
