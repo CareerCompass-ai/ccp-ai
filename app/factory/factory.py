@@ -1,3 +1,6 @@
+from app.repo.assistant_repo import AssistantRepository
+from app.repo.notifications_repo import NotificationsRepository
+from app.repo.user_repo import UserRepository
 import constant.config as cfg
 from app.ai.ai_helper import AI
 from app.repo.address_repo import AddressRepository
@@ -68,6 +71,18 @@ class RepositoryFactory:
     @staticmethod
     def get_analysis_repo():
         return AnalysisRepository()
+    
+    @staticmethod
+    def get_assistant_repo():
+        return AssistantRepository()
+    
+    @staticmethod
+    def get_notifications_repo():
+        return NotificationsRepository()
+    
+    @staticmethod
+    def get_user_repo():
+        return UserRepository()
     
     @staticmethod
     def get_job_qdrant_repo():
