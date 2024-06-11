@@ -18,6 +18,7 @@ class AppliedJobsResponse(BaseModel):
     work_place: Optional[str] = ""
     company_type: Optional[str] = ""
     hiring_level: Optional[str] = ""
+    display_content: Optional[str] = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -44,6 +45,7 @@ class SavedJobsResponse(BaseModel):
     work_place: Optional[str] = ""
     company_type: Optional[str] = ""
     hiring_level: Optional[str] = ""
+    display_content: Optional[str] = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
