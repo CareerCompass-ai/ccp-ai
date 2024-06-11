@@ -20,6 +20,7 @@ class JobPostedResponse(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     applied_count: int
+    display_content: Optional[str] = ""
 
 class ListJobsPostedResponse(BaseModel):
     records: List[JobPostedResponse]
