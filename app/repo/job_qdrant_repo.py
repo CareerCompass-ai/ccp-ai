@@ -232,7 +232,7 @@ class JobQdrantRepository:
                 temp_range.append(temp)
             reduced_range = await self.reduce_ranges(temp_range)
             for range in reduced_range:
-                filter = models.Filter()
+                filter = models.Filter(must=[], should=[], must_not=[])
                 if filter.must is None:
                     filter.must = []
                 if filter.should is None:
@@ -401,68 +401,60 @@ class JobQdrantRepository:
                 del filter
                 del results
         else:
-            filter = models.Filter()
-            if filter.must is None:
-                filter.must = []
-            if filter.should is None:
-                filter.should = []
-            if filter.must_not is None:
-                filter.must_not = []
+            filter = models.Filter(must=[], should=[], must_not=[])
 
-            if input.job_tags is not None:
+            if input.exclude:
+                input.exclude = input.exclude.split(',')
+                for id in input.exclude:
+                    filter.must_not.append(
+                        models.FieldCondition(
+                            key="id",
+                            match=models.MatchValue(value=id)
+                        )
+                    )
+
+            if input.job_tags:
                 input.job_tags = input.job_tags.split(',')
-
                 for tag in input.job_tags:
                     filter.must.append(
                         models.FieldCondition(
                             key="job_tags",
-                            match=models.MatchValue(
-                                value=tag,
-                            ),
+                            match=models.MatchValue(value=tag)
                         )
                     )
 
-            if input.hiring_level is not None:
+            if input.hiring_level:
                 input.hiring_level = input.hiring_level.split(',')
                 filter.must.append(
                     models.FieldCondition(
                         key="hiring_level",
-                        match=models.MatchAny(
-                            any=input.hiring_level,
-                        ),
+                        match=models.MatchAny(any=input.hiring_level)
                     )
                 )
 
-            if input.job_type is not None:
+            if input.job_type:
                 input.job_type = input.job_type.split(',')
                 filter.must.append(
                     models.FieldCondition(
                         key="job_type",
-                        match=models.MatchAny(
-                            any=input.job_type,
-                        ),
+                        match=models.MatchAny(any=input.job_type)
                     )
                 )
 
-            if input.company_type is not None:
+            if input.company_type:
                 input.company_type = input.company_type.split(',')
                 filter.must.append(
                     models.FieldCondition(
                         key="company_type",
-                        match=models.MatchAny(
-                            any=input.company_type,
-                        ),
+                        match=models.MatchAny(any=input.company_type)
                     )
                 )
 
-            # FIXME: fix this
-            if input.last_updated is not None:
+            if input.last_updated:
                 filter.must.append(
                     models.FieldCondition(
                         key="updated_at",
-                        range=models.Range(
-                            lte=input.last_updated
-                        )
+                        range=models.Range(lte=input.last_updated)
                     )
                 )
 
@@ -470,9 +462,7 @@ class JobQdrantRepository:
                 filter.must.append(
                     models.FieldCondition(
                         key="salary_from",
-                        range=models.Range(
-                            gte=input.salary_from
-                        )
+                        range=models.Range(gte=input.salary_from)
                     )
                 )
 
@@ -480,42 +470,34 @@ class JobQdrantRepository:
                 filter.must.append(
                     models.FieldCondition(
                         key="salary_to",
-                        range=models.Range(
-                            lte=input.salary_to
-                        )
+                        range=models.Range(lte=input.salary_to)
                     )
                 )
 
-            if input.work_place is not None:
+            if input.work_place:
                 input.work_place = input.work_place.split(',')
                 filter.must.append(
                     models.FieldCondition(
                         key="work_place",
-                        match=models.MatchAny(
-                            any=input.work_place,
-                        ),
+                        match=models.MatchAny(any=input.work_place)
                     )
                 )
 
-            if input.city_name is not None:
+            if input.city_name:
                 input.city_name = input.city_name.split(',')
                 filter.must.append(
                     models.FieldCondition(
                         key="city_name",
-                        match=models.MatchAny(
-                            any=input.city_name,
-                        ),
+                        match=models.MatchAny(any=input.city_name)
                     )
                 )
 
-            if input.country_name is not None:
+            if input.country_name:
                 input.country_name = input.country_name.split(',')
                 filter.must.append(
                     models.FieldCondition(
                         key="country_name",
-                        match=models.MatchAny(
-                            any=input.country_name,
-                        ),
+                        match=models.MatchAny(any=input.country_name)
                     )
                 )
 
@@ -523,11 +505,10 @@ class JobQdrantRepository:
                 filter.must.append(
                     models.FieldCondition(
                         key="is_hiring",
-                        match=models.MatchValue(
-                            value=input.is_hiring,
-                        ),
+                        match=models.MatchValue(value=input.is_hiring)
                     )
                 )
+
             _res = await self.count_total_record(filter)
             total_record += _res.count
 
@@ -550,18 +531,17 @@ class JobQdrantRepository:
                 )
                 return hits
 
-            async def scroll_task(limit):
+            async def scroll_task(limit, start_from):
                 result = self.client.scroll(
                     collection_name=self.index_name,
                     scroll_filter=filter,
                     limit=limit,
                     order_by=models.OrderBy(
-                        key="id",
+                        key="updated_at",
                         direction="desc",
-                        start_from=input.latest_job_id - (input.page * input.size - input.size)
+                        start_from=start_from
                     ),
                     with_payload=True,
-                    # with_vectors=False
                 )
                 return result
 
@@ -570,8 +550,23 @@ class JobQdrantRepository:
                 tasks.append(search_task(input.size))
                 tasks.append(search_task(total_record))
             else:
-                tasks.append(scroll_task(input.size))
-                tasks.append(scroll_task(total_record))
+                # get the latest updated record to start from
+                initial_result = self.client.scroll(
+                    collection_name=self.index_name,
+                    scroll_filter=filter,
+                    limit=1,
+                    order_by=models.OrderBy(
+                        key="updated_at",
+                        direction="desc"
+                    ),
+                    with_payload=True
+                )
+
+                if initial_result:
+                    latest_updated_at = initial_result[0][0].payload['updated_at']
+
+                    tasks.append(scroll_task(input.size, latest_updated_at))
+                    tasks.append(scroll_task(total_record, latest_updated_at))
 
             results = await asyncio.gather(*tasks)
 
