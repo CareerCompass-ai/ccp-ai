@@ -74,7 +74,7 @@ class JobRouter:
         is_hiring:  Optional[bool] = Query(True, description="Is hiring"),
         alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)"),
         resume_id: Optional[int] = Query(None, description="Resume id"),
-        db: Session = Depends(PostgresDB.get_db)
+        exclude: Optional[str] = Query(None, description="Exclude job id"),
     ):
         # map query params to req
         try:
@@ -96,12 +96,10 @@ class JobRouter:
                 salary=salary,
                 is_hiring=is_hiring,
                 alpha=alpha,
+                exclude=exclude,
             )
 
             if search_type == "vector": # handle vector search
-                latest_job =  await self.job_repo.get_latest_job(db=db)
-                req.latest_job_id = latest_job.id
-
                 if resume_id is not None: 
                     resume_vector = await self.resume_qdrant_repo.get_resume_vector(resume_id=resume_id)
 
