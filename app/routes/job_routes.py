@@ -560,26 +560,21 @@ class JobRouter:
 
             # Check whether this user applied to this job or not
             resumes = await self.resume_repo.get_by_user_id(db=db, user_id=req.user_id)
-            resume_ids = []
-            for resume in resumes:
-                resume_ids.append(resume.id)
+            resume_ids = [resume.id for resume in resumes]
 
             applications = await self.application_repo.list_by_resume_ids(db=db, resume_ids=resume_ids, job_id=req.job_id)
 
             # Check whether this user saved this job or not
             job_saved = await self.candidate_repo.get_job_saved_by_candidate_id(db=db, user_id=req.user_id, job_id=req.job_id)
 
-            resp = job.CheckAppliedOrSavedResponse()
-
-            if len(applications) > 0:
-                resp.is_applied = True
-
-            if job_saved is not None:
-                resp.is_saved = True
+            resp = job.CheckAppliedOrSavedResponse(
+                is_applied=bool(applications),
+                is_saved=job_saved is not None
+            )
 
             return resp
         except Exception:
             logger.error(f"check_is_saved_or_applied failed error = {traceback.format_exc()}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
 job_router = JobRouter().router
