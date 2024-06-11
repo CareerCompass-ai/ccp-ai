@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.dto import recruiter
+
 from models.ccp_address import Address
 from models.ccp_candidate import Candidate
 from models.ccp_city import City
@@ -10,7 +11,11 @@ from models.ccp_talent_saved import TalentSaved
 from models.ccp_user import User
 
 
-class RecruiterRepository:        
+class RecruiterRepository:      
+    async def get_by_id(self, db:Session, id) -> User:
+        result = db.query().filter(User.id == id).first()
+        return result
+
     async def get_jobs_posted(self, db:Session, id) -> recruiter.ListJobsPostedResponse:
         result =  db.query(Job.id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
                                 Job.salary_from, Job.salary_to, Job.job_type, Job.work_place,

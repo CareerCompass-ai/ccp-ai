@@ -9,7 +9,7 @@ from models.ccp_job import Job
 
 
 class JobRepository:
-    async def get_by_id(self, db:Session, id):
+    async def get_by_id(self, db:Session, id) -> Optional[Job]:
         data = db.query(Job).filter(Job.id == id).first()
         return data
     
