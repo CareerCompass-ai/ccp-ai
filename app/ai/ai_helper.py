@@ -18,6 +18,7 @@ class AI:
         self.completion_model = completion_model
         self.beast_completion_model = constant.OPENAI_BEAST_COMPLETION_MODEL
         self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
+        self.resume_question_and_answering_prompt = constant.RESUME_QUESTION_AND_ANSWERING_PROMPT
         self.minio_repo = MinioRepository()
 
     async def create_assistant(self, file_path, time_from, time_to, max_retries=3):
@@ -239,6 +240,45 @@ class AI:
                     await asyncio.sleep(2)
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
+
+    async def get_resume_answer(self, data, previous_context, question, max_retries=3):
+        retries = 0
+        input_text = "\n".join([str(item) for item in data])
+        
+        prompt = (
+            f"{self.resume_question_and_answering_prompt}"
+            f"Previous conversation:\n"
+            f"{previous_context}\n\n"
+            f"Current data:\n"
+            f"{input_text}\n\n"
+            f"Question:\n"
+            f"{question}\n\n"
+            f"Helpful Answer:"
+        )
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    model=self.beast_completion_model,
+                    # max_tokens=4096,
+                    temperature=0.2
+                )
+                answer = response.choices[0].message.content.strip()
+                return answer
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    await asyncio.sleep(2)
+        logger.info("Exceeded maximum number of retries. Please try again later.")
+        return None
+
 
     async def get_embedding(self, input, max_retries=3):
         retries = 0

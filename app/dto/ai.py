@@ -28,6 +28,14 @@ class JobQnARequest(BaseModel):
 class JobQnAResponse(BaseModel):
     answer: str = ""
 
+class ResumeQnARequest(BaseModel):
+    resume_ids: list[int]
+    question: str = ""
+    prev: list[PreviousContextItem] = []
+
+class ResumeQnAResponse(BaseModel):
+    answer: str = ""
+
 class GenerateAssistantResponse(BaseModel):
     assistant_id: str
     thread_id: str

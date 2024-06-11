@@ -31,6 +31,23 @@ class ResumeQdrantRepository:
         
         return data[0].vector
     
+    async def list_resumes_by_ids(self, resume_ids: list[int]):
+        data = self.client.retrieve(
+            collection_name=self.index_name,
+            ids=resume_ids,
+            with_payload=True,
+            with_vectors=False
+        )
+        records = []
+        for item in data:
+            payload = item.payload
+
+            result = mapper.toResumeDTO(payload)
+
+            records.append(result)
+
+        return records
+
     async def list_resumes(self, input: Optional[resume.ListResumeRequest]) -> resume.ListResumeResponse:
         if input.page <= 0:
             input.page = 1
