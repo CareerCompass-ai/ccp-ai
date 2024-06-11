@@ -15,7 +15,7 @@ class CandidateRepository:
     
     async def get_applied_jobs(self, db:Session, id) -> candidate.ListAppliedJobsResponse:
         applications = db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
-                                     Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Application.created_at, Application.updated_at)\
+                                     Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Job.display_content, Application.created_at, Application.updated_at)\
             .join(Resume, Application.resume_id == Resume.id)\
             .join(Job, Application.job_id == Job.id)\
             .filter(Resume.candidate_id == id)\
@@ -38,6 +38,7 @@ class CandidateRepository:
                     work_place=app.work_place,
                     company_type=app.company_type,
                     hiring_level=app.hiring_level,
+                    display_content=app.display_content,
                     created_at=app.created_at,
                     updated_at=app.updated_at
                 )
@@ -59,7 +60,7 @@ class CandidateRepository:
 
     async def get_saved_jobs(self, db:Session, id) -> candidate.ListSavedJobsResponse:
         jobs = db.query(JobSaved.job_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
-                             Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, JobSaved.created_at, JobSaved.updated_at)\
+                             Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Job.display_content, JobSaved.created_at, JobSaved.updated_at)\
             .join(JobSaved, Job.id == JobSaved.job_id)\
             .filter(JobSaved.candidate_id == id)\
             .order_by(JobSaved.created_at.desc())\
@@ -80,6 +81,7 @@ class CandidateRepository:
                     work_place=job.work_place,
                     company_type=job.company_type,
                     hiring_level=job.hiring_level,
+                    display_content=job.display_content,
                     created_at=job.created_at,
                     updated_at=job.updated_at
                 )
