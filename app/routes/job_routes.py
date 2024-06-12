@@ -394,33 +394,26 @@ class JobRouter:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
     async def close(
-            self,
-            #req: Optional[job.CloseJobRequest], 
-            job_id: int = Form(None),
-            session: Session = Depends(postgres.PostgresDB.get_db)
-        ):
+        self,
+        req: job.CloseJobRequest,
+        session: Session = Depends(postgres.PostgresDB.get_db)
+    ):
         try:
             now = datetime.now()
-
-            #data = job_repo.get_by_id(req.job_id)
-
             props = {
                 "is_hiring": False,
                 'updated_at': now,
                 'closed_date': now,
             }
 
-            session.autocommit = False # TODO: remove this?
-            with session.begin():
-                try:
-                    await self.job_repo.update_with_map(db=session, job_id=job_id, props=props)
-                    return job.CloseJobResponse(message="Closed job succesfully!")
-                    # job_repo.update_with_map(session, data, props)
-
-                except SQLAlchemyError:
-                    session.rollback()
-                    logger.error(f"close_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
-                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+            try:
+                await self.job_repo.update_with_map(db=session, job_id=req.job_id, props=props)
+                
+                return job.CloseJobResponse(message="Closed job successfully!")
+            except SQLAlchemyError:
+                session.rollback()
+                logger.error(f"close_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
                 
         except Exception:
             logger.error(f"close_job failed error = {traceback.format_exc()}")
