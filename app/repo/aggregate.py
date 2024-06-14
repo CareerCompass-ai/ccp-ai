@@ -71,23 +71,24 @@ class Aggregate:
             if user is not None:
                 job_aggregate.recruiter_name = user.first_name + ' ' + user.last_name
 
-        address = await self.address_repo.get_by_id(db=db, id=job.address_id)
-        if address is not None:
+        if job.address_id is not None:
+            address = await self.address_repo.get_by_id(db=db, id=job.address_id)
             job_aggregate.address_id = job.address_id
             
+            #detailed_address is optional, city and country always exist
             city = await self.city_repo.get_by_id(db=db, id=address.city_id)
-            if city is not None:
-                country = await self.country_repo.get_by_id(db=db, id=city.country_id)
-                if country is not None:
-                    detailed_address = address.detailed_address or ""
-                    city_name = city.city_name or ""
-                    country_name = country.country_name or ""
 
-                    address_full = f"{detailed_address}, {city_name}, {country_name}"
+            country = await self.country_repo.get_by_id(db=db, id=city.country_id)
 
-                    job_aggregate.address = address_full
-                    job_aggregate.city_name = city_name
-                    job_aggregate.country_name = country_name
+            address_full = ""
+            if address.detailed_address is not None:
+                address_full = f"{address.detailed_address}, {city.city_name}, {country.country_name}"
+            else:
+                address_full = f"{city.city_name}, {country.country_name}"
+
+            job_aggregate.address = address_full
+            job_aggregate.city_name = city.city_name
+            job_aggregate.country_name = country.country_name
 
         job_tag_list = await self.jobtags_repo.get_jobtags_for_job(db=db, job_id=job_aggregate.id)
         
