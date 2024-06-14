@@ -50,7 +50,10 @@ class Aggregate:
             salary_to=job.salary_to,
             job_type=job.job_type,
             company_type=job.company_type,
-            work_place=job.work_place
+            work_place=job.work_place,
+            display_content=job.display_content,
+            file_name=job.file_name,
+            common_job_title=job.common_job_title
         )
 
         if job.updated_at is not None:
