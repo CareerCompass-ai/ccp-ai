@@ -77,6 +77,9 @@ class Aggregate:
             
         city = await self.city_repo.get_by_id(db=db, id=address.city_id)
         country = await self.country_repo.get_by_id(db=db, id=city.country_id)
+
+        if address.detailed_address is None:
+            address.detailed_address = ""
         address_full = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
         
         job_aggregate.address = address_full
@@ -85,12 +88,13 @@ class Aggregate:
         
         job_tag_list = await self.jobtags_repo.get_jobtags_for_job(db=db, job_id=job_aggregate.id)
         
-        tag_list = []
-        for job_tag in job_tag_list:
-            tag = await self.tag_repo.get_by_id(db=db, id=job_tag.tag_id)
-            tag_list.append(tag.tag_name)
-        
-        job_aggregate.job_tags = tag_list
+        if job_tag_list is not None:
+            tag_list = []
+            for job_tag in job_tag_list:
+                tag = await self.tag_repo.get_by_id(db=db, id=job_tag.tag_id)
+                tag_list.append(tag.tag_name)
+            
+            job_aggregate.job_tags = tag_list
         
         return job_aggregate
     

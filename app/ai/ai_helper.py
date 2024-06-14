@@ -358,7 +358,17 @@ class AI:
     
     async def get_acronyms_and_abbreviation_of_job(self, input:str, max_retries=3) -> str:
         retries = 0
-        prompt = constant.GET_ACRONYMS_AND_ABBREVIATION_PROMPT
+        prompt = """
+            ### Resume: ### {input} ### 
+            Your task is to provide a detailed list of the skills and knowledge in this candidate's resume. 
+            Please answer with the corresponding position. 
+            The response must be a JSON object with a field "answer" and the value as a list/array containing the skills and knowledge in this candidate's resume.
+
+            ## Response Example - a JSON object ##
+            {{
+                "answer": ["Software Engineer", "SWE", "Backend Engineer", "backend", "back-end", "Frontend Engineer", "frontend", "front-end", "Software Developer", "Dev", "Developer", "Frontend Developer", "Web dev", "Web developer", "Backend Developer", "BE", "FE", "Full Stack Developer", "Full-Stack Developer", "fullstack", "full-stack", "FSD", "fsd", "Application Developer", "App Dev"]
+            }}
+        """
         content = prompt.format(input=input)
         while retries < max_retries:
             try:
