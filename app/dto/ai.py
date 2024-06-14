@@ -52,3 +52,7 @@ class AssistantResponse(BaseModel):
 
 class ListAssistantResponse(BaseModel):
     data: List[AssistantResponse]
+
+class GenerateAssistantRequest(BaseModel):
+    time_from: str
+    time_to: str

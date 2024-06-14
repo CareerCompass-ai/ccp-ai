@@ -17,7 +17,7 @@ class RecruiterRouter:
         self.talent_repo = factory.get_talent_saved_repo()
         self.router = APIRouter(prefix="/api", tags=['Recruiter'])
         self.router.add_api_route("/recruiter/jobs-posted", self.list_jobs_posted, methods=["GET"], response_model=recruiter.ListJobsPostedResponse)
-        self.router.add_api_route("/recruiter/update-saved-talent", self.update_saved_talent, methods=["POST"], response_model=recruiter.SaveTalentResponse)
+        self.router.add_api_route("/recruiter/update-saved-talent", self.update_saved_talent, methods=["PUT"], response_model=recruiter.SaveTalentResponse)
         self.router.add_api_route("/recruiter/candidates-saved", self.list_candidates_saved, methods=["GET"], response_model=recruiter.ListTalentSavedResponse)
 
     async def list_jobs_posted(

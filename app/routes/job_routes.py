@@ -48,7 +48,7 @@ class JobRouter:
         self.router.add_api_route("/job", self.get_job_from_qdrant, methods=["GET"], response_model=job.JobAggregate)
         self.router.add_api_route("/job/create", self.create, methods=["POST"], response_model=job.CreateJobPostResponse)
         self.router.add_api_route("/job/apply", self.apply, methods=["POST"], response_model=job.ApplyJobResponse)
-        self.router.add_api_route("/job/close", self.close, methods=["POST"], response_model=job.CloseJobResponse)
+        self.router.add_api_route("/job/close", self.close, methods=["PUT"], response_model=job.CloseJobResponse)
         self.router.add_api_route("/job/update", self.update_job, methods=["PUT"]) # TODO: , response_model=job.UpdateJobResponse
         self.router.add_api_route("/job/{id}/resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
         self.router.add_api_route("/job/check-saved-or-applied", self.check_is_saved_or_applied, methods=["POST"], response_model=job.CheckAppliedOrSavedResponse)

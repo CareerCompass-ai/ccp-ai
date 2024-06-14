@@ -47,12 +47,11 @@ assistant_repo = factory.get_assistant_repo()
 # Assistant
 @ai_router.post("/assistant/generate", response_model=ai.GenerateAssistantResponse)
 async def generate_assistant (
-    time_from: str = Form(None),
-    time_to: str = Form(None),
+    req: ai.GenerateAssistantRequest,
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        _file_name = time_from + '-' + time_to + '.csv'
+        _file_name = req.time_from + '-' + req.time_to + '.csv'
 
         # Check if CSV exist?
         with db.begin():
@@ -72,7 +71,7 @@ async def generate_assistant (
             #Generate CSV
             with db.begin():
                 try: 
-                    await generate_analysis_file(db=db, time_from=time_from, time_to=time_to, file_name=_file_name)
+                    await generate_analysis_file(db=db, time_from=req.time_from, time_to=req.time_to, file_name=_file_name)
 
                 except SQLAlchemyError:
                     db.rollback()
@@ -87,7 +86,7 @@ async def generate_assistant (
         #Create assistant & thread
         #Insert into db
         #Remove all assistant exist??
-        assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name, time_from=time_from, time_to=time_to)
+        assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name, time_from=req.time_from, time_to=req.time_to)
 
         thread_id = await ai_helper.create_thread()
 
