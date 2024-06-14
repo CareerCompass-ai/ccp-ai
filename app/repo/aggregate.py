@@ -44,13 +44,13 @@ class Aggregate:
             hiring_level=job.hiring_level,
             job_title=job.job_title,
             content=job.content,
-            content_url = job.content_url,
-            is_hiring = job.is_hiring,
-            salary_from = job.salary_from,
-            salary_to = job.salary_to,
-            job_type = job.job_type,
-            company_type = job.company_type,
-            work_place = job.work_place
+            content_url=job.content_url,
+            is_hiring=job.is_hiring,
+            salary_from=job.salary_from,
+            salary_to=job.salary_to,
+            job_type=job.job_type,
+            company_type=job.company_type,
+            work_place=job.work_place
         )
 
         if job.updated_at is not None:
@@ -71,28 +71,37 @@ class Aggregate:
             if user is not None:
                 job_aggregate.recruiter_name = user.first_name + ' ' + user.last_name
 
-        address = await self.address_repo.get_by_id(db=db, id=job.address_id)
-        if address is not None:
-            job_aggregate.address_id = job.address_id # TODO: double check
+        if job.address_id is not None:
+            address = await self.address_repo.get_by_id(db=db, id=job.address_id)
+            job_aggregate.address_id = job.address_id
             
-        city = await self.city_repo.get_by_id(db=db, id=address.city_id)
-        country = await self.country_repo.get_by_id(db=db, id=city.country_id)
-        address_full = address.detailed_address + ', ' + city.city_name + ', ' + country.country_name
-        
-        job_aggregate.address = address_full
-        job_aggregate.city_name = city.city_name
-        job_aggregate.country_name = country.country_name
-        
+            #detailed_address is optional, city and country always exist
+            city = await self.city_repo.get_by_id(db=db, id=address.city_id)
+
+            country = await self.country_repo.get_by_id(db=db, id=city.country_id)
+
+            address_full = ""
+            if address.detailed_address is not None:
+                address_full = f"{address.detailed_address}, {city.city_name}, {country.country_name}"
+            else:
+                address_full = f"{city.city_name}, {country.country_name}"
+
+            job_aggregate.address = address_full
+            job_aggregate.city_name = city.city_name
+            job_aggregate.country_name = country.country_name
+
         job_tag_list = await self.jobtags_repo.get_jobtags_for_job(db=db, job_id=job_aggregate.id)
         
         tag_list = []
         for job_tag in job_tag_list:
             tag = await self.tag_repo.get_by_id(db=db, id=job_tag.tag_id)
-            tag_list.append(tag.tag_name)
+            if tag:
+                tag_list.append(tag.tag_name)
         
         job_aggregate.job_tags = tag_list
         
         return job_aggregate
+
     
     async def get_resume(self, db:Session, id: int) -> Optional[ResumeAggregate]:
         resume = await self.resume_repo.get_by_id(db=db, id=id)
