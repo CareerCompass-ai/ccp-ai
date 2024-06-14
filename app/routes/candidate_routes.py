@@ -18,7 +18,7 @@ class CandidateRouter:
         self.resume_repo = factory.get_resume_repo()
         self.router = APIRouter(prefix="/api", tags=['Candidate'])
         self.router.add_api_route("/candidate/applied", self.list_jobs_applied, methods=["GET"], response_model=candidate.ListAppliedJobsResponse)
-        self.router.add_api_route("/candidate/update-saved-job", self.update_saved_job, methods=["POST"], response_model=candidate.UpdateSaveJobResponse)
+        self.router.add_api_route("/candidate/update-saved-job", self.update_saved_job, methods=["PUT"], response_model=candidate.UpdateSaveJobResponse)
         self.router.add_api_route("/candidate/saved-jobs", self.list_jobs_saved, methods=["GET"], response_model=candidate.ListSavedJobsResponse)
         self.router.add_api_route("/resumes", self.list_resume_of_candidate, methods=["GET"], response_model=resume.GetResumesOfCandidateResponse)
 

@@ -69,3 +69,6 @@ class GetResumesOfCandidateResponse(BaseModel):
 
 class DeleteResumeResponse(BaseModel):
     msg: str
+
+class DeleteResumeRequest(BaseModel):
+    resume_id: str

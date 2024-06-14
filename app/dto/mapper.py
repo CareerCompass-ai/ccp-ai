@@ -75,5 +75,6 @@ def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
         certificates=payload["certificates"],
         educations=payload["educations"],
         work_expericences=payload["work_expericences"],
+        resume_link=payload["resume_link"]
     )
 

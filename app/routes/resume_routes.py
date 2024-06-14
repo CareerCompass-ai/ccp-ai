@@ -90,7 +90,7 @@ class ResumeRouter:
 
     async def delete(
         self,
-        resume_id: int = Form(None),
+        req: resume.DeleteResumeRequest,
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
@@ -101,7 +101,7 @@ class ResumeRouter:
                 'updated_at': now,
             }
 
-            await self.resume_repo.update_with_map(db=db, resume_id=resume_id, props=props)
+            await self.resume_repo.update_with_map(db=db, resume_id=req.resume_id, props=props)
             
             #Delete resume in MinIO or not?
             
