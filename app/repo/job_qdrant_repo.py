@@ -25,6 +25,13 @@ class JobQdrantRepository:
     async def list_recommend_jobs(self, input: job.ListRecommendJobRequest) -> List[job.JobAggregate]:
         records = []
 
+        if not input.resume_ids:
+            return job.ListRelatedJobResponse(
+                page=input.page,
+                size=input.size,
+                records=[]
+            )
+
         hits = self.client.recommend(
             collection_name=self.index_name,
             positive=input.resume_ids,
