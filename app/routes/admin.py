@@ -69,19 +69,24 @@ class AdminRouter:
         except Exception:
             logger.error(f"weaviate delete_class failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-
+        
     async def manual_sync_job(self, req: ManualSyncJobRequest, is_authenticated: bool = Depends(authenticate_user), db: Session = Depends(PostgresDB.get_db)):
         try:
             for id in req.ids:
                 job_agg = await self.agg_repo.get_job(db=db, id=id)
-                summarized_content = await self.ai_helper.get_job_summarized(job_agg.content)
-                vector = await self.ai_helper.get_embedding(summarized_content)
-                job_agg.s_content = summarized_content
+                
+                # summarize content
+                summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
 
-                acronyms_and_abbreviations = await self.ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
+                acronyms_and_abbreviations = self.ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
+                if isinstance(acronyms_and_abbreviations, list):
+                    acronyms_and_abbreviations = ", ".join(acronyms_and_abbreviations)
 
-                combined_content = await combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
-                vector = await self.ai_helper.get_embedding(combined_content)
+                # combine content
+                combined_content = combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
+
+                # vectorize the combined content
+                vector = self.ai_helper.get_embedding(combined_content)
 
                 job_agg.s_content = summarized_content
                 job_agg.combined_content = combined_content
