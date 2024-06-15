@@ -17,6 +17,17 @@ from .helper import combine_job_content
 
 security = HTTPBasic()
 
+async def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = config.HTTP_ADMIN_USER_NAME
+    correct_password = config.HTTP_ADMIN_PASSWORD
+    if credentials.username != correct_username or credentials.password != correct_password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Wrong way",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return True
+
 class AdminRouter:
     def __init__(self):
         self.agg_repo = factory.get_aggregate_repo()
@@ -31,17 +42,6 @@ class AdminRouter:
         self.router.add_api_route("/weaviate/create-jobqna-class", self.create_jobqna_class, methods=["POST"])
         self.router.add_api_route("/weaviate/delete-class", self.delete_class, methods=["DELETE"])
         self.router.add_api_route("/manual-sync-job", self.manual_sync_job, methods=["POST"])
-
-    async def authenticate_user(self, credentials: HTTPBasicCredentials = Depends(security)):
-        correct_username = config.HTTP_ADMIN_USER_NAME
-        correct_password = config.HTTP_ADMIN_PASSWORD
-        if credentials.username != correct_username or credentials.password != correct_password:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Wrong way",
-                headers={"WWW-Authenticate": "Basic"},
-            )
-        return True
 
     async def protected_route(self, is_authenticated: bool = Depends(authenticate_user)):
         return {"message": "You are authorized to access this resource"}

@@ -51,4 +51,5 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/ccp-ai:latest
             docker stop ccp-ai || true
             docker rm ccp-ai || true
+            docker images | grep "ccp-ai" | awk '{print $3}' | xargs docker rmi
             docker run --name ccp-ai -d -p 5010:5010 ${{ secrets.DOCKER_USERNAME }}/ccp-ai:latest
