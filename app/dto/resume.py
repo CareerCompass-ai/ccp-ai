@@ -49,6 +49,7 @@ class ListResumeResponse(BaseModel):
 class UploadResumeMinioRequest(BaseModel):
     temp_path: str
     file_name: str
+
 class UploadResumeMinioResponse(BaseModel):
     url: str
 
@@ -71,4 +72,4 @@ class DeleteResumeResponse(BaseModel):
     msg: str
 
 class DeleteResumeRequest(BaseModel):
-    resume_id: str
+    resume_id: int
