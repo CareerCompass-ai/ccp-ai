@@ -48,8 +48,11 @@ jobs:
           port: 22
           script: |
             ssh-keyscan -H ${{ secrets.SERVER }} >> ~/.ssh/known_hosts
-            docker pull ${{ secrets.DOCKER_USERNAME }}/ccp-ai:latest
-            docker stop ccp-ai || true
-            docker rm ccp-ai || true
-            docker images | grep "ccp-ai" | awk '{print $3}' | xargs docker rmi
-            docker run --name ccp-ai -d -p 5010:5010 ${{ secrets.DOCKER_USERNAME }}/ccp-ai:latest
+            if docker pull ${{ secrets.DOCKER_USERNAME }}/ccp-ai:latest; then
+              docker stop ccp-ai || true
+              docker rm ccp-ai || true
+              docker images | grep "ccp-ai" | awk '{print $3}' | xargs docker rmi
+              docker run --name ccp-ai -d -p 5010:5010 ${{ secrets.DOCKER_USERNAME }}/ccp-ai:latest
+            else
+              echo "Docker pull failed, keeping the current container running."
+            fi
