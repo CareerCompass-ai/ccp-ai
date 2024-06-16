@@ -28,6 +28,9 @@ class ResumeQdrantRepository:
             ids=[resume_id],
             with_vectors=True,
         )
+
+        if not data:
+            return []
         
         return data[0].vector
     
