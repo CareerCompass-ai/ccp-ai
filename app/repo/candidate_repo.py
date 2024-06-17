@@ -1,12 +1,16 @@
 from sqlalchemy.orm import Session
 
-from app.dto import candidate
+from app.dto import candidate, recruiter
 from models.ccp_application import Application
 from models.ccp_candidate import Candidate
 from models.ccp_job import Job
 from models.ccp_job_saved import JobSaved
 from models.ccp_resume import Resume
 from models.ccp_viewedjob import ViewedJob
+from models.ccp_user import User
+from models.ccp_address import Address
+from models.ccp_city import City
+from models.ccp_country import Country
 
 
 class CandidateRepository:      
@@ -107,3 +111,31 @@ class CandidateRepository:
             )
 
         return result
+
+    async def get_detail(self, db:Session, id) -> recruiter.TalentSavedResponse:
+        result = db.query(Candidate.id, Candidate.year_of_experience, Candidate.open_to_work, Candidate.self_introduction, Candidate.level,
+                               User.email, User.phone, User.first_name, User.last_name, User.work_title, User.gender, User.dob,
+                               Address.detailed_address, City.city_name, Country.country_name) \
+                            .join(User, Candidate.id == User.id)\
+                            .outerjoin(Address, User.address_id == Address.id)\
+                            .outerjoin(City, Address.city_id == City.id)\
+                            .outerjoin(Country, City.country_id == Country.id)\
+                            .filter(Candidate.id == id)\
+                            .first()
+        return recruiter.TalentSavedResponse(
+                    candidate_id = result.id,
+                    year_of_experience = result.year_of_experience,
+                    open_to_work = result.open_to_work,
+                    self_introduction = result.self_introduction,
+                    level = result.level,
+                    email = result.email,
+                    phone = result.phone,
+                    first_name = result.first_name,
+                    last_name = result.last_name,
+                    work_title = result.work_title,
+                    gender = result.gender,
+                    dob = result.dob,
+                    detailed_address = result.detailed_address,
+                    city_name = result.city_name,
+                    country_name = result.country_name
+        )

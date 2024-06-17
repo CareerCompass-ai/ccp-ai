@@ -3,6 +3,10 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
+from app.dto.project import ProjectBase
+from app.dto.certificate import CertificateBase
+from app.dto.education import EducationBase
+from app.dto.work_experience import WorkExperienceBase
 
 class JobPostedResponse(BaseModel):
     job_id: int
@@ -49,6 +53,12 @@ class TalentSavedResponse(BaseModel):
     detailed_address: Optional[str] = None
     city_name: Optional[str] = None
     country_name: Optional[str] = None
+    projects: Optional[List[ProjectBase]] = None
+    certificates: Optional[List[CertificateBase]] = None
+    educations: Optional[List[EducationBase]] = None
+    work_experiences: Optional[List[WorkExperienceBase]] = None
 
 class ListTalentSavedResponse(BaseModel):
     records: List[TalentSavedResponse]
+class ListCandidateResponse(BaseModel):
+    ids: List[int]

@@ -21,6 +21,10 @@ from app.repo.resume_repo import ResumeRepository
 from app.repo.tag_repo import TagRepository
 from app.repo.talent_saved_repo import TalentSavedRepository
 from producer.producer import KafkaProducer
+from app.repo.project_repo import ProjectRepository
+from app.repo.education_repo import EducationRepository
+from app.repo.certificate_repo import CertificateRepository
+from app.repo.work_experience_repo import WorkExperienceRepository
 
 
 class RepositoryFactory:
@@ -67,6 +71,22 @@ class RepositoryFactory:
     @staticmethod
     def get_city_repo():
         return CityRepository()
+    
+    @staticmethod
+    def get_project_repo():
+        return ProjectRepository()
+    
+    @staticmethod
+    def get_education_repo():
+        return EducationRepository()
+    
+    @staticmethod
+    def get_certificate_repo():
+        return CertificateRepository()
+    
+    @staticmethod
+    def get_work_experience_repo():
+        return WorkExperienceRepository()
     
     @staticmethod
     def get_analysis_repo():
