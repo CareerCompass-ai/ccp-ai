@@ -71,8 +71,8 @@ class RecruiterRouter:
         try:
             _candidate = await self.recruiter_repo.get_talents_saved(db=db, id=recruiter_id)
             record = []
-            for candidate in _candidate:
-                _detail_info = await self.candidate_repo.get_detail(db=db, id=candidate[1][0])
+            for candidate in _candidate.ids:
+                _detail_info = await self.candidate_repo.get_detail(db=db, id=candidate)
                 detail_info = recruiter.TalentSavedResponse(
                     candidate_id = _detail_info.candidate_id,
                     year_of_experience = _detail_info.year_of_experience,
@@ -91,10 +91,10 @@ class RecruiterRouter:
                     country_name = _detail_info.country_name
                 )
 
-                _projects = await self.project_repo.list_by_candidate_id(db=db, candidate_id=candidate[1][0])
-                _certificate = await self.certificate_repo.list_by_candidate_id(db=db, candidate_id=candidate[1][0])
-                _education = await self.education_repo.list_by_candidate_id(db=db, candidate_id=candidate[1][0])
-                _work_exp = await self.work_experience_repo.list_by_candidate_id(db=db, candidate_id=candidate[1][0])
+                _projects = await self.project_repo.list_by_candidate_id(db=db, candidate_id=candidate)
+                _certificate = await self.certificate_repo.list_by_candidate_id(db=db, candidate_id=candidate)
+                _education = await self.education_repo.list_by_candidate_id(db=db, candidate_id=candidate)
+                _work_exp = await self.work_experience_repo.list_by_candidate_id(db=db, candidate_id=candidate)
 
                 detail_info.projects = _projects
                 detail_info.certificates = _certificate
