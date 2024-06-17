@@ -442,19 +442,20 @@ class JobRouter:
         try:
             now = datetime.now()
             
-            #Remove jobtags
-            await self.jobtag_repo.delete_jobtags(db=session, job_id=job_id)
-            #Update jobtags
-            with session.begin():
-                try:
-                    tags = tags.split(',')
-                    for tag_id in tags:
-                        await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
-                
-                except IntegrityError:
-                    session.rollback()
-                    logger.error(f"create jobtags failed error [IntegrityError] = {traceback.format_exc()}")
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jobtags create failed.")
+            if tags is not None:
+                #Remove jobtags
+                await self.jobtag_repo.delete_jobtags(db=session, job_id=job_id)
+                #Update jobtags
+                with session.begin():
+                    try:
+                        tags = tags.split(',')
+                        for tag_id in tags:
+                            await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
+                    
+                    except IntegrityError:
+                        session.rollback()
+                        logger.error(f"create jobtags failed error [IntegrityError] = {traceback.format_exc()}")
+                        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jobtags create failed.")
 
 
             #Update address
@@ -509,6 +510,15 @@ class JobRouter:
 
                 #Get content from pdf
                 pdf_file = BytesIO(file_content)
+
+                pdf_document = fitz.open(stream=pdf_file, filetype="pdf")
+
+                markdown_content = pymupdf4llm.to_markdown(pdf_document)
+
+                markdown_content = markdown_content.replace('\n--\n', '\n')
+                markdown_content = re.sub(r'\n-+\n', '\n', markdown_content)
+                
+                props["display_content"] = markdown_content
 
                 pdf_reader = PyPDF2.PdfReader(pdf_file)
 
