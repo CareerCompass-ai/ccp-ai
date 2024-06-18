@@ -11,7 +11,7 @@ class TalentSavedRepository:
         return record
     
     async def delete_saved_talent(self, db:Session, record: TalentSaved) -> TalentSaved:
-        db.query(TalentSaved).filter_by(candidate_id = record.candidate_id, recruiter_id = record.recruiter_id).delete()
+        db.query(TalentSaved).filter_by(candidate_id = record.candidate_id, recruiter_id = record.recruiter_id, resume_id = record.resume_id).delete()
         db.commit()
 
         return record
