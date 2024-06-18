@@ -49,7 +49,7 @@ class JobRouter:
         self.router.add_api_route("/job/create", self.create, methods=["POST"], response_model=job.CreateJobPostResponse)
         self.router.add_api_route("/job/apply", self.apply, methods=["POST"], response_model=job.ApplyJobResponse)
         self.router.add_api_route("/job/close", self.close, methods=["PUT"], response_model=job.CloseJobResponse)
-        self.router.add_api_route("/job/update", self.update_job, methods=["PUT"]) # TODO: , response_model=job.UpdateJobResponse
+        self.router.add_api_route("/job/update", self.update_job, methods=["PUT"], response_model=job.UpdateJobResponse)
         self.router.add_api_route("/job/{id}/resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
         self.router.add_api_route("/job/check-saved-or-applied", self.check_is_saved_or_applied, methods=["POST"], response_model=job.CheckAppliedOrSavedResponse)
 
@@ -441,10 +441,9 @@ class JobRouter:
     ):
         try:
             now = datetime.now()
-            
+            #Remove jobtags
+            await self.jobtag_repo.delete_jobtags(db=session, job_id=job_id)
             if tags is not None:
-                #Remove jobtags
-                await self.jobtag_repo.delete_jobtags(db=session, job_id=job_id)
                 #Update jobtags
                 with session.begin():
                     try:
@@ -537,6 +536,8 @@ class JobRouter:
 
                 #update job
                 await self.job_repo.update_with_map(db=session, job_id=job_id, props=props)
+
+                return job.UpdateJobResponse(message="Update successfully!")
 
             except SQLAlchemyError:
                 session.rollback()
