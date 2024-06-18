@@ -28,6 +28,7 @@ class ListJobsPostedResponse(BaseModel):
 class SaveTalentRequest(BaseModel):
     recruiter_id: int
     candidate_id: int
+    resume_id: int
     type: int #1: save, 2: unsave
 
 class SaveTalentResponse(BaseModel):
