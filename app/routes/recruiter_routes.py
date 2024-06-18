@@ -42,6 +42,7 @@ class RecruiterRouter:
             record = TalentSaved(
                 recruiter_id=req.recruiter_id,
                 candidate_id=req.candidate_id,
+                resume_id=req.resume_id,
                 created_at=now,
                 updated_at=now
             )

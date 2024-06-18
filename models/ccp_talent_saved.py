@@ -9,6 +9,7 @@ class TalentSaved(Base):
     __tablename__ = "ccp_talent_saved"
     candidate_id = Column(Integer, primary_key=True, nullable=False)
     recruiter_id = Column(Integer, primary_key=True, nullable=False)
+    resume_id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
 
