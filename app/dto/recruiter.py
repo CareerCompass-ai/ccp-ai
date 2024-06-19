@@ -9,12 +9,15 @@ class JobPostedResponse(BaseModel):
     job_id: int
     job_title: Optional[str] = None
     content: Optional[str] = ""
+    s_content: Optional[str] = ""
     is_hiring: Optional[bool] = None
     opened_date: Optional[datetime] = None
     closed_date: Optional[datetime] = None
     salary_from: Optional[float] = 0.0
     salary_to: Optional[float] = 0.0
+    address: Optional[str] = ""
     job_type: Optional[str] = ""
+    job_tags: List[str] = ""
     work_place: Optional[str] = ""
     company_type: Optional[str] = ""
     hiring_level: Optional[str] = ""
@@ -22,6 +25,7 @@ class JobPostedResponse(BaseModel):
     updated_at: Optional[datetime] = None
     applied_count: int
     display_content: Optional[str] = ""
+    url: str
 
 class ListJobsPostedResponse(BaseModel):
     records: List[JobPostedResponse]
@@ -52,9 +56,5 @@ class GetTalentSavedResponse(BaseModel):
     certificates: List[CertificateBase] = None
     educations: List[EducationBase] = None
     work_expericences: List[WorkExperienceBase] = None
-
-class ListIdTalentSavedResponse(BaseModel):
-    ids: List[int]
-
 class ListTalentSavedResponse(BaseModel):
     records: List[GetTalentSavedResponse]

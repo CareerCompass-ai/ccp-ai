@@ -16,6 +16,7 @@ class RecruiterRouter:
         self.recruiter_repo = factory.get_recruiter_repo()
         self.resume_qdrant_repo = factory.get_resume_qdrant_repo()
         self.talent_repo = factory.get_talent_saved_repo()
+        self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.router = APIRouter(prefix="/api", tags=['Recruiter'])
         self.router.add_api_route("/recruiter/jobs-posted", self.list_jobs_posted, methods=["GET"], response_model=recruiter.ListJobsPostedResponse)
         self.router.add_api_route("/recruiter/update-saved-talent", self.update_saved_talent, methods=["PUT"], response_model=recruiter.SaveTalentResponse)
@@ -35,7 +36,9 @@ class RecruiterRouter:
                 size = 10
             if size >= 100:
                 size = 100
-            data = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, page=page, size=size)
+            job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, page=page, size=size)
+            print(job_ids)
+            data = await self.job_qdrant_repo.list_jobs_posted(ids=job_ids)
             return data
         except Exception:
             logger.error(f"list_jobs_posted failed error = {traceback.format_exc()}")
@@ -76,14 +79,17 @@ class RecruiterRouter:
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
-            offset = (page - 1) * size
+            if page <= 0:
+                page = 1
+            if size <= 0:
+                size = 10
+            if size >= 100:
+                size = 100
 
             #Return list of ids order by created_at desc
-            resume_ids = await self.recruiter_repo.get_talents_saved(db=db, id=recruiter_id)
+            resume_ids = await self.recruiter_repo.get_talents_saved(db=db, id=recruiter_id, page=page, size=size)
 
-            paginated_list = resume_ids.ids[offset:offset + size]
-
-            data = await self.resume_qdrant_repo.list_saved_resumes_by_ids(resume_ids=paginated_list)
+            data = await self.resume_qdrant_repo.list_saved_resumes_by_ids(resume_ids=resume_ids)
             return data
         except Exception:
             logger.error(f"list_candidates_saved failed error = {traceback.format_exc()}")
