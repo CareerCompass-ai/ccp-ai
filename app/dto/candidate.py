@@ -6,25 +6,37 @@ from pydantic import BaseModel
 
 class AppliedJobsResponse(BaseModel):
     job_id: int
-    resume_id: int
-    job_title: str
+    job_title: Optional[str] = None
     content: Optional[str] = ""
+    s_content: Optional[str] = ""
     is_hiring: Optional[bool] = None
     opened_date: Optional[datetime] = None
     closed_date: Optional[datetime] = None
     salary_from: Optional[float] = 0.0
     salary_to: Optional[float] = 0.0
+    address: Optional[str] = ""
     job_type: Optional[str] = ""
+    job_tags: List[str] = ""
     work_place: Optional[str] = ""
     company_type: Optional[str] = ""
     hiring_level: Optional[str] = ""
-    display_content: Optional[str] = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    applied_count: int
+    display_content: Optional[str] = ""
+    job_url: str
+    resume_id: int
+    resume_url: str
 
 class ListAppliedJobsResponse(BaseModel):
     records: List[AppliedJobsResponse] = None
 
+class ResumesAppliedResponse(BaseModel):
+    job_id: int
+    resume_id: int
+    resume_url: str
+class ListResumesAppliedResponse(BaseModel):
+    records: List[ResumesAppliedResponse]
 class UpdateSaveJobRequest(BaseModel):
     candidate_id: int
     job_id: int

@@ -8,45 +8,30 @@ from models.ccp_job_saved import JobSaved
 from models.ccp_resume import Resume
 from models.ccp_viewedjob import ViewedJob
 
-
+from typing import List
 class CandidateRepository:      
     async def get_by_id(self, db:Session, id):
         return db.query(Candidate).filter(Candidate.id == id).first()
     
-    async def get_applied_jobs(self, db:Session, id) -> candidate.ListAppliedJobsResponse:
-        applications = db.query(Application.job_id, Application.resume_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
-                                     Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Job.display_content, Application.created_at, Application.updated_at)\
+    async def get_applied_jobs(self, db:Session, id, page, size) -> candidate.ListResumesAppliedResponse:
+        offset = (page - 1) * size
+        applications = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
             .join(Resume, Application.resume_id == Resume.id)\
-            .join(Job, Application.job_id == Job.id)\
             .filter(Resume.candidate_id == id)\
             .order_by(Application.created_at.desc())\
+            .offset(offset)\
+            .limit(size)\
             .all()
         records = []
         for app in applications:
             records.append(
-                candidate.AppliedJobsResponse(
+                candidate.ResumesAppliedResponse(
                     job_id=app.job_id,
                     resume_id=app.resume_id,
-                    job_title=app.job_title,
-                    content=app.content,
-                    is_hiring=app.is_hiring,
-                    opened_date=app.opened_date,
-                    closed_date=app.closed_date,
-                    salary_from=app.salary_from,
-                    salary_to=app.salary_to,
-                    job_type=app.job_type,
-                    work_place=app.work_place,
-                    company_type=app.company_type,
-                    hiring_level=app.hiring_level,
-                    display_content=app.display_content,
-                    created_at=app.created_at,
-                    updated_at=app.updated_at
+                    resume_url=app.resume_link
                 )
             )
-
-        return candidate.ListAppliedJobsResponse(
-            records=records
-        )
+        return candidate.ListResumesAppliedResponse(records=records)
     
     async def create_saved_job(self, db:Session, record: JobSaved) -> JobSaved:
         db.add(record)

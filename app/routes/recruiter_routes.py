@@ -37,7 +37,6 @@ class RecruiterRouter:
             if size >= 100:
                 size = 100
             job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, page=page, size=size)
-            print(job_ids)
             data = await self.job_qdrant_repo.list_jobs_posted(ids=job_ids)
             return data
         except Exception:
