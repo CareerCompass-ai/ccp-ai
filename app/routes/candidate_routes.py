@@ -70,9 +70,23 @@ class CandidateRouter:
             logger.error(f"update_saved_job failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
-    async def list_jobs_saved(self, candidate_id: Optional[int] = Query(None, description="Candidate/User ID"), db: Session = Depends(PostgresDB.get_db)):
+    async def list_jobs_saved(
+            self, 
+            candidate_id: Optional[int] = Query(None, description="Candidate/User ID"), 
+            page: int = Query(None, description="Page"),
+            size: int = Query(None, description="Size"),
+            db: Session = Depends(PostgresDB.get_db)):
         try:
-            data = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id)
+            if page <= 0:
+                page = 1
+            if size <= 0:
+                size = 10
+            if size >= 100:
+                size = 100
+
+            job_ids = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id, page=page, size=size)
+            
+            data = await self.job_qdrant_repo.list_jobs_saved(job_ids)
             return data
         except Exception:
             logger.error(f"list_jobs_saved failed error = {traceback.format_exc()}")

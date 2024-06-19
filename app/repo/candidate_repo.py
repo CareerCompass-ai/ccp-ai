@@ -43,38 +43,20 @@ class CandidateRepository:
         db.query(JobSaved).filter_by(candidate_id=record.candidate_id, job_id=record.job_id).delete()
         db.commit()
 
-    async def get_saved_jobs(self, db:Session, id) -> candidate.ListSavedJobsResponse:
-        jobs = db.query(JobSaved.job_id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
-                             Job.salary_from, Job.salary_to, Job.job_type, Job.work_place, Job.company_type, Job.hiring_level, Job.display_content, JobSaved.created_at, JobSaved.updated_at)\
-            .join(JobSaved, Job.id == JobSaved.job_id)\
+    async def get_saved_jobs(self, db:Session, id, page, size) -> List[int]:
+
+        offset = (page - 1) * size
+        jobs = db.query(JobSaved.job_id)\
             .filter(JobSaved.candidate_id == id)\
             .order_by(JobSaved.created_at.desc())\
+            .offset(offset)\
+            .limit(size)\
             .all()
         records = []
         for job in jobs:
-            records.append(
-                candidate.SavedJobsResponse(
-                    job_id=job.job_id,
-                    job_title=job.job_title,
-                    content=job.content,
-                    is_hiring=job.is_hiring,
-                    opened_date=job.opened_date,
-                    closed_date=job.closed_date,
-                    salary_from=job.salary_from,
-                    salary_to=job.salary_to,
-                    job_type=job.job_type,
-                    work_place=job.work_place,
-                    company_type=job.company_type,
-                    hiring_level=job.hiring_level,
-                    display_content=job.display_content,
-                    created_at=job.created_at,
-                    updated_at=job.updated_at
-                )
-            )
+            records.append(job.job_id)
         
-        return candidate.ListSavedJobsResponse(
-            records=records
-        )
+        return records
     
     # TODO: Refactor this file
     async def get_job_saved_by_candidate_id(self, db:Session, user_id, job_id) -> JobSaved:
