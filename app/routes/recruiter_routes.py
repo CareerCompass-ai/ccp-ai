@@ -23,10 +23,18 @@ class RecruiterRouter:
     async def list_jobs_posted(
         self,
         recruiter_id: int = Query(None, description="recruiter ID"),
+        page: int = Query(None, description="Page"),
+        size: int = Query(None, description="Size"),
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
-            data = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id)
+            if page <= 0:
+                page = 1
+            if size <= 0:
+                size = 10
+            if size >= 100:
+                size = 100
+            data = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, page=page, size=size)
             return data
         except Exception:
             logger.error(f"list_jobs_posted failed error = {traceback.format_exc()}")

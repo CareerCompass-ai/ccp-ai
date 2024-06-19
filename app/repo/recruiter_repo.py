@@ -16,10 +16,20 @@ class RecruiterRepository:
         result = db.query().filter(User.id == id).first()
         return result
 
-    async def get_jobs_posted(self, db:Session, id) -> recruiter.ListJobsPostedResponse:
-        result =  db.query(Job.id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
-                                Job.salary_from, Job.salary_to, Job.job_type, Job.work_place,
-                                 Job.company_type, Job.hiring_level, Job.created_at, Job.updated_at, Job.applied_count, Job.display_content).filter(Job.recruiter_id == id).all()
+    async def get_jobs_posted(self, db:Session, id, page, size) -> recruiter.ListJobsPostedResponse:
+        offset = (page - 1) * size
+        result = db.query(
+            Job.id, Job.job_title, Job.content, Job.is_hiring, Job.opened_date, Job.closed_date, 
+            Job.salary_from, Job.salary_to, Job.job_type, Job.work_place,
+            Job.company_type, Job.hiring_level, Job.created_at, Job.updated_at, Job.applied_count, Job.display_content
+        ).filter(
+            Job.recruiter_id == id
+        ).order_by(Job.created_at.desc()
+        ).offset(
+            offset
+        ).limit(
+            size
+        ).all()
         record = []
         for job in result:
             record.append(
