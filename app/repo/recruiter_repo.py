@@ -56,38 +56,13 @@ class RecruiterRepository:
         return recruiter.ListJobsPostedResponse (records=record)
 
     
-    async def get_talents_saved(self, db:Session, id) -> recruiter.ListTalentSavedResponse:
-        result = db.query(TalentSaved.candidate_id, Candidate.year_of_experience, Candidate.open_to_work, Candidate.self_introduction, Candidate.level,
-                               User.email, User.phone, User.first_name, User.last_name, User.work_title, User.gender, User.dob,
-                               Address.detailed_address, City.city_name, Country.country_name) \
-                            .join(Candidate, TalentSaved.candidate_id == Candidate.id)\
-                            .join(User, Candidate.id == User.id)\
-                            .join(Address, User.address_id == Address.id)\
-                            .join(City, Address.city_id == City.id)\
-                            .join(Country, City.country_id == Country.id)\
+    async def get_talents_saved(self, db:Session, id) -> recruiter.ListIdTalentSavedResponse:
+        result = db.query(TalentSaved.resume_id)\
                             .filter(TalentSaved.recruiter_id == id)\
+                            .order_by(TalentSaved.created_at.desc())\
                             .all()
         record = []
         for item in result:
-            record.append(
-                recruiter.TalentSavedResponse(
-                    candidate_id=item.candidate_id,
-                    year_of_experience=item.year_of_experience,
-                    open_to_work=item.open_to_work,
-                    self_introduction=item.self_introduction,
-                    level=item.level,
-                    email=item.email,
-                    phone=item.phone,
-                    first_name=item.first_name,
-                    last_name=item.last_name,
-                    work_title=item.work_title,
-                    gender=item.gender,
-                    dob=item.dob,
-                    detailed_address=item.detailed_address,
-                    city_name=item.city_name,
-                    country_name=item.country_name
-                )
-            )
-        
-        return recruiter.ListTalentSavedResponse(records=record)
+            record.append(item.resume_id)
+        return recruiter.ListIdTalentSavedResponse(ids=record)
     
