@@ -16,15 +16,34 @@ class CandidateRouter:
     def __init__(self):
         self.candidate_repo = factory.get_candidate_repo()
         self.resume_repo = factory.get_resume_repo()
+        self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.router = APIRouter(prefix="/api", tags=['Candidate'])
         self.router.add_api_route("/candidate/applied", self.list_jobs_applied, methods=["GET"], response_model=candidate.ListAppliedJobsResponse)
         self.router.add_api_route("/candidate/update-saved-job", self.update_saved_job, methods=["PUT"], response_model=candidate.UpdateSaveJobResponse)
         self.router.add_api_route("/candidate/saved-jobs", self.list_jobs_saved, methods=["GET"], response_model=candidate.ListSavedJobsResponse)
         self.router.add_api_route("/resumes", self.list_resume_of_candidate, methods=["GET"], response_model=resume.GetResumesOfCandidateResponse)
 
-    async def list_jobs_applied(self, candidate_id: Optional[int] = Query(None, description="Candidate/User ID"), db: Session = Depends(PostgresDB.get_db)):
+    async def list_jobs_applied(
+            self, 
+            candidate_id: int = Query(None, description="Candidate/User ID"), 
+            page: int = Query(None, description="Page"),
+            size: int = Query(None, description="Size"),
+            db: Session = Depends(PostgresDB.get_db)):
         try:
-            data = await self.candidate_repo.get_applied_jobs(db=db, id=candidate_id)
+            if page <= 0:
+                page = 1
+            if size <= 0:
+                size = 10
+            if size >= 100:
+                size = 100
+
+            res = await self.candidate_repo.get_applied_jobs(db=db, id=candidate_id, page=page, size=size)
+
+            job_records = res.model_dump()
+            
+            job_ids = [record['job_id'] for record in job_records['records']]
+
+            data = await self.job_qdrant_repo.list_jobs_applied(job_ids, job_records['records'])
             return data
         except Exception:
             logger.error(f"list_jobs_applied failed error = {traceback.format_exc()}")
@@ -51,9 +70,23 @@ class CandidateRouter:
             logger.error(f"update_saved_job failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
-    async def list_jobs_saved(self, candidate_id: Optional[int] = Query(None, description="Candidate/User ID"), db: Session = Depends(PostgresDB.get_db)):
+    async def list_jobs_saved(
+            self, 
+            candidate_id: Optional[int] = Query(None, description="Candidate/User ID"), 
+            page: int = Query(None, description="Page"),
+            size: int = Query(None, description="Size"),
+            db: Session = Depends(PostgresDB.get_db)):
         try:
-            data = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id)
+            if page <= 0:
+                page = 1
+            if size <= 0:
+                size = 10
+            if size >= 100:
+                size = 100
+
+            job_ids = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id, page=page, size=size)
+            
+            data = await self.job_qdrant_repo.list_jobs_saved(job_ids)
             return data
         except Exception:
             logger.error(f"list_jobs_saved failed error = {traceback.format_exc()}")
