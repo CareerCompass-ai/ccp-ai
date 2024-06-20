@@ -7,6 +7,12 @@ from app.dto.job import JobAggregate
 class AppliedJobsResponse(JobAggregate):
     resume_id: int
     resume_url: str
+
+class ListAppliedJobsResponse(BaseModel):
+    count: int
+    page: int
+    size: int
+    records: List[AppliedJobsResponse]
 class ResumesAppliedResponse(BaseModel):
     job_id: int
     resume_id: int
@@ -28,3 +34,9 @@ class JobViewdResponse(BaseModel):
     job_id: Optional[int] = None
     candidate_id: Optional[int] = None
     time: Optional[datetime] = None
+
+class ListJobsSaved(BaseModel):
+    count: int
+    page: int
+    size: int
+    records: List[JobAggregate]
