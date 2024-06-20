@@ -614,7 +614,7 @@ class JobQdrantRepository:
             dynamic_filters=dynamic_filters_obj
         )
 
-    async def list_jobs_applied(self, job_ids: List[int], job_records: List[dict]) -> List[candidate.AppliedJobsResponse]:
+    async def list_jobs_applied(self, job_ids: List[int], resume_ids: List[int], resume_urls: List[str]) -> List[candidate.AppliedJobsResponse]:
         records = self.client.retrieve(
             collection_name=self.index_name,
             ids=job_ids,
@@ -622,4 +622,4 @@ class JobQdrantRepository:
             with_payload=True
         )
 
-        return [mapper.toAppliedJobDTO(record.payload, item.get("resume_id"), item.get("resume_url")) for record, item in zip(records, job_records)]
+        return [mapper.toAppliedJobDTO(record.payload, resume_id, resume_url) for record, resume_id, resume_url in zip(records, resume_ids, resume_urls)]

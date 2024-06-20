@@ -18,9 +18,9 @@ class CandidateRouter:
         self.resume_repo = factory.get_resume_repo()
         self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.router = APIRouter(prefix="/api", tags=['Candidate'])
-        self.router.add_api_route("/candidate/applied", self.list_jobs_applied, methods=["GET"], response_model=List[candidate.AppliedJobsResponse])
+        self.router.add_api_route("/candidate/applied", self.list_jobs_applied, methods=["GET"], response_model=candidate.ListAppliedJobsResponse)
         self.router.add_api_route("/candidate/update-saved-job", self.update_saved_job, methods=["PUT"], response_model=candidate.UpdateSaveJobResponse)
-        self.router.add_api_route("/candidate/saved-jobs", self.list_jobs_saved, methods=["GET"], response_model=List[job.JobAggregate])
+        self.router.add_api_route("/candidate/saved-jobs", self.list_jobs_saved, methods=["GET"], response_model=candidate.ListJobsSaved)
         self.router.add_api_route("/resumes", self.list_resume_of_candidate, methods=["GET"], response_model=resume.GetResumesOfCandidateResponse)
 
     async def list_jobs_applied(
@@ -30,21 +30,41 @@ class CandidateRouter:
             size: int = Query(None, description="Size"),
             db: Session = Depends(PostgresDB.get_db)):
         try:
-            if page <= 0:
+            if page is None or page <= 0:
                 page = 1
-            if size <= 0:
+            if size is None or size <= 0:
                 size = 10
             if size >= 100:
                 size = 100
 
-            res = await self.candidate_repo.get_applied_jobs(db=db, id=candidate_id, page=page, size=size)
+            _response = await self.candidate_repo.get_applied_jobs(db=db, id=candidate_id)
 
-            job_records = res.model_dump()
+            response = _response.model_dump().get('records')
             
-            job_ids = [record['job_id'] for record in job_records['records']]
+            job_ids = []
+            resume_ids = []
+            resume_urls = []
 
-            data = await self.job_qdrant_repo.list_jobs_applied(job_ids, job_records['records'])
-            return data
+            for record in response:
+                job_ids.append(record['job_id'])
+                resume_ids.append(record['resume_id'])
+                resume_urls.append(record['resume_url'])
+
+            total_records = len(job_ids)
+
+            offset = (page - 1) * size
+
+            paged_job_ids = job_ids[offset:offset + size]
+            paged_resume_ids = resume_ids[offset:offset + size]
+            paged_resume_urls = resume_urls[offset:offset + size]
+
+            data = await self.job_qdrant_repo.list_jobs_applied(paged_job_ids, paged_resume_ids, paged_resume_urls)
+            return candidate.ListAppliedJobsResponse(
+                count=total_records,
+                page=page,
+                size=size,
+                records=data
+            )
         except Exception:
             logger.error(f"list_jobs_applied failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
@@ -84,10 +104,21 @@ class CandidateRouter:
             if size >= 100:
                 size = 100
 
-            job_ids = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id, page=page, size=size)
+            job_ids = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id)
+
+            total_records = len(job_ids)
+
+            offset = (page - 1) * size
+
+            paging_list = job_ids[offset:offset+size]
             
-            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=job_ids)
-            return data
+            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=paging_list)
+            return candidate.ListJobsSaved(
+                count=total_records,
+                page=page,
+                size=size,
+                records=data
+            )
         except Exception:
             logger.error(f"list_jobs_saved failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
