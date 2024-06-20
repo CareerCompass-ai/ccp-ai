@@ -1,11 +1,11 @@
 import traceback
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.dto import candidate, resume
+from app.dto import candidate, resume, job
 from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from models.ccp_job_saved import JobSaved
@@ -18,9 +18,9 @@ class CandidateRouter:
         self.resume_repo = factory.get_resume_repo()
         self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.router = APIRouter(prefix="/api", tags=['Candidate'])
-        self.router.add_api_route("/candidate/applied", self.list_jobs_applied, methods=["GET"], response_model=candidate.ListAppliedJobsResponse)
+        self.router.add_api_route("/candidate/applied", self.list_jobs_applied, methods=["GET"], response_model=List[candidate.AppliedJobsResponse])
         self.router.add_api_route("/candidate/update-saved-job", self.update_saved_job, methods=["PUT"], response_model=candidate.UpdateSaveJobResponse)
-        self.router.add_api_route("/candidate/saved-jobs", self.list_jobs_saved, methods=["GET"], response_model=candidate.ListSavedJobsResponse)
+        self.router.add_api_route("/candidate/saved-jobs", self.list_jobs_saved, methods=["GET"], response_model=List[job.JobAggregate])
         self.router.add_api_route("/resumes", self.list_resume_of_candidate, methods=["GET"], response_model=resume.GetResumesOfCandidateResponse)
 
     async def list_jobs_applied(
@@ -86,7 +86,7 @@ class CandidateRouter:
 
             job_ids = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id, page=page, size=size)
             
-            data = await self.job_qdrant_repo.list_jobs_saved(job_ids)
+            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=job_ids)
             return data
         except Exception:
             logger.error(f"list_jobs_saved failed error = {traceback.format_exc()}")
