@@ -16,17 +16,12 @@ class RecruiterRepository:
         result = db.query().filter(User.id == id).first()
         return result
 
-    async def get_jobs_posted(self, db:Session, id, page, size) -> List[int]:
-        offset = (page - 1) * size
+    async def get_jobs_posted(self, db:Session, id) -> List[int]:
         result = db.query(
             Job.id
         ).filter(
             Job.recruiter_id == id
         ).order_by(Job.created_at.desc()
-        ).offset(
-            offset
-        ).limit(
-            size
         ).all()
         records = []
         for job in result:
@@ -35,13 +30,10 @@ class RecruiterRepository:
         return records
 
     
-    async def get_talents_saved(self, db:Session, id, page, size) -> List[int]:
-        offset = (page - 1) * size
+    async def get_talents_saved(self, db:Session, id) -> List[int]:
         result = db.query(TalentSaved.resume_id)\
                             .filter(TalentSaved.recruiter_id == id)\
                             .order_by(TalentSaved.created_at.desc())\
-                            .offset(offset)\
-                            .limit(size)\
                             .all()
         record = []
         for item in result:

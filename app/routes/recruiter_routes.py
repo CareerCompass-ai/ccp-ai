@@ -18,9 +18,9 @@ class RecruiterRouter:
         self.talent_repo = factory.get_talent_saved_repo()
         self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.router = APIRouter(prefix="/api", tags=['Recruiter'])
-        self.router.add_api_route("/recruiter/jobs-posted", self.list_jobs_posted, methods=["GET"], response_model=List[job.JobAggregate])
+        self.router.add_api_route("/recruiter/jobs-posted", self.list_jobs_posted, methods=["GET"], response_model=recruiter.ListJobsPostedAggregate)
         self.router.add_api_route("/recruiter/update-saved-talent", self.update_saved_talent, methods=["PUT"], response_model=recruiter.SaveTalentResponse)
-        self.router.add_api_route("/recruiter/candidates-saved", self.list_candidates_saved, methods=["GET"], response_model=List[resume.ResumeAggregate])
+        self.router.add_api_route("/recruiter/candidates-saved", self.list_candidates_saved, methods=["GET"], response_model=recruiter.ListCandidatesSaved)
 
     async def list_jobs_posted(
         self,
@@ -36,9 +36,21 @@ class RecruiterRouter:
                 size = 10
             if size >= 100:
                 size = 100
-            job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, page=page, size=size)
-            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=job_ids)
-            return data
+
+            job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id)
+            total_records = len(job_ids)
+
+            offset = (page - 1) * size
+
+            paging_list = job_ids[offset:offset+size]
+
+            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=paging_list)
+            return recruiter.ListJobsPostedAggregate(
+                count=total_records,
+                page=page,
+                size=size,
+                records=data
+            )
         except Exception:
             logger.error(f"list_jobs_posted failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
@@ -86,10 +98,20 @@ class RecruiterRouter:
                 size = 100
 
             #Return list of ids order by created_at desc
-            resume_ids = await self.recruiter_repo.get_talents_saved(db=db, id=recruiter_id, page=page, size=size)
+            resume_ids = await self.recruiter_repo.get_talents_saved(db=db, id=recruiter_id)
+            total_records = len(resume_ids)
 
-            data = await self.resume_qdrant_repo.list_resumes_by_ids(resume_ids=resume_ids)
-            return data
+            offset = (page - 1) * size
+
+            paging_list = resume_ids[offset:offset+size]
+
+            data = await self.resume_qdrant_repo.list_resumes_by_ids(resume_ids=paging_list)
+            return recruiter.ListCandidatesSaved(
+                count=total_records,
+                page=page,
+                size=size,
+                records=data
+            )
         except Exception:
             logger.error(f"list_candidates_saved failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))

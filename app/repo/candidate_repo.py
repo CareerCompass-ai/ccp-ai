@@ -13,14 +13,11 @@ class CandidateRepository:
     async def get_by_id(self, db:Session, id):
         return db.query(Candidate).filter(Candidate.id == id).first()
     
-    async def get_applied_jobs(self, db:Session, id, page, size) -> candidate.ListResumesAppliedResponse:
-        offset = (page - 1) * size
+    async def get_applied_jobs(self, db:Session, id) -> candidate.ListResumesAppliedResponse:
         applications = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
             .join(Resume, Application.resume_id == Resume.id)\
             .filter(Resume.candidate_id == id)\
             .order_by(Application.created_at.desc())\
-            .offset(offset)\
-            .limit(size)\
             .all()
         records = []
         for app in applications:
@@ -43,14 +40,11 @@ class CandidateRepository:
         db.query(JobSaved).filter_by(candidate_id=record.candidate_id, job_id=record.job_id).delete()
         db.commit()
 
-    async def get_saved_jobs(self, db:Session, id, page, size) -> List[int]:
+    async def get_saved_jobs(self, db:Session, id) -> List[int]:
 
-        offset = (page - 1) * size
         jobs = db.query(JobSaved.job_id)\
             .filter(JobSaved.candidate_id == id)\
             .order_by(JobSaved.created_at.desc())\
-            .offset(offset)\
-            .limit(size)\
             .all()
         records = []
         for job in jobs:

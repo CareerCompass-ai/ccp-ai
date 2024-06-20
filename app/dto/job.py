@@ -90,12 +90,10 @@ class ListJobResponse(BaseModel):
     size: int
     records: List[JobAggregate]
     dynamic_filters: DynamicFilters = DynamicFilters()
-
 class ListRelatedJobResponse(BaseModel):
     page: int
     size: int
     records: List[JobAggregate]
-
 class GetJobRequest(BaseModel):
     id: Optional[int] = None
 
