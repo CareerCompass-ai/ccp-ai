@@ -5,7 +5,7 @@ from qdrant_client.conversions import common_types as types
 from qdrant_client.http import models
 
 import constant.common
-from app.dto import job, mapper
+from app.dto import job, mapper, recruiter, candidate
 from config.qdrant import QdrantVDB
 from constant import config as cfg
 from pkg.logging import logger
@@ -614,3 +614,12 @@ class JobQdrantRepository:
             dynamic_filters=dynamic_filters_obj
         )
 
+    async def list_jobs_applied(self, job_ids: List[int], job_records: List[dict]) -> List[candidate.AppliedJobsResponse]:
+        records = self.client.retrieve(
+            collection_name=self.index_name,
+            ids=job_ids,
+            with_vectors=False,
+            with_payload=True
+        )
+
+        return [mapper.toAppliedJobDTO(record.payload, item.get("resume_id"), item.get("resume_url")) for record, item in zip(records, job_records)]

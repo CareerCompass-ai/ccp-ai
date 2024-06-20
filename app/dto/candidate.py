@@ -2,56 +2,23 @@ from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
+from app.dto.job import JobAggregate
 
-
-class AppliedJobsResponse(BaseModel):
+class AppliedJobsResponse(JobAggregate):
+    resume_id: int
+    resume_url: str
+class ResumesAppliedResponse(BaseModel):
     job_id: int
     resume_id: int
-    job_title: str
-    content: Optional[str] = ""
-    is_hiring: Optional[bool] = None
-    opened_date: Optional[datetime] = None
-    closed_date: Optional[datetime] = None
-    salary_from: Optional[float] = 0.0
-    salary_to: Optional[float] = 0.0
-    job_type: Optional[str] = ""
-    work_place: Optional[str] = ""
-    company_type: Optional[str] = ""
-    hiring_level: Optional[str] = ""
-    display_content: Optional[str] = ""
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-
-class ListAppliedJobsResponse(BaseModel):
-    records: List[AppliedJobsResponse] = None
-
+    resume_url: str
+class ListResumesAppliedResponse(BaseModel):
+    records: List[ResumesAppliedResponse]
 class UpdateSaveJobRequest(BaseModel):
     candidate_id: int
     job_id: int
     type: int #1: save, 2: unsave
 class UpdateSaveJobResponse(BaseModel):
     message: str
-
-class SavedJobsResponse(BaseModel):
-    job_id: int
-    job_title: str
-    content: Optional[str] = ""
-    is_hiring: Optional[bool] = None
-    opened_date: Optional[datetime] = None
-    closed_date: Optional[datetime] = None
-    salary_from: Optional[float] = 0.0
-    salary_to: Optional[float] = 0.0
-    job_type: Optional[str] = ""
-    work_place: Optional[str] = ""
-    company_type: Optional[str] = ""
-    hiring_level: Optional[str] = ""
-    display_content: Optional[str] = ""
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-
-class ListSavedJobsResponse(BaseModel):
-    records: List[SavedJobsResponse] = None
-
 class CreateJobViewedRequest(BaseModel):
     job_id: int
     candidate_id: int
