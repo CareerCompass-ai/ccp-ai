@@ -2,35 +2,11 @@ from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
+from app.dto.job import JobAggregate
 
-
-class AppliedJobsResponse(BaseModel):
-    job_id: int
-    job_title: Optional[str] = None
-    content: Optional[str] = ""
-    s_content: Optional[str] = ""
-    is_hiring: Optional[bool] = None
-    opened_date: Optional[datetime] = None
-    closed_date: Optional[datetime] = None
-    salary_from: Optional[float] = 0.0
-    salary_to: Optional[float] = 0.0
-    address: Optional[str] = ""
-    job_type: Optional[str] = ""
-    job_tags: List[str] = ""
-    work_place: Optional[str] = ""
-    company_type: Optional[str] = ""
-    hiring_level: Optional[str] = ""
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    applied_count: int
-    display_content: Optional[str] = ""
-    job_url: str
+class AppliedJobsResponse(JobAggregate):
     resume_id: int
     resume_url: str
-
-class ListAppliedJobsResponse(BaseModel):
-    records: List[AppliedJobsResponse] = None
-
 class ResumesAppliedResponse(BaseModel):
     job_id: int
     resume_id: int
@@ -43,31 +19,6 @@ class UpdateSaveJobRequest(BaseModel):
     type: int #1: save, 2: unsave
 class UpdateSaveJobResponse(BaseModel):
     message: str
-
-class SavedJobsResponse(BaseModel):
-    job_id: int
-    job_title: Optional[str] = None
-    content: Optional[str] = ""
-    s_content: Optional[str] = ""
-    is_hiring: Optional[bool] = None
-    opened_date: Optional[datetime] = None
-    closed_date: Optional[datetime] = None
-    salary_from: Optional[float] = 0.0
-    salary_to: Optional[float] = 0.0
-    address: Optional[str] = ""
-    job_type: Optional[str] = ""
-    job_tags: List[str] = ""
-    work_place: Optional[str] = ""
-    company_type: Optional[str] = ""
-    hiring_level: Optional[str] = ""
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-    applied_count: int
-    display_content: Optional[str] = ""
-    job_url: str
-class ListSavedJobsResponse(BaseModel):
-    records: List[SavedJobsResponse] = None
-
 class CreateJobViewedRequest(BaseModel):
     job_id: int
     candidate_id: int

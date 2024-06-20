@@ -614,115 +614,12 @@ class JobQdrantRepository:
             dynamic_filters=dynamic_filters_obj
         )
 
-    async def list_jobs_posted(self, ids: List[int]) -> recruiter.ListJobsPostedResponse:
-        data = self.client.retrieve(
-            collection_name=self.index_name,
-            ids=ids,
-            with_vectors=False,
-            with_payload=True
-        )
-
-        records = []
-        for item in data:
-            payload = item.payload
-            records.append(
-                recruiter.JobPostedResponse(
-                    job_id = payload["id"],
-                    job_title = payload["job_title"],
-                    content = payload["content"],
-                    s_content = payload["s_content"],
-                    is_hiring = payload["is_hiring"],
-                    opened_date = payload["opened_date"],
-                    closed_date = payload["closed_date"],
-                    salary_from = payload["salary_from"],
-                    salary_to = payload["salary_to"],
-                    job_type = payload["job_type"],
-                    work_place = payload["work_place"],
-                    address = payload["address"],
-                    job_tags = payload["job_tags"],
-                    company_type = payload["company_type"],
-                    hiring_level = payload["hiring_level"],
-                    created_at = payload["created_at"],
-                    updated_at = payload["updated_at"],
-                    applied_count = payload["applied_count"],
-                    display_content = payload["display_content"],
-                    url = payload["content_url"]
-                )
-            )
-        return recruiter.ListJobsPostedResponse(records=records)
-
-    async def list_jobs_applied(self, job_ids: List[int], job_records: List[dict]) -> candidate.ListAppliedJobsResponse:
-        data = self.client.retrieve(
+    async def list_jobs_applied(self, job_ids: List[int], job_records: List[dict]) -> List[candidate.AppliedJobsResponse]:
+        records = self.client.retrieve(
             collection_name=self.index_name,
             ids=job_ids,
             with_vectors=False,
             with_payload=True
         )
 
-        records = []
-        for item, rec in zip(data, job_records):
-            payload = item.payload
-            records.append(
-                candidate.AppliedJobsResponse(
-                    job_id = payload["id"],
-                    job_title = payload["job_title"],
-                    content = payload["content"],
-                    s_content = payload["s_content"],
-                    is_hiring = payload["is_hiring"],
-                    opened_date = payload["opened_date"],
-                    closed_date = payload["closed_date"],
-                    salary_from = payload["salary_from"],
-                    salary_to = payload["salary_to"],
-                    job_type = payload["job_type"],
-                    work_place = payload["work_place"],
-                    address = payload["address"],
-                    job_tags = payload["job_tags"],
-                    company_type = payload["company_type"],
-                    hiring_level = payload["hiring_level"],
-                    created_at = payload["created_at"],
-                    updated_at = payload["updated_at"],
-                    applied_count = payload["applied_count"],
-                    display_content = payload["display_content"],
-                    job_url = payload["content_url"],
-                    resume_id=rec.get("resume_id"),
-                    resume_url=rec.get("resume_url")
-                )
-            )
-        return candidate.ListAppliedJobsResponse(records=records)
-    
-    async def list_jobs_saved(self, job_ids: List[int]) -> candidate.ListSavedJobsResponse:
-        data = self.client.retrieve(
-            collection_name=self.index_name,
-            ids=job_ids,
-            with_vectors=False,
-            with_payload=True
-        )
-
-        records = []
-        for item in data:
-            payload = item.payload
-            records.append(
-                candidate.SavedJobsResponse(
-                    job_id = payload["id"],
-                    job_title = payload["job_title"],
-                    content = payload["content"],
-                    s_content = payload["s_content"],
-                    is_hiring = payload["is_hiring"],
-                    opened_date = payload["opened_date"],
-                    closed_date = payload["closed_date"],
-                    salary_from = payload["salary_from"],
-                    salary_to = payload["salary_to"],
-                    job_type = payload["job_type"],
-                    work_place = payload["work_place"],
-                    address = payload["address"],
-                    job_tags = payload["job_tags"],
-                    company_type = payload["company_type"],
-                    hiring_level = payload["hiring_level"],
-                    created_at = payload["created_at"],
-                    updated_at = payload["updated_at"],
-                    applied_count = payload["applied_count"],
-                    display_content = payload["display_content"],
-                    job_url = payload["content_url"],
-                )
-            )
-        return candidate.ListSavedJobsResponse(records=records)
+        return [mapper.toAppliedJobDTO(record.payload, item.get("resume_id"), item.get("resume_url")) for record, item in zip(records, job_records)]

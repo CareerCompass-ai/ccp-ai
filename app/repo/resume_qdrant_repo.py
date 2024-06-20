@@ -111,36 +111,3 @@ class ResumeQdrantRepository:
             size=input.size,
             records=records
         )
-    
-    async def list_saved_resumes_by_ids(self, resume_ids: list[int]) -> recruiter.ListTalentSavedResponse:
-        data = self.client.retrieve(
-            collection_name=self.index_name,
-            with_payload=True,
-            with_vectors=False,
-            ids=resume_ids
-        )
-        records = []
-        for item in data:
-            payload = item.payload
-            records.append(
-                recruiter.GetTalentSavedResponse(
-                    id=payload["id"],
-                    candidate_id=payload["candidate_id"],
-                    candidate_name=payload["candidate_name"],
-                    work_title=payload["work_title"],
-                    year_of_experience=payload["year_of_experience"],
-                    open_to_work=payload["open_to_work"],
-                    level=payload["level"],
-                    candidate_address=payload["candidate_address"],
-                    s_content=payload["s_content"],
-                    content=payload["content"],
-                    skills=payload["skills"],
-                    projects=payload["projects"],
-                    certificates=payload["certificates"],
-                    educations=payload["educations"],
-                    work_expericences=payload["work_expericences"],
-                    resume_link=payload["resume_link"]
-                )
-            )
-
-        return recruiter.ListTalentSavedResponse(records=records)
