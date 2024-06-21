@@ -4,8 +4,9 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.dto import job
-from config.postgres import SessionLocal
 from models.ccp_job import Job
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException, status
 
 
 class JobRepository:
@@ -14,15 +15,14 @@ class JobRepository:
         return data
     
     async def create(self, session: Session, record: Optional[job.JobBase]) -> Optional[Job]:
-        if record:
+        try:
             record = Job(**record.model_dump())
             session.add(record)
             session.flush()  
-            session.refresh(record)  
-
+            session.refresh(record)
             return record
-        
-        return None
+        except SQLAlchemyError as e:  
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")  
     
     async def update_with_map(self, db:Session, job_id: int, props: dict) -> Optional[Job]:
         job_record = db.query(Job).filter(Job.id == job_id).first()

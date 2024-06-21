@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.dto import address
 from models.ccp_address import Address
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException, status
 
 
 class AddressRepository:        
@@ -26,15 +28,14 @@ class AddressRepository:
         return address_aggregates
 
     async def create(self, session: Session, record: Optional[address.AddressBase]) -> Optional[Address]:
-        if record:
+        try:
             record = Address(**record.model_dump())
             session.add(record)
             session.flush()  
             session.refresh(record)  
-
             return record
-        
-        return None
+        except SQLAlchemyError as e:  
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}") 
     
     async def update_with_map(self, db: Session, address_id: int, props: dict) -> Optional[Address]:
         address_record = db.query(Address).filter(Address.id == address_id).first()

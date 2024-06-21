@@ -234,24 +234,12 @@ class JobRouter:
         try:
             file_content = await file.read()
 
-            temp_dir = os.path.dirname(os.path.abspath(__file__))
-            temp_file_path = os.path.join(temp_dir, file.filename)
-            with open(temp_file_path, "wb") as temp_file:
-                temp_file.write(file_content)
-
             # Generate file name
             file_name = str(uuid.uuid4()) + "_" + file.filename
-
-            # Upload file to MinIO and get the public URL
-            upload_response = await self.minio_repo.upload(
-                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=file_name)
-            )
-            public_url = upload_response.url
-
-            os.remove(temp_file_path)
+            public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
 
             now = datetime.now()
-            
+
             common_job_title = await self.ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
 
             record = job.JobBase(
@@ -272,6 +260,11 @@ class JobRouter:
                 created_at=now,
                 updated_at=now,
             )
+
+            temp_dir = os.path.dirname(os.path.abspath(__file__))
+            temp_file_path = os.path.join(temp_dir, file.filename)
+            with open(temp_file_path, "wb") as temp_file:
+                temp_file.write(file_content)
 
             if file is not None:
                 # Extract text with formatting from PDF using PyMuPDF
@@ -295,8 +288,8 @@ class JobRouter:
                     text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
                     text_content += text
 
-                record.content = text_content
-
+                record.content = text_content          
+    
             with session.begin():
                 try:
                     address_record = None
@@ -320,25 +313,32 @@ class JobRouter:
                     #Create new job
                     job_rec = await self.job_repo.create(session, record)
 
+                    #Create job tags
                     if tags is not None:
                         tags = tags.split(',')
-
                         for tag_id in tags:
                             await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_rec.id)
 
-                    return job.CreateJobPostResponse()
+                    await self.minio_repo.upload(
+                        minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=file_name)
+                    )
+
+                    os.remove(temp_file_path)
 
                 except SQLAlchemyError:
                     session.rollback()
                     logger.error(f"create_job failed error = {traceback.format_exc()}")
                     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-
+                
+            return job.CreateJobPostResponse()
         except Exception:
             logger.error(f"create_job failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
         finally:
             if file is not None:
                 file.file.close()
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
 
     async def list_resumes_from_qdrant(
             self,
