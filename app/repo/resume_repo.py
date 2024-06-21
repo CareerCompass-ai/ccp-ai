@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.dto import resume
 from models.ccp_resume import Resume
-
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException, status
 
 class ResumeRepository:
     async def get_by_id(self, db:Session, id):
@@ -12,13 +13,13 @@ class ResumeRepository:
         return result
     
     async def post_resume(self, db: Session, input: Optional[resume.ResumeBase]):
-        if input:
+        try:
             resume_instance = Resume(**input.model_dump())
             db.add(resume_instance)
             db.flush()
             db.refresh(resume_instance)
-            return resume_instance
-        return None
+        except SQLAlchemyError as e:  
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
         
     async def get_by_user_id(self, db:Session, user_id) -> List[Resume]:
         result = db.query(Resume).filter(Resume.candidate_id == user_id, Resume.active == True).all()
