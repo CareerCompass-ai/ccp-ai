@@ -34,6 +34,7 @@ class ResumeAggregate(ResumeBase):
     certificates: List[CertificateBase] = None
     educations: List[EducationBase] = None
     work_expericences: List[WorkExperienceBase] = None
+    is_saved: Optional[bool] = None
 
 class ListResumeRequest(BaseModel):
     page: Optional[int] = None

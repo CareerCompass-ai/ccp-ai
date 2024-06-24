@@ -15,3 +15,10 @@ class TalentSavedRepository:
         db.commit()
 
         return record
+    
+    async def check_saved_talent(self, db:Session, resume_id: int, recruiter_id: int) -> bool:
+        is_saved = db.query(TalentSaved).filter(TalentSaved.recruiter_id == recruiter_id, TalentSaved.resume_id == resume_id).first()
+
+        if is_saved is None:
+            return False
+        return True
