@@ -4,8 +4,10 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.dto import job
-from config.postgres import SessionLocal
 from models.ccp_job import Job
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException, status
+from pkg.logging import logger
 
 
 class JobRepository:
@@ -14,15 +16,15 @@ class JobRepository:
         return data
     
     async def create(self, session: Session, record: Optional[job.JobBase]) -> Optional[Job]:
-        if record:
+        try:
             record = Job(**record.model_dump())
             session.add(record)
             session.flush()  
-            session.refresh(record)  
-
+            session.refresh(record)
             return record
-        
-        return None
+        except SQLAlchemyError as e:  
+            logger.error(f"create_job failed error = {e}")
+            raise 
     
     async def update_with_map(self, db:Session, job_id: int, props: dict) -> Optional[Job]:
         job_record = db.query(Job).filter(Job.id == job_id).first()
