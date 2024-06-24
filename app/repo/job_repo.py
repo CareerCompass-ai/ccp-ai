@@ -7,6 +7,7 @@ from app.dto import job
 from models.ccp_job import Job
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
+from pkg.logging import logger
 
 
 class JobRepository:
@@ -22,7 +23,8 @@ class JobRepository:
             session.refresh(record)
             return record
         except SQLAlchemyError as e:  
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")  
+            logger.error(f"create_job failed error = {e}")
+            raise 
     
     async def update_with_map(self, db:Session, job_id: int, props: dict) -> Optional[Job]:
         job_record = db.query(Job).filter(Job.id == job_id).first()

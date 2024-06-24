@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.dto import resume
 from models.ccp_resume import Resume
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException, status
+from pkg.logging import logger
 
 class ResumeRepository:
     async def get_by_id(self, db:Session, id):
@@ -19,8 +19,9 @@ class ResumeRepository:
             db.flush()
             db.refresh(resume_instance)
         except SQLAlchemyError as e:  
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
-        
+            logger.error(f"create_resume failed error = {e}")
+            raise
+
     async def get_by_user_id(self, db:Session, user_id) -> List[Resume]:
         result = db.query(Resume).filter(Resume.candidate_id == user_id, Resume.active == True).all()
         return result

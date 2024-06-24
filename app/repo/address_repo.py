@@ -6,7 +6,7 @@ from app.dto import address
 from models.ccp_address import Address
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
-
+from pkg.logging import logger
 
 class AddressRepository:        
     async def get_by_id(self, db:Session, id):
@@ -34,8 +34,9 @@ class AddressRepository:
             session.flush()  
             session.refresh(record)  
             return record
-        except SQLAlchemyError as e:  
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}") 
+        except SQLAlchemyError as e: 
+            logger.error(f"create_address failed error = {e}")
+            raise
     
     async def update_with_map(self, db: Session, address_id: int, props: dict) -> Optional[Address]:
         address_record = db.query(Address).filter(Address.id == address_id).first()

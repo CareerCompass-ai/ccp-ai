@@ -38,6 +38,7 @@ class JobRouter:
         self.resume_repo = factory.get_resume_repo()
         self.candidate_repo = factory.get_candidate_repo()
         self.address_repo = factory.get_address_repo()
+        self.talent_saved_repo = factory.get_talent_saved_repo()
         self.ai_helper = factory.get_ai_helper()
         self.kafka_producer = factory.get_kafka_producer()
 
@@ -50,7 +51,7 @@ class JobRouter:
         self.router.add_api_route("/job/apply", self.apply, methods=["POST"], response_model=job.ApplyJobResponse)
         self.router.add_api_route("/job/close", self.close, methods=["PUT"], response_model=job.CloseJobResponse)
         self.router.add_api_route("/job/update", self.update_job, methods=["PUT"], response_model=job.UpdateJobResponse)
-        self.router.add_api_route("/job/{id}/resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
+        self.router.add_api_route("/job/applied-resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
         self.router.add_api_route("/job/check-saved-or-applied", self.check_is_saved_or_applied, methods=["POST"], response_model=job.CheckAppliedOrSavedResponse)
 
     async def list_jobs_from_qdrant(
@@ -342,9 +343,11 @@ class JobRouter:
 
     async def list_resumes_from_qdrant(
             self,
-            id: int = Path(..., title="Job ID"),
-            page: Optional[int] = Query(None, description="Page numeber"),
-            size: Optional[int] = Query(None, description="Page size")
+            id: int = Query(description="Job ID"),
+            recruiter_id: int = Query(description="Recruiter ID"),
+            page: int = Query(description="Page numeber"),
+            size: int = Query(description="Page size"),
+            db: Session = Depends(postgres.PostgresDB.get_db)
         ):
         try:
             req = resume.ListResumeRequest(
@@ -353,6 +356,9 @@ class JobRouter:
                 job_id=id
             )
             data = await self.resume_qdrant_repo.list_resumes(input=req)
+            for item in data.records:
+                item.is_saved = await self.talent_saved_repo.check_saved_talent(db=db, resume_id=item.id, recruiter_id=recruiter_id)
+
             return data
         except Exception:
             logger.error(f"list_resumes_from_qdrant failed error = {traceback.format_exc()}")

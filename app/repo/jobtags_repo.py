@@ -6,7 +6,7 @@ from app.dto import job_tag
 from models.ccp_jobtag import JobTag
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
-
+from pkg.logging import logger
 class JobTagsRepository:        
     async def get_by_id(self, db:Session, id_tag, id_job):
         return db.query(JobTag).filter(JobTag.tag_id == id_tag and JobTag.job_id == id_job).first()
@@ -46,7 +46,8 @@ class JobTagsRepository:
             session.flush()  
             session.refresh(record) 
         except SQLAlchemyError as e:  
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}") 
+            logger.error(f"create_jobtags failed error = {e}")
+            raise
 
     async def delete_jobtags(self, db: Session, job_id: int):
         db.query(JobTag).filter(JobTag.job_id == job_id).delete()
