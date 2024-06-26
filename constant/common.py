@@ -1,4 +1,14 @@
-HIRING_LEVELS = ['Entry level', 'Associate', 'Junior level', 'Mid-Senior level', 'Leader', 'Manager', 'Director', 'Executive', 'Internship']
+HIRING_LEVELS = [
+    'Internship',
+    'Entry level',
+    'Junior level',
+    'Associate',
+    'Mid-Senior level',
+    'Leader',
+    'Manager',
+    'Director',
+    'Executive'
+]
 
 JOB_TYPES = ['Contract', 'Part-time', 'Full-time', 'Temporary']
 

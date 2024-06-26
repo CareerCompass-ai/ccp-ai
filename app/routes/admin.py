@@ -76,17 +76,17 @@ class AdminRouter:
                 job_agg = await self.agg_repo.get_job(db=db, id=id)
                 
                 # summarize content
-                summarized_content = self.ai_helper.get_job_summarized(job_agg.content)
+                summarized_content = await self.ai_helper.get_job_summarized(job_agg.content)
 
-                acronyms_and_abbreviations = self.ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
+                acronyms_and_abbreviations = await self.ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
                 if isinstance(acronyms_and_abbreviations, list):
                     acronyms_and_abbreviations = ", ".join(acronyms_and_abbreviations)
 
                 # combine content
-                combined_content = combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
+                combined_content = await combine_job_content(job_agg, summarized_content, acronyms_and_abbreviations)
 
                 # vectorize the combined content
-                vector = self.ai_helper.get_embedding(combined_content)
+                vector = await self.ai_helper.get_embedding(combined_content)
 
                 job_agg.s_content = summarized_content
                 job_agg.combined_content = combined_content
