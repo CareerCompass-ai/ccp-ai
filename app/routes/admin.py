@@ -36,7 +36,7 @@ class AdminRouter:
         self.weaviate_client = weaviate.setup_weaviate_connection()
         self.sync_helper = SyncHelper(qdrant_client=self.qdrant_client, weaviate_client=self.weaviate_client)
 
-        self.router = APIRouter(prefix="/admin/api", tags=['Admin'])
+        self.router = APIRouter(prefix="/api/admin", tags=['Admin'])
         self.router.add_api_route("/protected", self.protected_route, methods=["GET"])
         self.router.add_api_route("/weaviate/create-job-class", self.create_job_class, methods=["POST"])
         self.router.add_api_route("/weaviate/create-jobqna-class", self.create_jobqna_class, methods=["POST"])
