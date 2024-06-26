@@ -127,13 +127,24 @@ async def generate_assistant (
 
 
 @ai_router.post("/assistant/questioning", response_model=ai.AssistantResponse)
-async def assistant_questioning(
-    req: ai.AssistantQuestionRequest
-):
+async def assistant_questioning(req: ai.AssistantQuestionRequest):
     try:
-        res = await ai_helper.get_assistant_answer(input=req)
-        return res
-    except Exception:
+        response = await ai_helper.get_assistant_answer(input=req)
+
+        if response["status"] == "success":
+            return response["data"]
+        elif response["status"] == "error":
+            if response["message"] == "Assistant run timed out":
+                raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT, detail=response["message"])
+            elif response["message"] == "Assistant run failed":
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=response["message"])
+            else:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=response["message"])
+
+    except HTTPException as http_exception:
+        raise http_exception
+
+    except Exception as e:
         logger.error(f"assistant_questioning failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 # Flow:

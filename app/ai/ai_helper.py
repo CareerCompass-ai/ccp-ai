@@ -4,13 +4,16 @@ import time
 import requests
 import httpx
 import numpy as np
+from datetime import datetime, timedelta
 import asyncio
 from openai import OpenAI
-from app.repo.minio_repo import MinioRepository
+
 import constant.ai as constant
 import constant.config as minio_constant
 from pkg.logging import logger
+
 from app.dto import ai, minio
+from app.repo.minio_repo import MinioRepository
 class AI:
     def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL):
         self.openai_client = OpenAI(api_key=api_key)
@@ -76,7 +79,7 @@ class AI:
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
-    async def get_assistant_answer(self, max_retries=3, input=ai.AssistantQuestionRequest) -> ai.AssistantResponse:
+    async def get_assistant_answer(self, max_retries=3, input=ai.AssistantQuestionRequest) -> dict:
         retries = 0
         while retries < max_retries:
             try:
@@ -93,16 +96,26 @@ class AI:
                     assistant_id=input.assistant_id,
                 )
 
+                start_time = datetime.now()
+                timeout = timedelta(minutes=5)
+
                 # Poll the run status until it is completed
                 while True:
                     run_status = self.openai_client.beta.threads.runs.retrieve(
-                        thread_id=input.thread_id, 
+                        thread_id=input.thread_id,
                         run_id=run.id
                     )
                     if run_status.status == "completed":
                         break
-                    await asyncio.sleep(0.5)  # Asynchronously sleep for a bit before checking again
+                    elif run_status.status == "failed":
+                        logger.error(f"Assistant run failed: {run_status.error}")
+                        return {"status": "error", "message": "Assistant run failed"}
+                    elif datetime.now() - start_time > timeout:
+                        logger.error("Assistant run timed out.")
+                        return {"status": "error", "message": "Assistant run timed out"}
+                    await asyncio.sleep(0.5)  # TODO: Think up a solution to improve this case. Note: Asynchronously sleep for a bit before checking again
 
+                
                 # Retrieve the messages after the run is completed
                 messages = self.openai_client.beta.threads.messages.list(
                     thread_id=input.thread_id
@@ -116,7 +129,6 @@ class AI:
                     if content_block.type == "text":
                         _res.message = content_block.text.value
                     elif content_block.type == "image_file":
-                        
                         # Call API to get image
                         url = f'https://api.openai.com/v1/files/{content_block.image_file.file_id}/content'
                         image_response = requests.get(url, headers={'Authorization': f'Bearer {constant.OPENAI_API_KEY}'})
@@ -136,19 +148,20 @@ class AI:
                             )
                             _res.image = image_url.url
                             os.remove(image_path)
-                return _res
+                
+                return {"status": "success", "data": _res}
 
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
                     logger.error(f"Bad request error: {e}")
-                    break
+                    return {"status": "error", "message": "Bad request error"}
                 else:
                     logger.info(f"Request to OpenAI API failed. Retrying... ({retries+1}/{max_retries})")
                     retries += 1
-                    await asyncio.sleep(2)  # Asynchronously sleep before retrying
+                    await asyncio.sleep(2)
 
         logger.info("Exceeded maximum number of retries. Please try again later.")
-        return None
+        return {"status": "error", "message": "Exceeded maximum number of retries"}
 
     async def get_answer_v1(self, question, input_documents, max_retries=3):
         retries = 0
