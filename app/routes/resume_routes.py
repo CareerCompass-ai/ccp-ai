@@ -15,8 +15,6 @@ from app.dto import minio, resume
 from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from pkg.logging import logger
-
-
 class ResumeRouter:
     def __init__(self):
         self.resume_qdrant_repo = factory.get_resume_qdrant_repo()
@@ -35,22 +33,15 @@ class ResumeRouter:
         try:
             file_content = await file.read()
 
-            temp_dir = os.path.dirname(os.path.abspath(__file__))
-            temp_file_path = os.path.join(temp_dir, file.filename)
-            with open(temp_file_path, "wb") as temp_file:
-                temp_file.write(file_content)
-
             # Generate file name
             file_name = str(uuid.uuid4()) + "_" + file.filename
 
-            upload_response = await self.minio_repo.upload(
-                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_RESUME, temp_path=temp_file_path, file_name=file_name)
-            )
-            public_url = upload_response.url
-
+            # Define URL before uploading to MinIO
+            public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_RESUME}/{file_name}"
 
             now = datetime.now()
 
+            # Create a record
             record = resume.ResumeBase(
                 candidate_id=candidate_id,
                 resume_name=file_name,
@@ -58,6 +49,12 @@ class ResumeRouter:
                 created_at=now,
                 updated_at=now
             )
+
+            # Step 1: Save file temporarily
+            temp_dir = os.path.dirname(os.path.abspath(__file__))
+            temp_file_path = os.path.join(temp_dir, file.filename)
+            with open(temp_file_path, "wb") as temp_file:
+                temp_file.write(file_content)
 
             if file is not None:
                 pdf_file = BytesIO(file_content)
@@ -71,23 +68,39 @@ class ResumeRouter:
 
                 record.content = text_content
 
-            os.remove(temp_file_path)
-
+            # Start transaction
             with db.begin():
                 try:
+                    # Step 2: Insert record into database
                     await self.resume_repo.post_resume(db=db, input=record)
-                    return resume.CreateResumePostResponse
-                except SQLAlchemyError:
+
+                    # Step 3: Perform upload to MinIO
+                    await self.minio_repo.upload(
+                        minio.UploadMinioRequest(
+                            bucket_name=minio_constant.MINIO_BUCKET_RESUME,
+                            temp_path=temp_file_path,
+                            file_name=file_name
+                        )
+                    )
+
+                    os.remove(temp_file_path)
+
+                except Exception as e:
+                    # Rollback database transaction on any error
                     db.rollback()
-                    logger.error(f"create_resume failed error = {traceback.format_exc()}")
-                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+                    logger.error(f"create_resume transaction failed error = {traceback.format_exc()}")
+                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+
+            return resume.CreateResumePostResponse(message="Upload successfully!")
+
         except Exception:
             logger.error(f"create_resume failed error = {traceback.format_exc()}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
         finally:
             if file is not None:
                 file.file.close()
-
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
     async def delete(
         self,
         req: resume.DeleteResumeRequest,

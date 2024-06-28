@@ -4,7 +4,7 @@ from qdrant_client.conversions import common_types as types
 from qdrant_client.http import models
 
 import constant.config as constant
-from app.dto import mapper, resume
+from app.dto import mapper, resume, recruiter
 from config.qdrant import QdrantVDB
 from pkg.logging import logger
 

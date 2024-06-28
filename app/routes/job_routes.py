@@ -38,6 +38,7 @@ class JobRouter:
         self.resume_repo = factory.get_resume_repo()
         self.candidate_repo = factory.get_candidate_repo()
         self.address_repo = factory.get_address_repo()
+        self.talent_saved_repo = factory.get_talent_saved_repo()
         self.ai_helper = factory.get_ai_helper()
         self.kafka_producer = factory.get_kafka_producer()
 
@@ -49,8 +50,8 @@ class JobRouter:
         self.router.add_api_route("/job/create", self.create, methods=["POST"], response_model=job.CreateJobPostResponse)
         self.router.add_api_route("/job/apply", self.apply, methods=["POST"], response_model=job.ApplyJobResponse)
         self.router.add_api_route("/job/close", self.close, methods=["PUT"], response_model=job.CloseJobResponse)
-        self.router.add_api_route("/job/update", self.update_job, methods=["PUT"]) # TODO: , response_model=job.UpdateJobResponse
-        self.router.add_api_route("/job/{id}/resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
+        self.router.add_api_route("/job/update", self.update_job, methods=["PUT"], response_model=job.UpdateJobResponse)
+        self.router.add_api_route("/job/applied-resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
         self.router.add_api_route("/job/check-saved-or-applied", self.check_is_saved_or_applied, methods=["POST"], response_model=job.CheckAppliedOrSavedResponse)
 
     async def list_jobs_from_qdrant(
@@ -234,24 +235,12 @@ class JobRouter:
         try:
             file_content = await file.read()
 
-            temp_dir = os.path.dirname(os.path.abspath(__file__))
-            temp_file_path = os.path.join(temp_dir, file.filename)
-            with open(temp_file_path, "wb") as temp_file:
-                temp_file.write(file_content)
-
             # Generate file name
             file_name = str(uuid.uuid4()) + "_" + file.filename
-
-            # Upload file to MinIO and get the public URL
-            upload_response = await self.minio_repo.upload(
-                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=file_name)
-            )
-            public_url = upload_response.url
-
-            os.remove(temp_file_path)
+            public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
 
             now = datetime.now()
-            
+
             common_job_title = await self.ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
 
             record = job.JobBase(
@@ -272,6 +261,11 @@ class JobRouter:
                 created_at=now,
                 updated_at=now,
             )
+
+            temp_dir = os.path.dirname(os.path.abspath(__file__))
+            temp_file_path = os.path.join(temp_dir, file.filename)
+            with open(temp_file_path, "wb") as temp_file:
+                temp_file.write(file_content)
 
             if file is not None:
                 # Extract text with formatting from PDF using PyMuPDF
@@ -295,8 +289,8 @@ class JobRouter:
                     text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
                     text_content += text
 
-                record.content = text_content
-
+                record.content = text_content          
+    
             with session.begin():
                 try:
                     address_record = None
@@ -320,31 +314,40 @@ class JobRouter:
                     #Create new job
                     job_rec = await self.job_repo.create(session, record)
 
+                    #Create job tags
                     if tags is not None:
                         tags = tags.split(',')
-
                         for tag_id in tags:
                             await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_rec.id)
 
-                    return job.CreateJobPostResponse()
+                    await self.minio_repo.upload(
+                        minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=file_name)
+                    )
+
+                    os.remove(temp_file_path)
 
                 except SQLAlchemyError:
                     session.rollback()
                     logger.error(f"create_job failed error = {traceback.format_exc()}")
                     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-
+                
+            return job.CreateJobPostResponse()
         except Exception:
             logger.error(f"create_job failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
         finally:
             if file is not None:
                 file.file.close()
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
 
     async def list_resumes_from_qdrant(
             self,
-            id: int = Path(..., title="Job ID"),
-            page: Optional[int] = Query(None, description="Page numeber"),
-            size: Optional[int] = Query(None, description="Page size")
+            id: int = Query(description="Job ID"),
+            recruiter_id: int = Query(description="Recruiter ID"),
+            page: int = Query(description="Page numeber"),
+            size: int = Query(description="Page size"),
+            db: Session = Depends(postgres.PostgresDB.get_db)
         ):
         try:
             req = resume.ListResumeRequest(
@@ -353,6 +356,9 @@ class JobRouter:
                 job_id=id
             )
             data = await self.resume_qdrant_repo.list_resumes(input=req)
+            for item in data.records:
+                item.is_saved = await self.talent_saved_repo.check_saved_talent(db=db, resume_id=item.id, recruiter_id=recruiter_id)
+
             return data
         except Exception:
             logger.error(f"list_resumes_from_qdrant failed error = {traceback.format_exc()}")
@@ -441,20 +447,20 @@ class JobRouter:
     ):
         try:
             now = datetime.now()
-            
             #Remove jobtags
             await self.jobtag_repo.delete_jobtags(db=session, job_id=job_id)
-            #Update jobtags
-            with session.begin():
-                try:
-                    tags = tags.split(',')
-                    for tag_id in tags:
-                        await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
-                
-                except IntegrityError:
-                    session.rollback()
-                    logger.error(f"create jobtags failed error [IntegrityError] = {traceback.format_exc()}")
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jobtags create failed.")
+            if tags is not None:
+                #Update jobtags
+                with session.begin():
+                    try:
+                        tags = tags.split(',')
+                        for tag_id in tags:
+                            await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
+                    
+                    except IntegrityError:
+                        session.rollback()
+                        logger.error(f"create jobtags failed error [IntegrityError] = {traceback.format_exc()}")
+                        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jobtags create failed.")
 
 
             #Update address
@@ -510,6 +516,15 @@ class JobRouter:
                 #Get content from pdf
                 pdf_file = BytesIO(file_content)
 
+                pdf_document = fitz.open(stream=pdf_file, filetype="pdf")
+
+                markdown_content = pymupdf4llm.to_markdown(pdf_document)
+
+                markdown_content = markdown_content.replace('\n--\n', '\n')
+                markdown_content = re.sub(r'\n-+\n', '\n', markdown_content)
+                
+                props["display_content"] = markdown_content
+
                 pdf_reader = PyPDF2.PdfReader(pdf_file)
 
                 text_content = ""
@@ -527,6 +542,8 @@ class JobRouter:
 
                 #update job
                 await self.job_repo.update_with_map(db=session, job_id=job_id, props=props)
+
+                return job.UpdateJobResponse(message="Update successfully!")
 
             except SQLAlchemyError:
                 session.rollback()
