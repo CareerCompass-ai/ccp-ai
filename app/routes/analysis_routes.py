@@ -31,6 +31,18 @@ class AnalysisRouter:
         self.router.add_api_route("/analysis/get-countries", self.get_country, methods=["GET"], response_model=analysis.ListCountryName)
         self.router.add_api_route("/analysis/get-common-job-titles", self.get_common_job_titles, methods=["GET"], response_model=analysis.ListJobTitle)
 
+    async def format_time_range(self, time_from=None, time_to=None):
+        if time_from:
+            input_tz = timezone('Asia/Ho_Chi_Minh')
+            time_from_dt = datetime.strptime(time_from, "%Y-%m-%d").replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
+            time_from = time_from_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+        
+        if time_to:
+            input_tz = timezone('Asia/Ho_Chi_Minh')
+            time_to_dt = datetime.strptime(time_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=input_tz)
+            time_to = time_to_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+        
+        return time_from, time_to
     async def list_top_job_titles(self, top_number: int = Query(None, description="Top number of hiring jobs"), time_from: str = Query(None, description="Start time of time to get the top hiring jobs"), time_to: str = Query(None, description="End time of time to get the top hiring jobs"), db: Session = Depends(PostgresDB.get_db)):
         try:
             data = await self.analysis_repo.get_top_job_titles(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
