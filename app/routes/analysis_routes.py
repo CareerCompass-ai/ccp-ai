@@ -33,12 +33,12 @@ class AnalysisRouter:
 
     async def format_time_range(self, time_from=None, time_to=None):
         if time_from:
-            input_tz = timezone('Asia/Ho_Chi_Minh')
+            input_tz = timezone('UTC')
             time_from_dt = datetime.strptime(time_from, "%Y-%m-%d").replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
             time_from = time_from_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
         
         if time_to:
-            input_tz = timezone('Asia/Ho_Chi_Minh')
+            input_tz = timezone('UTC')
             time_to_dt = datetime.strptime(time_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=input_tz)
             time_to = time_to_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
         
@@ -142,15 +142,7 @@ class AnalysisRouter:
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
-            if time_from:
-                input_tz = timezone('Asia/Ho_Chi_Minh') # TODO: check with the datetime stored in database, should I use Asia/Ho_Chi_Minh or UTC?
-                time_from_dt = datetime.strptime(time_from, "%Y-%m-%d").replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
-                time_from = time_from_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
-            
-            if time_to:
-                input_tz = timezone('Asia/Ho_Chi_Minh')
-                time_to_dt = datetime.strptime(time_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=input_tz)
-                time_to = time_to_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+            time_from, time_to = self.format_time_range(time_from, time_to)
             
             data = await self.analysis_repo.get_top_viewed_jobs(
                 db=db, top_number=top_number, time_from=time_from, time_to=time_to
