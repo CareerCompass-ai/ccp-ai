@@ -1,5 +1,6 @@
 import traceback
-
+from datetime import datetime, timedelta
+from pytz import timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -129,11 +130,23 @@ class AnalysisRouter:
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
-            data = await self.analysis_repo.get_top_viewed_jobs(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
+            if time_from:
+                input_tz = timezone('Asia/Ho_Chi_Minh') # TODO: check with the datetime stored in database, should I use Asia/Ho_Chi_Minh or UTC?
+                time_from_dt = datetime.strptime(time_from, "%Y-%m-%d").replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
+                time_from = time_from_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+            
+            if time_to:
+                input_tz = timezone('Asia/Ho_Chi_Minh')
+                time_to_dt = datetime.strptime(time_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=input_tz)
+                time_to = time_to_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+            
+            data = await self.analysis_repo.get_top_viewed_jobs(
+                db=db, top_number=top_number, time_from=time_from, time_to=time_to
+            )
             return data
         except Exception:
             logger.error(f"get_top_viewed_jobs failed error = {traceback.format_exc()}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
     async def list_top_work_titles(
         self,
