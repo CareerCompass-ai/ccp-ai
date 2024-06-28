@@ -142,7 +142,7 @@ class AnalysisRouter:
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
-            time_from, time_to = self.format_time_range(time_from, time_to)
+            time_from, time_to = await self.format_time_range(time_from, time_to)
             
             data = await self.analysis_repo.get_top_viewed_jobs(
                 db=db, top_number=top_number, time_from=time_from, time_to=time_to
