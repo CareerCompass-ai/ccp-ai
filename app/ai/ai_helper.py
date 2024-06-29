@@ -393,3 +393,49 @@ class AI:
                     await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
+    
+    async def get_enhance_resume_content(self, input: str, max_retries=3) -> list[str]:
+        retries = 0
+        prompt = """
+            You are helpful assistant with expertise in crafting professional and compelling resume content. Given the following user's resume details, your task is to provide three distinct versions of a summary paragraph that highlight their skills, experience, and accomplishments. Each version should be unique, emphasizing different aspects of the user's qualifications. Ensure that the paragraphs are engaging, tailored to attract potential employers, and accurately reflect the candidate's true qualifications and experiences.
+            
+            ## Resume Details: {input} ##
+
+            The response must be a JSON object with a field "answer" containing an array of three different summary paragraphs.
+            ## Response Example ##
+            {{
+                "answer": [
+                    "Paragraph 1",
+                    "Paragraph 2",
+                    "Paragraph 3"
+                ]
+            }}
+        """
+        content = prompt.format(input=input)
+        
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.completion_model,
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant designed to provide professional resume content that accurately reflects the candidate's true qualifications and experiences."},
+                        {"role": "system", "content": content}
+                    ],
+                    top_p=0.2,
+                )
+
+                tmp = json.loads(response.choices[0].message.content.strip())
+                if "answer" in tmp and isinstance(tmp["answer"], list) and all(isinstance(item, str) for item in tmp["answer"]):
+                    return tmp["answer"]
+                else:
+                    return []
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error:: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    await asyncio.sleep(2)
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
+        return []

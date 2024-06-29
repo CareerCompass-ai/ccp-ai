@@ -56,3 +56,9 @@ class ListAssistantResponse(BaseModel):
 class GenerateAssistantRequest(BaseModel):
     time_from: str
     time_to: str
+
+class GetEnhanceResumeRequest(BaseModel):
+    content: str
+
+class GetEnhanceResumeResponse(BaseModel):
+    message: list[str]
