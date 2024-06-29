@@ -581,3 +581,19 @@ async def resumes_questioning(req: ai.ResumeQnARequest):
     except Exception:
         logger.error(f"questioning failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+    
+@ai_router.post("/ai/resume/enhance", response_model=ai.GetEnhanceResumeResponse)
+async def get_enhance_resume(req: ai.GetEnhanceResumeRequest):
+    try:
+        data = await ai_helper.get_enhance_resume_content(req.content)
+
+        if data is None:
+            return ai.GetEnhanceResumeResponse(message=[])
+
+        return ai.GetEnhanceResumeResponse(
+            message=data
+        )
+
+    except Exception as e:
+        logger.error(f"get_enhance_resume failed: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
