@@ -359,6 +359,10 @@ class JobRouter:
             for item in data.records:
                 item.is_saved = await self.talent_saved_repo.check_saved_talent(db=db, resume_id=item.id, recruiter_id=recruiter_id)
 
+            data.job_id = id
+            job_title = await self.job_repo.get_job_title(db=db, job_id=id)
+            data.job_title = job_title
+
             return data
         except Exception:
             logger.error(f"list_resumes_from_qdrant failed error = {traceback.format_exc()}")
