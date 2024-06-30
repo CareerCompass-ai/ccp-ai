@@ -145,9 +145,9 @@ class JobQdrantRepository:
                 dynamic_filters['work_places'][payload["work_place"]] += 1
             if "company_type" in payload:
                 dynamic_filters['company_types'][payload["company_type"]] += 1
-            if "city_name" in payload:
+            if "city_name" in payload and payload["city_name"]:
                 dynamic_filters['cities'][payload["city_name"]] += 1
-            if "country_name" in payload:
+            if "country_name" in payload and payload["country_name"]:
                 dynamic_filters['countries'][payload["country_name"]] += 1
             if "job_tags" in payload:
                 for tag in payload["job_tags"]:
