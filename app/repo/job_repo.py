@@ -46,3 +46,8 @@ class JobRepository:
         data = db.query(Job.file_name).filter(Job.id == job_id).first()
 
         return data.file_name
+    
+    async def get_job_title(self, db: Session, job_id: int):
+        res = db.query(Job.job_title).filter(Job.id == job_id).first()
+
+        return res.job_title

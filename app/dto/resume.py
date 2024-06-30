@@ -42,6 +42,8 @@ class ListResumeRequest(BaseModel):
     job_id: Optional[int] = None
 
 class ListResumeResponse(BaseModel):
+    job_id: Optional[int]= None
+    job_title: Optional[str] = None
     count: int = None
     page: int
     size: int
