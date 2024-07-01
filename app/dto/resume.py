@@ -35,6 +35,10 @@ class ResumeAggregate(ResumeBase):
     educations: List[EducationBase] = None
     work_expericences: List[WorkExperienceBase] = None
     is_saved: Optional[bool] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    self_introduction: Optional[str] = None
+    introduction: Optional[str] = None
 
 class ListResumeRequest(BaseModel):
     page: Optional[int] = None
@@ -42,6 +46,8 @@ class ListResumeRequest(BaseModel):
     job_id: Optional[int] = None
 
 class ListResumeResponse(BaseModel):
+    job_id: Optional[int]= None
+    job_title: Optional[str] = None
     count: int = None
     page: int
     size: int
