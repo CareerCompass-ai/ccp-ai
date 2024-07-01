@@ -6,9 +6,11 @@ class AssistantBase(BaseModel):
     id: Optional[int] = None
     assistant_id: str
     thread_id: str
-    file_id: str
+    job_file_id: str
+    user_file_id: str
     assistant_name: Optional[str] = ""
-    file_name: Optional[str] = ""
+    job_file_name: Optional[str] = ""
+    user_file_name: Optional[str] = ""
     file_url: Optional[str] = ""
     time_from: Optional[datetime] = None
     time_to: Optional[datetime] = None

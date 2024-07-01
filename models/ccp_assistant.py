@@ -9,8 +9,10 @@ class Assistant(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     assistant_id = Column(String, nullable=True)
-    file_id = Column(String, nullable=True)
-    file_name = Column(String, nullable=True)
+    job_file_id = Column(String, nullable=True)
+    user_file_id = Column(String, nullable=True)
+    job_file_name = Column(String, nullable=True)
+    user_file_name = Column(String, nullable=True)
     file_url = Column(String, nullable=True)
     time_from = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=True)
     time_to = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=True)
