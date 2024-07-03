@@ -21,19 +21,22 @@ class AI:
         self.resume_question_and_answering_prompt = constant.RESUME_QUESTION_AND_ANSWERING_PROMPT
         self.minio_repo = MinioRepository()
 
-    async def create_assistant(self, file_path, time_from, time_to, max_retries=3):
+    async def create_assistant(self, file_paths, time_from, time_to, max_retries=3):
         retries = 0
         while retries < max_retries:
             try:
+                file_ids = []
+                for file_path in file_paths:
+                    file = self.openai_client.files.create(
+                        file=open(file_path, "rb"),
+                        purpose='assistants'
+                    )
+                    file_ids.append(file.id)
 
-                file = self.openai_client.files.create(
-                    file=open(file_path, "rb"),
-                    purpose='assistants'
-                )
                 assistant = self.openai_client.beta.assistants.create(
                     name="Data Visualization",
                     instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
-                    f"This data is formatted using csv format. This file structure has 2 different schemas and are separated by 1 line. This file contains system data from {time_from} to {time_to}. The first Schema contains information about posted jobs. The 2nd Schema contains information about user accounts (including candidates and employers)." 
+                    f"Two uploaded files are in csv format. The first file contains data about posted jobs. The second file is data about users (including candidates and recruiter). Both contain data from {time_from} to {time_to} in the system." 
                     f"You have access to a sandboxed environment for writing and testing code."
                     f"When you are asked to create a visualization you should follow these steps:"
                     f"1. Write the code."
@@ -45,11 +48,11 @@ class AI:
                     model=self.beast_completion_model,
                     tool_resources={
                         "code_interpreter": {
-                            "file_ids": [file.id]
+                            "file_ids": file_ids
                         }
                     }
                 )
-                return assistant.id, file.id
+                return assistant.id, file_ids
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
                     logger.error(f"Bad request error: {e}")

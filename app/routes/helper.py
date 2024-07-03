@@ -20,7 +20,7 @@ async def combine_job_content(job_agg: job.JobAggregate, summarized_content: str
         )
         return combined_content
 
-async def generate_analysis_file(db: Session, time_from: str, time_to: str, file_name: str):
+async def generate_analysis_file(db: Session, time_from: str, time_to: str, file_name_job: str, file_name_user: str):
     query1 = f"""
         SELECT
             j.id AS "job_id (ID of the job)",
@@ -83,9 +83,9 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
     ]
 
     df1 = pd.DataFrame(res_1, columns=columns)
-    with open(file_name, 'w', newline='') as f:
+    with open(file_name_job, 'w', newline='') as f:
         df1.to_csv(f, index=False)
-        f.write('\n')
+    f.close()
 
     query4 = f"""
         SELECT 
@@ -98,11 +98,11 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
             ca.level AS "candidate_level (Level of the candidate)",
             u.created_at AS "account create time"
         FROM ccp_user u 
-        JOIN ccp_address a ON u.address_id = a.id
-        JOIN ccp_city c ON a.city_id = c.id
-        JOIN ccp_country co ON c.country_id = co.id
-        LEFT JOIN ccp_candidate ca ON u.id = ca.id;
-        --WHERE u.created_at BETWEEN '{time_from}' AND '{time_to}'
+        LEFT JOIN ccp_address a ON u.address_id = a.id
+        LEFT JOIN ccp_city c ON a.city_id = c.id
+        LEFT JOIN ccp_country co ON c.country_id = co.id
+        LEFT JOIN ccp_candidate ca ON u.id = ca.id
+        WHERE u.created_at BETWEEN '{time_from}' AND '{time_to}';
     """
 
     res_4 = db.execute(text(query4))
@@ -120,7 +120,6 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
 
     df4 = pd.DataFrame(res_4, columns=columns)
 
-    with open(file_name, 'a', newline='') as f:
+    with open(file_name_user, 'a', newline='') as f:
         df4.to_csv(f, index=False)
-        f.write('\n')
     f.close()

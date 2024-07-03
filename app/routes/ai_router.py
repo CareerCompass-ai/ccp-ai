@@ -51,12 +51,13 @@ async def generate_assistant (
     db: Session = Depends(PostgresDB.get_db)
 ):
     try:
-        _file_name = req.time_from + '-' + req.time_to + '.csv'
+        _file_name_job = 'job_' + req.time_from + '-' + req.time_to + '.csv'
+        _file_name_user = 'user_' + req.time_from + '-' + req.time_to + '.csv'
 
         # Check if CSV exist?
         with db.begin():
             try: 
-                _file = await assistant_repo.get_by_file_name(db=db, name=_file_name)
+                _file = await assistant_repo.get_by_file_name(db=db, job_file_name=_file_name_job, user_file_name=_file_name_user)
             except SQLAlchemyError:
                 db.rollback()
                 logger.error(f"get analysis file failed error = {traceback.format_exc()}")
@@ -66,12 +67,14 @@ async def generate_assistant (
         #If exist
         if _file is not None:
             #Get file from minio
-            await minio_repo.get_object(minio_constant.MINIO_BUCKET_ASSISTANT, _file_name)
+            await minio_repo.get_object(minio_constant.MINIO_BUCKET_ASSISTANT, _file_name_job)
+            await minio_repo.get_object(minio_constant.MINIO_BUCKET_ASSISTANT, _file_name_user)
+
         else:
             #Generate CSV
             with db.begin():
                 try: 
-                    await generate_analysis_file(db=db, time_from=req.time_from, time_to=req.time_to, file_name=_file_name)
+                    await generate_analysis_file(db=db, time_from=req.time_from, time_to=req.time_to, file_name_job=_file_name_job, file_name_user=_file_name_user)
 
                 except SQLAlchemyError:
                     db.rollback()
@@ -79,14 +82,18 @@ async def generate_assistant (
                     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
                 
             #Upload MinIO
-            upload_response = await minio_repo.upload(
-                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT, temp_path=_file_name, file_name=_file_name)
+            await minio_repo.upload(
+                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT, temp_path=_file_name_job, file_name=_file_name_job)
+            )
+
+            await minio_repo.upload(
+                minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_ASSISTANT, temp_path=_file_name_user, file_name=_file_name_user)
             )
 
         #Create assistant & thread
         #Insert into db
         #Remove all assistant exist??
-        assistant_id, file_id = await ai_helper.create_assistant(file_path=_file_name, time_from=req.time_from, time_to=req.time_to)
+        assistant_id, file_ids = await ai_helper.create_assistant(file_paths=[_file_name_job, _file_name_user], time_from=req.time_from, time_to=req.time_to)
 
         thread_id = await ai_helper.create_thread()
 
@@ -95,15 +102,18 @@ async def generate_assistant (
         record = assistant.AssistantBase (
             assistant_id=assistant_id,
             thread_id=thread_id,
-            file_id=file_id,
+            job_file_id=file_ids[0],
+            user_file_id=file_ids[1],
             time_from=now,
             time_to=now,
             created_at=now,
             updated_at=now,
-            file_name=_file_name
+            job_file_name=_file_name_job,
+            user_file_name=_file_name_user
         )
 
-        os.remove(_file_name)
+        os.remove(_file_name_job)
+        os.remove(_file_name_user)
         
         with db.begin():
             try:

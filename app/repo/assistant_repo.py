@@ -7,8 +7,8 @@ from app.dto import assistant
 from models.ccp_assistant import Assistant
 
 class AssistantRepository:
-    async def get_by_file_name(self, db:Session, name):
-        return db.query(Assistant).where(Assistant.file_name == name).first()
+    async def get_by_file_name(self, db:Session, job_file_name, user_file_name):
+        return db.query(Assistant).filter(Assistant.job_file_name == job_file_name, Assistant.user_file_name == user_file_name).first()
 
     async def create(self, session: Session, input: Optional[assistant.AssistantBase]) -> Assistant:
         if input:
