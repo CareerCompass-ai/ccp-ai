@@ -94,6 +94,7 @@ class ResumeQdrantRepository:
             collection_name=self.index_name,
             query_vector=job_vector[0].vector,
             query_filter=filter,
+            limit=input.size,
             offset=(input.page - 1) * input.size,
         )
         for item in hits:
