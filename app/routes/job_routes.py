@@ -418,7 +418,11 @@ class JobRouter:
 
             try:
                 await self.job_repo.update_with_map(db=session, job_id=req.job_id, props=props)
-                
+
+                updated_job = await self.job_repo.get_by_id(db=session, id=req.job_id)
+
+                await self.job_qdrant_repo.update_fields_qdrant(cfg.QDRANT_INDEX_JOB_SEARCH, updated_job.id, props)
+
                 return job.CloseJobResponse(message="Closed job successfully!")
             except SQLAlchemyError:
                 session.rollback()

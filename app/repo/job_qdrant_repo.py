@@ -19,6 +19,18 @@ class JobQdrantRepository:
         self.client = self.qdrant_setup.setup_qdrant_connection()
         self.index_name = index_name
 
+    async def update_fields_qdrant(self, collection_name: str, id: int, payload):
+        try:
+            self.client.set_payload(
+                collection_name=collection_name,
+                payload=payload,
+                points=[id],
+            )
+
+            logger.info(f"update_fields_qdrant success with collection=[{collection_name}], with id=[{id}]")
+        except Exception as e:
+            logger.error(f"update_fields_qdrant failed with collection=[{collection_name}], err= {e}")
+
     async def process_batch(self, batch, dynamic_filters):
         await self.update_dynamic_filters(batch, dynamic_filters)
         
