@@ -10,6 +10,8 @@ from .routes.job_routes import job_router
 from .routes.recruiter_routes import recruiter_router
 from .routes.resume_routes import resume_router
 
+from .middleware.auth_middleware import JWTMiddleware
+
 app = FastAPI()
 
 origins = ["*"]
@@ -21,6 +23,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# auth middleware
+app.add_middleware(JWTMiddleware)
 
 # admin router, for fixing and configurating stuffs
 app.include_router(admin_router)
