@@ -450,6 +450,7 @@ class JobRouter:
         hiring_level: str = Form(None), 
         work_place: str = Form(None) ,
         tags: str = Form(None),
+        is_hiring: str = Form(None),
         file: UploadFile = File(None),
         session: Session = Depends(postgres.PostgresDB.get_db),
     ):
@@ -490,6 +491,9 @@ class JobRouter:
                 "work_place": work_place,
                 "updated_at": now,
             }
+
+            if is_hiring == "true":
+                props["is_hiring"] = True
 
             # Change common_job_title if change job_title
             if new_job_title is not None:
