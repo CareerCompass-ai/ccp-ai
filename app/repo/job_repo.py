@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.dto import job
+from app.dto import job, mapper
 from models.ccp_job import Job
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
@@ -57,5 +57,5 @@ class JobRepository:
         
         total_records = query.count()
         data = query.offset(offset).limit(limit).all()
-        
-        return total_records, data
+
+        return total_records, [mapper.toJobDTO(record) for record in data]
