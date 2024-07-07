@@ -35,6 +35,13 @@ class JobQdrantRepository:
         await self.update_dynamic_filters(batch, dynamic_filters)
         
     async def list_recommend_jobs(self, input: job.ListRecommendJobRequest) -> List[job.JobAggregate]:
+        query_filter = models.Filter(must=[], should=[], must_not=[])
+        query_filter.must.append(
+            models.FieldCondition(
+                key="is_hiring",
+                match=models.MatchValue(value=True)
+            )
+        )
         records = []
 
         if not input.resume_ids:
@@ -52,6 +59,7 @@ class JobQdrantRepository:
             ),
             limit=input.size,
             offset=(input.page - 1) * input.size,
+            query_filter=query_filter
         )
 
         if not hits:
@@ -78,6 +86,14 @@ class JobQdrantRepository:
         )
     
     async def list_related_jobs(self, input: job.ListRelatedJobRequest) -> List[job.JobAggregate]:
+        query_filter = models.Filter(must=[], should=[], must_not=[])
+        query_filter.must.append(
+            models.FieldCondition(
+                key="is_hiring",
+                match=models.MatchValue(value=True)
+            )
+        )
+
         records = []
 
         hits = self.client.recommend(
@@ -90,6 +106,7 @@ class JobQdrantRepository:
             # ),
             limit=input.size,
             offset=(input.page - 1) * input.size,
+            query_filter=query_filter
         )
 
         if not hits:
