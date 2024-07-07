@@ -3,5 +3,6 @@ WHITELIST_PATHS = [
     "/api/jobs", 
     "/api/job", 
     "/api/related-jobs", 
-    "/api/common/types"
+    "/api/common/types",
+    "/ai/resume/enhance",
 ] 
