@@ -31,6 +31,7 @@ class RecruiterRouter:
         page: int = Query(None, description="Page"),
         size: int = Query(None, description="Size"),
         input: str = Query(None, description="Search input"),
+        is_hiring: bool = Query(None, description="Is hiring"),
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
@@ -43,7 +44,7 @@ class RecruiterRouter:
 
             if input is not None:
                 offset = (page - 1) * size
-                total_records, data = await self.job_repo.list_posted_job(db=db, recruiter_id=recruiter_id, input=input, limit=size, offset=offset)
+                total_records, data = await self.job_repo.list_posted_job(db=db, recruiter_id=recruiter_id, input=input, limit=size, offset=offset, is_hiring=is_hiring)
 
                 tasks = [self.aggregate_repo.get_job(db=db, id=job.id) for job in data]
                 
@@ -56,7 +57,7 @@ class RecruiterRouter:
                     records=records
                 )
             else:
-                job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id)
+                job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, is_hiring=is_hiring)
                 total_records = len(job_ids)
 
                 offset = (page - 1) * size

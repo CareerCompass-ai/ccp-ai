@@ -16,11 +16,12 @@ class RecruiterRepository:
         result = db.query().filter(User.id == id).first()
         return result
 
-    async def get_jobs_posted(self, db:Session, id) -> List[int]:
+    async def get_jobs_posted(self, db:Session, id: int, is_hiring: bool) -> List[int]:
         result = db.query(
             Job.id
         ).filter(
-            Job.recruiter_id == id
+            Job.recruiter_id == id,
+            Job.is_hiring == is_hiring
         ).order_by(Job.created_at.desc()
         ).all()
         records = []
