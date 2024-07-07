@@ -17,6 +17,7 @@ class RecruiterRouter:
         self.resume_qdrant_repo = factory.get_resume_qdrant_repo()
         self.talent_repo = factory.get_talent_saved_repo()
         self.job_qdrant_repo = factory.get_job_qdrant_repo()
+        self.job_repo = factory.get_job_repo()
         self.router = APIRouter(prefix="/api", tags=['Recruiter'])
         self.router.add_api_route("/recruiter/jobs-posted", self.list_jobs_posted, methods=["GET"], response_model=recruiter.ListJobsPostedAggregate)
         self.router.add_api_route("/recruiter/update-saved-talent", self.update_saved_talent, methods=["PUT"], response_model=recruiter.SaveTalentResponse)
@@ -27,6 +28,7 @@ class RecruiterRouter:
         recruiter_id: int = Query(None, description="recruiter ID"),
         page: int = Query(None, description="Page"),
         size: int = Query(None, description="Size"),
+        input: str = Query(None, description="Search input"),
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
@@ -37,20 +39,31 @@ class RecruiterRouter:
             if size >= 100:
                 size = 100
 
-            job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id)
-            total_records = len(job_ids)
+            if input is not None:
+                offset = (page - 1) * size
+                total_records, data = await self.job_repo.list_posted_job(db=db, recruiter_id=recruiter_id, input=input, limit=size, offset=offset)
 
-            offset = (page - 1) * size
+                return recruiter.ListJobsPostedAggregate(
+                    count=total_records,
+                    page=page,
+                    size=size,
+                    records=data
+                )
+            else:
+                job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id)
+                total_records = len(job_ids)
 
-            paging_list = job_ids[offset:offset+size]
+                offset = (page - 1) * size
 
-            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=paging_list)
-            return recruiter.ListJobsPostedAggregate(
-                count=total_records,
-                page=page,
-                size=size,
-                records=data
-            )
+                paging_list = job_ids[offset:offset+size]
+
+                data = await self.job_qdrant_repo.list_jobs_by_ids(ids=paging_list)
+                return recruiter.ListJobsPostedAggregate(
+                    count=total_records,
+                    page=page,
+                    size=size,
+                    records=data
+                )
         except Exception:
             logger.error(f"list_jobs_posted failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
