@@ -1,5 +1,8 @@
 WHITELIST_PATHS = [
     "/health-check", 
+    "/docs",
+    "/openapi.json",
+    "/favicon.ico",
     "/api/jobs", 
     "/api/job", 
     "/api/related-jobs", 
