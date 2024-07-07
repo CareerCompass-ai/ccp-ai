@@ -20,6 +20,7 @@ from app.repo.resume_qdrant_repo import ResumeQdrantRepository
 from app.repo.resume_repo import ResumeRepository
 from app.repo.tag_repo import TagRepository
 from app.repo.talent_saved_repo import TalentSavedRepository
+from app.repo.jobtags_repo import JobTagsRepository
 from producer.producer import KafkaProducer
 
 
@@ -67,6 +68,10 @@ class RepositoryFactory:
     @staticmethod
     def get_city_repo():
         return CityRepository()
+    
+    @staticmethod
+    def get_jobtags_repo():
+        return JobTagsRepository()
     
     @staticmethod
     def get_analysis_repo():
