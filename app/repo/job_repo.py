@@ -58,4 +58,4 @@ class JobRepository:
         total_records = query.count()
         data = query.offset(offset).limit(limit).all()
 
-        return total_records, [mapper.toJobDTO(record) for record in data]
+        return total_records, data

@@ -18,6 +18,7 @@ class RecruiterRouter:
         self.talent_repo = factory.get_talent_saved_repo()
         self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.job_repo = factory.get_job_repo()
+        self.aggregate_repo = factory.get_aggregate_repo()
         self.router = APIRouter(prefix="/api", tags=['Recruiter'])
         self.router.add_api_route("/recruiter/jobs-posted", self.list_jobs_posted, methods=["GET"], response_model=recruiter.ListJobsPostedAggregate)
         self.router.add_api_route("/recruiter/update-saved-talent", self.update_saved_talent, methods=["PUT"], response_model=recruiter.SaveTalentResponse)
@@ -43,11 +44,17 @@ class RecruiterRouter:
                 offset = (page - 1) * size
                 total_records, data = await self.job_repo.list_posted_job(db=db, recruiter_id=recruiter_id, input=input, limit=size, offset=offset)
 
+                records = []
+                for job in data:
+                    record = await self.aggregate_repo.get_job(db=db, id=job.id)
+
+                    records.append(record)
+
                 return recruiter.ListJobsPostedAggregate(
                     count=total_records,
                     page=page,
                     size=size,
-                    records=data
+                    records=records
                 )
             else:
                 job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id)
