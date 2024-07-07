@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 from datetime import datetime
 
@@ -44,11 +45,9 @@ class RecruiterRouter:
                 offset = (page - 1) * size
                 total_records, data = await self.job_repo.list_posted_job(db=db, recruiter_id=recruiter_id, input=input, limit=size, offset=offset)
 
-                records = []
-                for job in data:
-                    record = await self.aggregate_repo.get_job(db=db, id=job.id)
-
-                    records.append(record)
+                tasks = [self.aggregate_repo.get_job(db=db, id=job.id) for job in data]
+                
+                records = await asyncio.gather(*tasks)
 
                 return recruiter.ListJobsPostedAggregate(
                     count=total_records,
