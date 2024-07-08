@@ -12,6 +12,10 @@ class JWTMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             return response
         
+        if request.method == "OPTIONS":
+            response = await call_next(request)
+            return response
+        
         auth_header = request.headers.get("Authorization")
         if auth_header:
             token = auth_header.split(" ")[1]
