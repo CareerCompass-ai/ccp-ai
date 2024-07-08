@@ -14,7 +14,7 @@ from .middleware.auth_middleware import JWTMiddleware
 
 app = FastAPI()
 
-origins = ["https://hcmus-careercompass.me"]
+origins = ["https://hcmus-careercompass.me", "http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
