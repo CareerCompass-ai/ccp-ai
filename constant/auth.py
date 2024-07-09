@@ -12,5 +12,6 @@ WHITELIST_PATHS = [
     "/api/admin/weaviate/create-job-class",
     "/api/admin/weaviate/create-jobqna-class",
     "/api/admin/weaviate/delete-class",
-    "/api/admin/manual-sync-job",
+    "/api/admin/manual-sync-jobs",
+    "/api/admin/manual-sync-resumes",
 ] 

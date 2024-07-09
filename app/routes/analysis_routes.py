@@ -45,6 +45,7 @@ class AnalysisRouter:
         return time_from, time_to
     async def list_top_job_titles(self, top_number: int = Query(None, description="Top number of hiring jobs"), time_from: str = Query(None, description="Start time of time to get the top hiring jobs"), time_to: str = Query(None, description="End time of time to get the top hiring jobs"), db: Session = Depends(PostgresDB.get_db)):
         try:
+            time_from, time_to = await self.format_time_range(time_from, time_to)
             data = await self.analysis_repo.get_top_job_titles(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
             return data
         except Exception:
@@ -61,6 +62,7 @@ class AnalysisRouter:
 
     async def list_top_applied_job_titles(self, top_number: int = Query(None, description="Number of records"), time_from: str = Query(None, description="Start time of time to get top apply job"), time_to: str = Query(None, description="End time of time to get top apply job"), db: Session = Depends(PostgresDB.get_db)):
         try:
+            time_from, time_to = await self.format_time_range(time_from, time_to)
             data = await self.analysis_repo.get_most_applied_job_titles(db=db, top_number=top_number, time_from=time_from, time_to=time_to)
             return data
         except Exception:
