@@ -15,3 +15,22 @@ WHITELIST_PATHS = [
     "/api/admin/manual-sync-jobs",
     "/api/admin/manual-sync-resumes",
 ] 
+
+ADMIN_PATHS = [
+    "/api/analysis/top-job-titles",
+    "/api/analysis/top-job-titles-salary",
+    "/api/analysis/top-applied-job-titles",
+    "/api/analysis/top-skills",
+    "/api/analysis/job-company-type",
+    "/api/analysis/new-user-in-time-range",
+    "/api/analysis/count-user-by-role",
+    "/api/analysis/job-status",
+    "/api/analysis/top-recruiter-by-job-posting",
+    "/api/analysis/top-viewed-job",
+    "/api/analysis/top-work-titles",
+    "/api/analysis/salary-change-by-time",
+    "/api/analysis/salary-change-by-year",
+    "/api/analysis/number-jobs-by-country",
+    "/api/analysis/get-countries",
+    "/api/analysis/get-common-job-titles"
+]

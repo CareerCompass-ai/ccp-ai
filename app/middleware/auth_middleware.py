@@ -37,29 +37,10 @@ class JWTMiddleware(BaseHTTPMiddleware):
         return response
     
     def check_authorization(self, request, payload):
-        admin_paths = [
-            "/api/analysis/top-job-titles",
-            "/api/analysis/top-job-titles-salary",
-            "/api/analysis/top-applied-job-titles",
-            "/api/analysis/top-skills",
-            "/api/analysis/job-company-type",
-            "/api/analysis/new-user-in-time-range",
-            "/api/analysis/count-user-by-role",
-            "/api/analysis/job-status",
-            "/api/analysis/top-recruiter-by-job-posting",
-            "/api/analysis/top-viewed-job",
-            "/api/analysis/top-work-titles",
-            "/api/analysis/salary-change-by-time",
-            "/api/analysis/salary-change-by-year",
-            "/api/analysis/number-jobs-by-country",
-            "/api/analysis/get-countries",
-            "/api/analysis/get-common-job-titles"
-        ]
-
         current_path = request.url.path
 
         # Check if the path requires admin role
-        if current_path in admin_paths:
+        if current_path in auth_constant.ADMIN_PATHS:
             if payload.get("role") != "ADMIN":
                 return False
             else:
