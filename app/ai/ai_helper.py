@@ -455,3 +455,135 @@ class AI:
                     await asyncio.sleep(2)
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return []
+    
+    async def get_skills_and_knowledge_of_resume(self, input:str, max_retries=3) -> str:
+        retries = 0
+        prompt = """
+            ### Resume: ### {input} ### 
+            Your task is to provide a detailed list of the skills and knowledge in this candidate's resume. 
+            Please answer with the corresponding position. 
+            The response must be a JSON object with a field "answer" and the value as a list/array containing the skills and knowledge in this candidate's resume.
+
+            ## Response Example - a JSON object ##
+            {{
+                "answer": ["Golang", "Python", "SQL", "Postgresql", "Kafka", "Microservices", "Design database", "Software Architecture"]
+            }}
+        """
+        content = prompt.format(input=input)
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.completion_model,
+                    messages=[
+                        {"role": "system", "content": f"You are a helpful assistant designed to provide a detailed list of the skills and knowledge of a candidate's resume. And must follow the response format"},
+                        {"role": "system", "content": content}
+                    ],
+                    top_p=0.2,
+                )
+
+                response = json.loads(response.choices[0].message.content.strip())  
+                return response.get("answer", "")
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error:: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    time.sleep(2) 
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
+        return None
+    
+    async def get_candidate_level(self, input:str, max_retries=3) -> str:
+        retries = 0
+        prompt = """
+        ### Resume: ### {input} ### 
+        Based on the provided candidate's resume, your task is to predict the candidate's professional level. 
+        Consider factors such as years of experience, job titles, responsibilities, achievements, and relevant skills mentioned in the resume.
+
+        Possible levels to choose from (answer must exist in the given list):
+        ["Entry level", "Associate", "Junior level", "Mid-Senior level", "Leader", "Manager"]
+
+        Please predict at least 2 levels for the candidate.
+
+        Provide your answer as a JSON object with a field "answer" and the value as a list containing the predicted candidate's level(s).
+
+        ## Response Example ##
+        {{
+            "answer": ["Entry level", "Associate"]
+        }}
+        """
+        content = prompt.format(input=input)
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.completion_model,
+                    messages=[
+                        {"role": "system", "content": f"You are a helpful assistant designed to predict the candidate's level based on their resume. And must follow the response format"},
+                        {"role": "system", "content": content}
+                    ],
+                    top_p=0.2,
+                )
+
+                tmp = json.loads(response.choices[0].message.content.strip())  
+                return tmp.get("answer", "")
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error:: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    time.sleep(2) 
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
+        return None
+    
+    async def get_candidate_major(self, input:str, max_retries=3) -> str:
+        retries = 0
+        prompt = """
+        ### Resume: ### {input} ### 
+        Based on the provided candidate's resume, your task is to predict the candidate's major. 
+        Consider factors such as years of experience, job titles, responsibilities, and skills mentioned in the resume.
+
+        Possible majors to choose from (answer must exist in the given list):
+        ["Software Engineer", "Backend Engineer", "Backend Developer", "Frontend Engineer", "Frontend Developer", "DevOps Engineer", "System Engineer", "Data Analyst", "Full-stack Developer", "Mobile Engineer", "Mobile Developer", "Cloud Engineer", "Data Scientist", "Machine Learning Engineer", "AI Engineer", "Network Engineer", "Cybersecurity Engineer", "Database Administrator", "IT Support Specialist", "IT Helpdesk", "Quality Assurance Engineer", "QA QC, "Tester", "IT Project Manager", "Site Reliability Engineer (SRE)", "UX/UI Designer", "Game Developer", "Embedded Systems Engineer", "Embedded Engineer", "IoT Engineer", "IT Consultant", "Business Analyst", "Business Intelligence", "Systems Analyst", "Web Developer", "Robotics Engineer", "IT Architect", "Product Manager", "DevSecOps Engineer", "Infrastructure Engineer", "Integration Engineer", "Platform Engineer", "Application Developer", "Technical Support Engineer", "Automation Engineer", "Blockchain Developer", "AR/VR Developer", "Big Data Engineer", "Data Engineer", "Cloud Solutions Architect", "Systems Administrator", "Database Administrator", "Data Architect", "Solution Architect", "ERP Engineer", "ERP Consultant"]
+        
+        Provide your answer as a JSON object with a field "answer" and the value as a list containing the predicted candidate's major(s).
+
+        ## Response Example 1 ##
+        {{
+            "answer": ["Software Engineer", "Backend Engineer", "Backend Developer"]
+        }}
+        ## Response Example 2 ##
+        {{
+            "answer": ["Embedded Systems Engineer", "Embedded Engineer", "IoT Engineer"]
+        }}
+        ## Response Example 3 ##
+        {{
+            "answer": ["Blockchain Developer"]
+        }}
+        """
+        content = prompt.format(input=input)
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.completion_model,
+                    messages=[
+                        {"role": "system", "content": f"You are a helpful assistant designed to predict the candidate's major based on their resume. And must follow the response format"},
+                        {"role": "system", "content": content}
+                    ],
+                    top_p=0.2,
+                )
+
+                tmp = json.loads(response.choices[0].message.content.strip())  
+                return tmp.get("answer", "")
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 400:
+                    logger.error(f"Bad request error:: {e}")
+                    break
+                else:
+                    logger.info(f"Request to OpenAI API failed. Retrying...")
+                    retries += 1
+                    time.sleep(2) 
+        logger.info(f"Exceeded maximum number of retries. Please try again later.")
+        return None

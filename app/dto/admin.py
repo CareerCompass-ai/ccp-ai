@@ -6,3 +6,6 @@ class DeleteClassRequest(BaseModel):
 
 class ManualSyncJobRequest(BaseModel):
     ids: list[int]
+
+class ManualSyncResumeRequest(BaseModel):
+    ids: list[int]
