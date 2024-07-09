@@ -136,10 +136,11 @@ class CandidateRouter:
                 updated_at=res.updated_at
             ) for res in data]
 
+            resume_records.sort(key=lambda x: x.id, reverse=True)
+
             return resume.GetResumesOfCandidateResponse(records=resume_records)
         except Exception:
             logger.error(f"list_resume_of_candidate failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
-
 
 candidate_router = CandidateRouter().router
