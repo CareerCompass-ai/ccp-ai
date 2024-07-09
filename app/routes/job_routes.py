@@ -451,6 +451,7 @@ class JobRouter:
         work_place: str = Form(None) ,
         tags: str = Form(None),
         is_hiring: str = Form(None),
+        recruiter_id: str = Form(None),
         file: UploadFile = File(None),
         session: Session = Depends(postgres.PostgresDB.get_db),
     ):

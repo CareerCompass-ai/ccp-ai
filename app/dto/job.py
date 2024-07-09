@@ -113,12 +113,14 @@ class UploadJobMinioResponse(BaseModel):
 class ApplyJobRequest(BaseModel):
     resume_id: int
     job_id: int
+    candidate_id: int
 
 class ApplyJobResponse(BaseModel):
     message: str = "Applied successfully"
 
 class CloseJobRequest(BaseModel):
     job_id: int
+    recruiter_id: int
 
 class CloseJobResponse(BaseModel):
     message: str = "Job closed successfully"

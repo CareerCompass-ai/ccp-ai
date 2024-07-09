@@ -82,3 +82,4 @@ class DeleteResumeResponse(BaseModel):
 
 class DeleteResumeRequest(BaseModel):
     resume_id: int
+    candidate_id: int

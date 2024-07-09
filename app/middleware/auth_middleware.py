@@ -8,27 +8,86 @@ import constant.auth as auth_constant
 
 class JWTMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in auth_constant.WHITELIST_PATHS:  # Whitelist paths that don't require auth
-            response = await call_next(request)
-            return response
-        
+        if request.url.path in auth_constant.WHITELIST_PATHS:
+            return await call_next(request)  # Allow access to whitelisted paths without auth
+
         if request.method == "OPTIONS":
-            response = await call_next(request)
-            return response
+            return await call_next(request)  # Allow preflight requests
         
         auth_header = request.headers.get("Authorization")
-        if auth_header:
-            token = auth_header.split(" ")[1]
-        else:
-            return JSONResponse({"detail": "Authorization header missing"}, status_code=401)
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return JSONResponse({"detail": "Authorization header missing or invalid"}, status_code=401)
+        
+        token = auth_header.split(" ")[1]
         
         try:
             payload = jwt.decode(token, cfg_constant.JWT_SECRET_KEY, algorithms=[cfg_constant.JWT_ALGORITHM])
-            # Store user info in request state if needed, e.g., request.state.user = payload
+            request.state.user = payload  # Store user info in request state if needed
+
+            authorized = self.check_authorization(request, payload)
+            if not authorized:
+                return JSONResponse({"detail": "You are not authorized to access this resource"}, status_code=403)
+        
         except jwt.ExpiredSignatureError:
             return JSONResponse({"detail": "Token has expired"}, status_code=401)
-        except jwt.InvalidTokenError:
+        except (jwt.InvalidTokenError, IndexError, KeyError):
             return JSONResponse({"detail": "Invalid token"}, status_code=401)
         
         response = await call_next(request)
         return response
+    
+    def check_authorization(self, request, payload):
+        admin_paths = [
+            "/api/analysis/top-job-titles",
+            "/api/analysis/top-job-titles-salary",
+            "/api/analysis/top-applied-job-titles",
+            "/api/analysis/top-skills",
+            "/api/analysis/job-company-type",
+            "/api/analysis/new-user-in-time-range",
+            "/api/analysis/count-user-by-role",
+            "/api/analysis/job-status",
+            "/api/analysis/top-recruiter-by-job-posting",
+            "/api/analysis/top-viewed-job",
+            "/api/analysis/top-work-titles",
+            "/api/analysis/salary-change-by-time",
+            "/api/analysis/salary-change-by-year",
+            "/api/analysis/number-jobs-by-country",
+            "/api/analysis/get-countries",
+            "/api/analysis/get-common-job-titles"
+        ]
+
+        current_path = request.url.path
+
+        # Check if the path requires admin role
+        if current_path in admin_paths:
+            if payload.get("role") != "ADMIN":
+                return False
+            else:
+                return True
+
+        # For paths that require specific user_id or recruiter_id
+        path_checks = {
+            "/api/resumes": ("candidate_id", payload["userId"]),
+            "/api/candidate/applied": ("candidate_id", payload["userId"]),
+            "/api/candidate/update-saved-job": ("candidate_id", payload["userId"]),
+            "/api/candidate/saved-jobs": ("candidate_id", payload["userId"]),
+            "/api/recruiter/jobs-posted": ("recruiter_id", payload["userId"]),
+            "/api/recruiter/update-saved-talent": ("recruiter_id", payload["userId"]),
+            "/api/recruiter/candidates-saved": ("recruiter_id", payload["userId"]),
+            "/api/recommend-jobs": ("user_id", payload["userId"]),
+            "/api/job/create": ("recruiter_id", payload["userId"]),
+            "/api/job/apply": ("candidate_id", payload["userId"]),
+            "/api/job/close": ("recruiter_id", payload["userId"]),
+            "/api/job/update": ("recruiter_id", payload["userId"]),
+            "/api/job/applied-resumes": ("recruiter_id", payload["userId"]),
+            "/api/resume/create": ("candidate_id", payload["userId"]),
+            "/api/resume/delete": ("candidate_id", payload["userId"]),
+        }
+        
+        if current_path in path_checks:
+            param_name, expected_value = path_checks[current_path]
+            param_value = request.query_params.get(param_name)
+            if param_value and str(expected_value) == str(param_value):
+                return True
+        
+        return False
