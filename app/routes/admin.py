@@ -12,7 +12,7 @@ from config.weaviate import WeaviateVDB as weaviate
 from constant import config
 from pkg.logging import logger
 
-from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest
+from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest, ManualSyncResumeRequest
 from .helper import combine_job_content
 
 security = HTTPBasic()
@@ -41,7 +41,8 @@ class AdminRouter:
         self.router.add_api_route("/weaviate/create-job-class", self.create_job_class, methods=["POST"])
         self.router.add_api_route("/weaviate/create-jobqna-class", self.create_jobqna_class, methods=["POST"])
         self.router.add_api_route("/weaviate/delete-class", self.delete_class, methods=["DELETE"])
-        self.router.add_api_route("/manual-sync-job", self.manual_sync_job, methods=["POST"])
+        self.router.add_api_route("/manual-sync-jobs", self.manual_sync_jobs, methods=["POST"])
+        self.router.add_api_route("/manual-sync-resumes", self.manual_sync_resumes, methods=["POST"])
 
     async def protected_route(self, is_authenticated: bool = Depends(authenticate_user)):
         return {"message": "You are authorized to access this resource"}
@@ -70,7 +71,7 @@ class AdminRouter:
             logger.error(f"weaviate delete_class failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
         
-    async def manual_sync_job(self, req: ManualSyncJobRequest, is_authenticated: bool = Depends(authenticate_user), db: Session = Depends(PostgresDB.get_db)):
+    async def manual_sync_jobs(self, req: ManualSyncJobRequest, is_authenticated: bool = Depends(authenticate_user), db: Session = Depends(PostgresDB.get_db)):
         try:
             for id in req.ids:
                 job_agg = await self.agg_repo.get_job(db=db, id=id)
@@ -93,9 +94,50 @@ class AdminRouter:
 
                 await self.sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_JOB_SEARCH, job_agg, vector)
 
-            return {"message": "Manual job sync completed successfully"}
+            return {"message": "Manual sync jobs completed successfully"}
         except Exception:
             logger.error(f"manual_sync_job failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        
+    async def manual_sync_resumes(self, req: ManualSyncResumeRequest, is_authenticated: bool = Depends(authenticate_user), db: Session = Depends(PostgresDB.get_db)):
+        try:
+            for id in req.ids:
+                resume_agg = await self.agg_repo.get_resume(db=db, id=id)
+
+                summarized_content = await self.ai_helper.get_resume_summarized(resume_agg.content)
+
+                # TODO: skills_and_knowledge = LLM Get skills and knowledge from resume
+                skills_and_knowledge = await self.ai_helper.get_skills_and_knowledge_of_resume(resume_agg.content)
+                if isinstance(skills_and_knowledge, list):
+                    skills_and_knowledge = ", ".join(skills_and_knowledge)
+                
+                # combined_content = summarized_content + resume_agg.resume_name + skills_and_knowledge
+
+                # predict candidate's level
+                level = await self.ai_helper.get_candidate_level(resume_agg.content)
+                if isinstance(level, list):
+                    level = ", ".join(level)
+
+                # predict candidate's major
+                tmp_content = summarized_content + ", skills and knowledges: " + skills_and_knowledge + ", level: " + level
+                major = await self.ai_helper.get_candidate_major(tmp_content)
+                if isinstance(major, list):
+                    major = ", ".join(major)
+
+                # combine content
+                combined_content = summarized_content + ", " + skills_and_knowledge + ", " + level + ", " + major
+
+                # vectorize the combined content
+                vector = await self.ai_helper.get_embedding(combined_content)
+
+                resume_agg.s_content = summarized_content
+                resume_agg.combined_content = combined_content
+
+                await self.sync_helper.upsert_to_qdrant(config.QDRANT_INDEX_RESUME_SEARCH, resume_agg, vector)
+
+            return {"message": "Manual sync resumes completed successfully"}
+        except Exception:
+            logger.error(f"manual_sync_resume failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
 admin_router = AdminRouter().router

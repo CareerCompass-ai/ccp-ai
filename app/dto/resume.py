@@ -39,6 +39,8 @@ class ResumeAggregate(ResumeBase):
     phone: Optional[str] = None
     self_introduction: Optional[str] = None
     introduction: Optional[str] = None
+    combined_content: Optional[str] = None
+
 
 class ListResumeRequest(BaseModel):
     page: Optional[int] = None
