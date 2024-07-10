@@ -42,7 +42,7 @@ class RecruiterRouter:
             if size >= 100:
                 size = 100
 
-            if input is not None:
+            if input != "":
                 offset = (page - 1) * size
                 total_records, data = await self.job_repo.list_posted_job(db=db, recruiter_id=recruiter_id, input=input, limit=size, offset=offset, is_hiring=is_hiring)
 

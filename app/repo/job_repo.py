@@ -53,7 +53,7 @@ class JobRepository:
         return res.job_title
     
     async def list_posted_job(self, db: Session, recruiter_id: int, input: str, limit: int, offset: int, is_hiring: bool = None):
-        query = db.query(Job).filter(Job.recruiter_id == recruiter_id, Job.job_title.ilike(f"%{input}%"), Job.is_hiring == is_hiring)
+        query = db.query(Job.id).filter(Job.recruiter_id == recruiter_id, Job.job_title.ilike(f"%{input}%"), Job.is_hiring == is_hiring)
         
         total_records = query.count()
         data = query.offset(offset).limit(limit).all()
