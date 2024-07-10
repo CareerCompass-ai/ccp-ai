@@ -53,6 +53,21 @@ class JobRouter:
         self.router.add_api_route("/job/update", self.update_job, methods=["PUT"], response_model=job.UpdateJobResponse)
         self.router.add_api_route("/job/applied-resumes", self.list_resumes_from_qdrant, methods=["GET"], response_model=resume.ListResumeResponse)
         self.router.add_api_route("/job/check-saved-or-applied", self.check_is_saved_or_applied, methods=["POST"], response_model=job.CheckAppliedOrSavedResponse)
+        self.router.add_api_route("/all-jobs-for-seo", self.list_all_jobs_for_seo, methods=["GET"], response_model=job.ListAllJobsForSEOResponse)
+
+    async def list_all_jobs_for_seo(
+            self,
+            db: Session = Depends(postgres.PostgresDB.get_db)
+        ):
+        try:
+            data = await self.job_repo.list_all_jobs_for_seo(db=db)
+
+            return job.ListAllJobsForSEOResponse(
+                records=data
+            )
+        except Exception:
+            logger.error(f"list_all_jobs_for_seo failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
     async def list_jobs_from_qdrant(
         self,

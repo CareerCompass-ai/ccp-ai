@@ -4,6 +4,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.dto import job, mapper
+from app.dto.job import JobForSEO
 from models.ccp_job import Job
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
@@ -59,3 +60,7 @@ class JobRepository:
         data = query.offset(offset).limit(limit).all()
 
         return total_records, data
+    
+    async def list_all_jobs_for_seo(self, db: Session):
+        result = db.query(Job.id, Job.job_title).all()
+        return [JobForSEO(id=job.id, title=job.job_title) for job in result]

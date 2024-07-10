@@ -90,6 +90,7 @@ class ListJobResponse(BaseModel):
     size: int
     records: List[JobAggregate]
     dynamic_filters: DynamicFilters = DynamicFilters()
+
 class ListRelatedJobResponse(BaseModel):
     page: int
     size: int
@@ -135,3 +136,10 @@ class CheckAppliedOrSavedRequest(BaseModel):
 class CheckAppliedOrSavedResponse(BaseModel):
     is_applied: bool
     is_saved: bool
+
+class JobForSEO(BaseModel):
+    id: int
+    title: str
+
+class ListAllJobsForSEOResponse(BaseModel):
+    records: List[JobForSEO]

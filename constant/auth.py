@@ -21,6 +21,7 @@ WHITELIST_PATHS = [
     "/api/admin/weaviate/delete-class",
     "/api/admin/manual-sync-jobs",
     "/api/admin/manual-sync-resumes",
+    "/api/all-jobs-for-seo",
 ] 
 
 ADMIN_PATHS = [
