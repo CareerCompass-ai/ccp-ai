@@ -34,3 +34,27 @@ ADMIN_PATHS = [
     "/api/analysis/get-countries",
     "/api/analysis/get-common-job-titles"
 ]
+
+PATH_CHECKS_BODY = {
+    "/api/candidate/update-saved-job": "candidate_id",
+    "/api/recruiter/update-saved-talent": "recruiter_id",
+    "/api/job/apply": "candidate_id",
+    "/api/job/close": "recruiter_id",
+    "/api/resume/delete": "candidate_id",
+}
+        
+PATH_CHECKS_FORM_DATA = {
+    "/api/job/create": "recruiter_id",
+    "/api/job/update": "recruiter_id",
+    "/api/resume/create": "candidate_id",
+}
+
+PATH_CHECKS_QUERY_PARAMS = {
+    "/api/resumes": "candidate_id",
+    "/api/candidate/applied": "candidate_id",
+    "/api/candidate/saved-jobs": "candidate_id",
+    "/api/recruiter/jobs-posted": "recruiter_id",
+    "/api/recruiter/candidates-saved": "recruiter_id",
+    "/api/recommend-jobs": "user_id",
+    "/api/job/applied-resumes": "recruiter_id",
+}

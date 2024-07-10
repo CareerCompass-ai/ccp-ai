@@ -2,6 +2,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 import jwt
+import json
 
 import constant.config as cfg_constant
 import constant.auth as auth_constant
@@ -24,7 +25,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
             payload = jwt.decode(token, cfg_constant.JWT_SECRET_KEY, algorithms=[cfg_constant.JWT_ALGORITHM])
             request.state.user = payload  # Store user info in request state if needed
 
-            authorized = self.check_authorization(request, payload)
+            authorized = await self.check_authorization(request, payload)
             if not authorized:
                 return JSONResponse({"detail": "You are not authorized to access this resource"}, status_code=403)
         
@@ -36,7 +37,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         return response
     
-    def check_authorization(self, request, payload):
+    async def check_authorization(self, request, payload):
         current_path = request.url.path
 
         # Check if the path requires admin role
@@ -46,29 +47,30 @@ class JWTMiddleware(BaseHTTPMiddleware):
             else:
                 return True
 
-        # For paths that require specific user_id or recruiter_id
-        path_checks = {
-            "/api/resumes": ("candidate_id", payload["userId"]),
-            "/api/candidate/applied": ("candidate_id", payload["userId"]),
-            "/api/candidate/update-saved-job": ("candidate_id", payload["userId"]),
-            "/api/candidate/saved-jobs": ("candidate_id", payload["userId"]),
-            "/api/recruiter/jobs-posted": ("recruiter_id", payload["userId"]),
-            "/api/recruiter/update-saved-talent": ("recruiter_id", payload["userId"]),
-            "/api/recruiter/candidates-saved": ("recruiter_id", payload["userId"]),
-            "/api/recommend-jobs": ("user_id", payload["userId"]),
-            "/api/job/create": ("recruiter_id", payload["userId"]),
-            "/api/job/apply": ("candidate_id", payload["userId"]),
-            "/api/job/close": ("recruiter_id", payload["userId"]),
-            "/api/job/update": ("recruiter_id", payload["userId"]),
-            "/api/job/applied-resumes": ("recruiter_id", payload["userId"]),
-            "/api/resume/create": ("candidate_id", payload["userId"]),
-            "/api/resume/delete": ("candidate_id", payload["userId"]),
-        }
+        if current_path in auth_constant.PATH_CHECKS_BODY:
+            param_name = auth_constant.PATH_CHECKS_BODY[current_path]
+            param_value = await self.get_param_value_from_body(request, param_name)
+            if param_value and str(payload["userId"]) == str(param_value):
+                return True
         
-        if current_path in path_checks:
-            param_name, expected_value = path_checks[current_path]
+        if current_path in auth_constant.PATH_CHECKS_FORM_DATA:
+            param_name = auth_constant.PATH_CHECKS_FORM_DATA[current_path]
+            param_value = await self.get_param_value_from_form_data(request, param_name)
+            if param_value and str(payload["userId"]) == str(param_value):
+                return True
+
+        if current_path in auth_constant.PATH_CHECKS_QUERY_PARAMS:
+            param_name = auth_constant.PATH_CHECKS_QUERY_PARAMS[current_path]
             param_value = request.query_params.get(param_name)
-            if param_value and str(expected_value) == str(param_value):
+            if param_value and str(payload["userId"]) == str(param_value):
                 return True
         
         return False
+
+    async def get_param_value_from_body(self, request, param_name):
+        body = await request.json()
+        return body.get(param_name)
+
+    async def get_param_value_from_form_data(self, request, param_name):
+        form = await request.form()
+        return form.get(param_name)
