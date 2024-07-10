@@ -22,7 +22,7 @@ class RecruiterRepository:
         ).filter(
             Job.recruiter_id == id,
             Job.is_hiring == is_hiring
-        ).order_by(Job.created_at.desc()
+        ).order_by(Job.updated_at.desc()
         ).all()
         records = []
         for job in result:

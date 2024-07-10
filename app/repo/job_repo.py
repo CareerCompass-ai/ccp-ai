@@ -57,7 +57,7 @@ class JobRepository:
         query = db.query(Job.id).filter(Job.recruiter_id == recruiter_id, Job.job_title.ilike(f"%{input}%"), Job.is_hiring == is_hiring)
         
         total_records = query.count()
-        data = query.offset(offset).limit(limit).all()
+        data = query.order_by(desc(Job.updated_at)).offset(offset).limit(limit).all()
 
         return total_records, data
     
