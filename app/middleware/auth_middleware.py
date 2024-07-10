@@ -1,11 +1,36 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from starlette.datastructures import FormData
 import jwt
 import json
+from io import BytesIO
+from starlette.datastructures import UploadFile
 
 import constant.config as cfg_constant
 import constant.auth as auth_constant
+
+class CustomRequest(Request):
+    def __init__(self, scope, receive, body=None, form=None):
+        super().__init__(scope, receive)
+        self._body = body
+        self._form = form
+
+    async def body(self):
+        if self._body is None:
+            self._body = await super().body()
+        return self._body
+
+    async def json(self):
+        body = await self.body()
+        return json.loads(body)
+
+    async def form(self):
+        if self._form is None:
+            form_data = await super().form()
+            form_dict = dict(form_data)
+            self._form = FormData([(key, value if isinstance(value, UploadFile) else BytesIO(value)) for key, value in form_dict.items()])
+        return self._form
 
 class JWTMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -25,7 +50,12 @@ class JWTMiddleware(BaseHTTPMiddleware):
             payload = jwt.decode(token, cfg_constant.JWT_SECRET_KEY, algorithms=[cfg_constant.JWT_ALGORITHM])
             request.state.user = payload  # Store user info in request state if needed
 
-            authorized = await self.check_authorization(request, payload)
+            # Create a CustomRequest object to store body and form data
+            body = await request.body()
+            form = await request.form()
+            custom_request = CustomRequest(request.scope, request.receive, body, form)
+            
+            authorized = await self.check_authorization(custom_request, payload)
             if not authorized:
                 return JSONResponse({"detail": "You are not authorized to access this resource"}, status_code=403)
         
@@ -34,7 +64,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
         except (jwt.InvalidTokenError, IndexError, KeyError):
             return JSONResponse({"detail": "Invalid token"}, status_code=401)
         
-        response = await call_next(request)
+        response = await call_next(custom_request)
         return response
     
     async def check_authorization(self, request, payload):
