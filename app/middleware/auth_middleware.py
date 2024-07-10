@@ -52,20 +52,26 @@ class JWTMiddleware(BaseHTTPMiddleware):
             param_value = await self.get_param_value_from_body(request, param_name)
             if param_value and str(payload["userId"]) == str(param_value):
                 return True
+            else:
+                return False
         
         if current_path in auth_constant.PATH_CHECKS_FORM_DATA:
             param_name = auth_constant.PATH_CHECKS_FORM_DATA[current_path]
             param_value = await self.get_param_value_from_form_data(request, param_name)
             if param_value and str(payload["userId"]) == str(param_value):
                 return True
+            else:
+                return False
 
         if current_path in auth_constant.PATH_CHECKS_QUERY_PARAMS:
             param_name = auth_constant.PATH_CHECKS_QUERY_PARAMS[current_path]
             param_value = request.query_params.get(param_name)
             if param_value and str(payload["userId"]) == str(param_value):
                 return True
+            else:
+                return False
         
-        return False
+        return True
 
     async def get_param_value_from_body(self, request, param_name):
         body = await request.json()
