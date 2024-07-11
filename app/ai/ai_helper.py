@@ -39,7 +39,7 @@ class AI:
                 assistant = self.openai_client.beta.assistants.create(
                     name="Data Visualization",
                     instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
-                    f"Two uploaded files are in csv format. The first file contains data about posted jobs. The second file is data about users (including candidates and recruiter). Both contain data from {time_from} to {time_to} in the system." 
+                    f"The two uploaded files are in csv format. The file named job_{time_from}-{time_to}.csv contains data about jobs posted between {time_from} and {time_to}, including job information and recruiter information that posts that job. The file named user_{time_from}-{time_to}.csv contains data about all user information in the entire system without time limit, including recruiter information and candidate information." 
                     f"You have access to a sandboxed environment for writing and testing code."
                     f"When you are asked to create a visualization you should follow these steps:"
                     f"1. Write the code."

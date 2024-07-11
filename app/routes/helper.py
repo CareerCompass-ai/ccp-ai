@@ -35,6 +35,7 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
             j.work_place AS "work_place (Place of work)",
             j.applied_count AS "applied_count (Number of job applications)",
             j.hiring_level AS "hiring_level (Level of hiring)",
+            j.created_at AS "created_at (Job creation date)",
             c.city_name AS "city_name (Name of the city)",
             co.country_name AS "country_name (Name of the country)",
             j.recruiter_id AS "recruiter_id (ID of the recruiter)",
@@ -73,6 +74,7 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
         "work_place (Place of work)", 
         "applied_count (Number of job applications)",
         "hiring_level (Level of hiring)", 
+        "created_at (Job creation date)",
         "city_name (Name of the city)", 
         "country_name (Name of the country)", 
         "recruiter_id (ID of the recruiter)",
@@ -96,13 +98,13 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
             u.work_title AS "candidate_work_title (Title of the work)", 
             ca.year_of_experience AS "candidate_yoe (Years of experience)", 
             ca.level AS "candidate_level (Level of the candidate)",
-            u.created_at AS "account create time"
+            u.created_at AS "created_at (Account creation date)"
         FROM ccp_user u 
         LEFT JOIN ccp_address a ON u.address_id = a.id
         LEFT JOIN ccp_city c ON a.city_id = c.id
         LEFT JOIN ccp_country co ON c.country_id = co.id
-        LEFT JOIN ccp_candidate ca ON u.id = ca.id
-        WHERE u.created_at BETWEEN '{time_from}' AND '{time_to}';
+        LEFT JOIN ccp_candidate ca ON u.id = ca.id;
+        --WHERE u.created_at BETWEEN '{time_from}' AND '{time_to}';
     """
 
     res_4 = db.execute(text(query4))
@@ -115,7 +117,7 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
         "candidate_work_title (Title of the work)", 
         "candidate_yoe (Years of experience)", 
         "candidate_level (Level of the candidate)",
-        "account create time"
+        "created_at (Account creation date)"
     ]
 
     df4 = pd.DataFrame(res_4, columns=columns)
