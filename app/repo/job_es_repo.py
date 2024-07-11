@@ -30,7 +30,7 @@ class JobESRepository:
         query = {
             "query_string": {
                 "query": input.input if input.input else "*",
-                "default_field": "content"  # Specify the field to search on
+                "default_field": "combined_content"  # Specify the field to search on
             }
         }
         

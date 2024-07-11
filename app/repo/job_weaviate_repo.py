@@ -15,8 +15,8 @@ class JobWeaviateRepository:
 
         if input.size <= 0:
             input.size = 10
-        if input.size >= 100:
-            input.size = 100
+        # if input.size >= 100:
+            # input.size = 100
 
         # res = job_collection.query.hybrid(
         #     query=input.input,
@@ -54,7 +54,7 @@ class JobWeaviateRepository:
             limit=input.size,
             return_metadata=MetadataQuery(score=True, explain_score=True),
             # filters=filter_conditions,
-            query_properties=["content"]
+            query_properties=["combined_content"]
             # fusion_type=
         )
 
