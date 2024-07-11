@@ -17,7 +17,7 @@ class CandidateRepository:
         applications = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
             .join(Resume, Application.resume_id == Resume.id)\
             .filter(Resume.candidate_id == id)\
-            .order_by(Application.created_at.desc())\
+            .order_by(Application.updated_at.desc())\
             .all()
         records = []
         for app in applications:
