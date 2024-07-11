@@ -240,8 +240,8 @@ class JobQdrantRepository:
             input.page = 1
         if input.size <= 0:
             input.size = 10
-        if input.size >= 100:
-            input.size = 100
+        # if input.size >= 100:
+            # input.size = 100
 
         total_record = 0
         dynamic_filters = {
