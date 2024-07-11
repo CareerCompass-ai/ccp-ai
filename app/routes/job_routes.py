@@ -30,6 +30,7 @@ class JobRouter:
     def __init__(self):
         self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.job_weaviate_repo = factory.get_job_weaviate_repo()
+        self.job_es_repo = factory.get_job_es_repo()
         self.resume_qdrant_repo = factory.get_resume_qdrant_repo()
         self.job_repo = factory.get_job_repo()
         self.jobtag_repo = factory.get_jobtag_repo()
@@ -132,8 +133,8 @@ class JobRouter:
                 data = await self.job_weaviate_repo.list_jobs(input=req)
 
                 return data
-            # elif search_type == "fulltext": # handle full-text search
-            #     # data = job_es_repo.list_jobs(input=req)
+            elif search_type == "fulltext": # handle full-text search
+                data = await self.job_es_repo.list_jobs(input=req)
             else:
                 return job.ListJobResponse(
                     count=0,

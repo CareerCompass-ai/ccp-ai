@@ -55,3 +55,5 @@ langchain-text-splitters==0.2.0
 langsmith==0.1.59
 pymupdf4llm==0.0.5
 pyjwt==2.8.0
+elastic-transport==8.13.1
+elasticsearch==8.14.0

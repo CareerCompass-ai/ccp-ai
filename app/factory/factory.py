@@ -1,4 +1,5 @@
 from app.repo.assistant_repo import AssistantRepository
+from app.repo.job_es_repo import JobESRepository
 from app.repo.notifications_repo import NotificationsRepository
 from app.repo.user_repo import UserRepository
 import constant.config as cfg
@@ -96,6 +97,10 @@ class RepositoryFactory:
     @staticmethod
     def get_job_weaviate_repo():
         return JobWeaviateRepository(collection_name="Job")
+    
+    @staticmethod
+    def get_job_es_repo():
+        return JobESRepository(index_name=cfg.ES_INDEX_JOB_SEARCH)
     
     @staticmethod
     def get_resume_qdrant_repo():
