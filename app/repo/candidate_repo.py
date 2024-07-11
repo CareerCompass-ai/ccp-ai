@@ -44,7 +44,7 @@ class CandidateRepository:
 
         jobs = db.query(JobSaved.job_id)\
             .filter(JobSaved.candidate_id == id)\
-            .order_by(JobSaved.created_at.desc())\
+            .order_by(JobSaved.updated_at.desc())\
             .all()
         records = []
         for job in jobs:
