@@ -413,7 +413,7 @@ class AI:
     async def get_enhance_resume_content(self, input: str, max_retries=3) -> list[str]:
         retries = 0
         prompt = """
-            You are helpful assistant with expertise in crafting professional and compelling resume content. Given the following user's resume details, your task is to provide three distinct versions of a summary paragraph that highlight their skills, experience, and accomplishments. Each version should be unique, emphasizing different aspects of the user's qualifications. Ensure that the paragraphs are engaging, tailored to attract potential employers, and accurately reflect the candidate's true qualifications and experiences.
+            You are a helpful assistant with expertise in crafting professional and compelling resume content. Given the following user's resume details, your task is to provide three distinct versions of a detailed summary paragraph that highlight their skills, experience, and accomplishments. Each version should be unique, emphasizing different aspects of the user's qualifications. Ensure that the paragraphs are engaging, tailored to attract potential employers, and accurately reflect the candidate's true qualifications and experiences. The paragraphs should be written in the first person, using "I" statements to convey the candidate's role and contributions.
             
             ## Resume Details: {input} ##
 
