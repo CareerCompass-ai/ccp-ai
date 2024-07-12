@@ -215,6 +215,9 @@ class JobRouter:
 
             data = await self.job_qdrant_repo.get_job(input=req)
 
+            if data is None:
+                return job.JobAggregate()
+
             # TODO: push message to kafka
             payload = {
                 "user_id": user_id,

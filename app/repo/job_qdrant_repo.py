@@ -143,15 +143,25 @@ class JobQdrantRepository:
 
     async def get_job(self, input: Optional[job.GetJobRequest]) -> job.JobAggregate:
         if input.id is not None:
-            record = self.client.retrieve(
-                self.index_name,
-                ids=[input.id]
-            )[0]
+            try:
+                records = self.client.retrieve(
+                    self.index_name,
+                    ids=[input.id]
+                )
+                
+                if not records:
+                    return None
 
-            if record is None:
+                record = records[0]
+
+                if record is None:
+                    return None
+
+                return mapper.toJobDTO(record.payload)
+            except IndexError:
+                logger.error(f"Job not found with id: {input.id}")
                 return None
-
-            return mapper.toJobDTO(record.payload)
+        return None
 
     async def count_total_record(self, filter: Optional[models.Filter]) -> int:
         return self.client.count(
