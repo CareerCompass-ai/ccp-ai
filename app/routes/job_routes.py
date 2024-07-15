@@ -13,6 +13,7 @@ from fastapi import (APIRouter, Depends, File, Form, HTTPException, Path,
                      Query, UploadFile, status)
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
+from better_profanity import profanity
 
 import constant.ai as constant
 import constant.config as minio_constant
@@ -232,26 +233,33 @@ class JobRouter:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
     async def create(
-            self,
-            job_title: str = Form(None),
-            is_hiring: str = Form(None),
-            opened_date: str = Form(None),
-            closed_date: str = Form(None),
-            salary_from: str = Form(None),
-            salary_to: str = Form(None),
-            job_type: str = Form(None),
-            company_type: str = Form(None),
-            address_detail: str = Form(None),
-            city_id: str = Form(None),
-            recruiter_id: str = Form(None),
-            hiring_level: str = Form(None),
-            work_place: str = Form(None),
-            tags: str = Form(None),
-            file: UploadFile = File(None),
-            session: Session = Depends(postgres.PostgresDB.get_db),
-        ):
-
+        self,
+        job_title: str = Form(None),
+        is_hiring: str = Form(None),
+        opened_date: str = Form(None),
+        closed_date: str = Form(None),
+        salary_from: str = Form(None),
+        salary_to: str = Form(None),
+        job_type: str = Form(None),
+        company_type: str = Form(None),
+        address_detail: str = Form(None),
+        city_id: str = Form(None),
+        recruiter_id: str = Form(None),
+        hiring_level: str = Form(None),
+        work_place: str = Form(None),
+        tags: str = Form(None),
+        file: UploadFile = File(None),
+        session: Session = Depends(postgres.PostgresDB.get_db),
+    ):
         try:
+            temp_file_path = None
+
+            # Check profanity in fields
+            fields_to_check = [job_title, job_type, company_type, address_detail, hiring_level, work_place]
+            for field in fields_to_check:
+                if field and profanity.contains_profanity(field):
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Field '{field}' contains profanity and cannot be accepted.")
+                
             file_content = await file.read()
 
             # Generate file name
@@ -308,13 +316,17 @@ class JobRouter:
                     text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
                     text_content += text
 
+                # Check profanity in content
+                if profanity.contains_profanity(text_content):
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
+
                 record.content = text_content          
-    
+
             with session.begin():
                 try:
                     address_record = None
-                    #If they are both None -> Not create a new address record in db
-                    if (address_detail is not None) or (city_id is not None):
+                    # If either address_detail or city_id is provided, create a new address record
+                    if address_detail is not None or city_id is not None:
                         address_record = address.AddressBase(
                             created_at=now,
                             updated_at=now
@@ -327,37 +339,39 @@ class JobRouter:
                             address_record.city_id = city_id
 
                         address_rec = await self.address_repo.create(session, address_record)
-                        #Add new address record to a new job
                         record.address_id = address_rec.id
 
-                    #Create new job
+                    # Create new job record
                     job_rec = await self.job_repo.create(session, record)
 
-                    #Create job tags
+                    # Create job tags if provided
                     if tags is not None:
                         tags = tags.split(',')
                         for tag_id in tags:
                             await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_rec.id)
 
+                    # Upload file to Minio
                     await self.minio_repo.upload(
                         minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=file_name)
                     )
 
+                    # Remove temporary file
                     os.remove(temp_file_path)
 
-                except SQLAlchemyError:
+                except SQLAlchemyError as e:
                     session.rollback()
-                    logger.error(f"create_job failed error = {traceback.format_exc()}")
-                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-                
+                    logger.error(f"create_job failed with SQLAlchemyError: {e}")
+                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+            
             return job.CreateJobPostResponse()
-        except Exception:
-            logger.error(f"create_job failed error = {traceback.format_exc()}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+
+        except HTTPException:
+            raise  # Let HTTPExceptions propagate as they are already handled
+        except Exception as e:
+            logger.error(f"create_job failed with unexpected error: {e}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
         finally:
-            if file is not None:
-                file.file.close()
-            if os.path.exists(temp_file_path):
+            if file is not None and temp_file_path and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
 
     async def list_resumes_from_qdrant(
