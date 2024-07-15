@@ -11,11 +11,11 @@ class JobESRepository:
         self.client = self.es_setup.setup_elasticsearch_connection()
         self.index_name = index_name
 
-    async def count_total_record(self, query: dict) -> int:
-        response = await self.client.count(index=self.index_name, body={"query": query})
+    def count_total_record(self, query: dict) -> int:
+        response = self.client.count(index=self.index_name, body={"query": query})
         return response["count"]
 
-    async def list_jobs(self, input: Optional[job.ListJobRequest]) -> job.ListJobResponse:
+    def list_jobs(self, input: job.ListJobRequest) -> job.ListJobResponse:
         if input.page <= 0:
             input.page = 1
         if input.size <= 0:
@@ -34,7 +34,7 @@ class JobESRepository:
             }
         }
         
-        response = await self.client.search(
+        response = self.client.search(
             index=self.index_name,
             body={
                 "query": query,
@@ -43,7 +43,7 @@ class JobESRepository:
             }
         )
 
-        total_record = await self.count_total_record(query)
+        total_record = self.count_total_record(query)
 
         records = []
         for hit in response["hits"]["hits"]:

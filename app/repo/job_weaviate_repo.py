@@ -10,7 +10,7 @@ class JobWeaviateRepository:
         self.client = self.weaviate_setup.setup_weaviate_connection()
         self.collection_name = collection_name
 
-    async def list_jobs(self, input: job.ListJobRequest) -> job.ListJobResponse:
+    def list_jobs(self, input: job.ListJobRequest) -> job.ListJobResponse:
         job_collection = self.client.collections.get(self.collection_name)
 
         if input.size <= 0:

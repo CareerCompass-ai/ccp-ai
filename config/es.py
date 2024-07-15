@@ -11,4 +11,5 @@ class ElasticSearchDB:
         return Elasticsearch(
             constant.ES_URL, 
             basic_auth=[constant.ES_USERNAME, constant.ES_PASSWORD], 
+            timeout=30
         )

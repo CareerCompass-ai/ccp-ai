@@ -131,11 +131,14 @@ class JobRouter:
 
                 return data
             elif search_type == "hybrid": # handle hybrid search
-                data = await self.job_weaviate_repo.list_jobs(input=req)
+                data = self.job_weaviate_repo.list_jobs(input=req)
 
                 return data
             elif search_type == "fulltext": # handle full-text search
-                data = await self.job_es_repo.list_jobs(input=req)
+                print(req)
+                data = self.job_es_repo.list_jobs(input=req)
+
+                return data
             else:
                 return job.ListJobResponse(
                     count=0,
