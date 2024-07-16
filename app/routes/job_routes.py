@@ -267,6 +267,8 @@ class JobRouter:
 
             # Generate file name
             file_name = str(uuid.uuid4()) + "_" + file.filename
+            if profanity.contains_profanity(file_name):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"File name contains profanity and cannot be accepted.")
             public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
 
             now = datetime.now()
