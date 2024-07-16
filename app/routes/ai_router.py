@@ -502,7 +502,6 @@ async def questioning(req: ai.JobQnARequest):
         modified_data = []
         for job in data:
             job_dict = job.model_dump()
-            job_dict.pop('content_url', None)
             job_dict.pop('address_id', None)
             job_dict.pop('recruiter_id', None)
             job_dict.pop('file_name', None)
@@ -566,7 +565,6 @@ async def resumes_questioning(req: ai.ResumeQnARequest):
             resume_dict.pop('matching_score', None)
             resume_dict.pop('s_content', None)
             resume_dict.pop('matching_score', None)
-            resume_dict.pop('resume_link', None)
             modified_data.append(resume_dict)
 
         if req.prev:
