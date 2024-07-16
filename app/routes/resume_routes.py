@@ -5,6 +5,7 @@ from datetime import datetime
 from io import BytesIO
 
 import PyPDF2
+from better_profanity import profanity
 from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
                      status)
 from sqlalchemy.exc import SQLAlchemyError
@@ -15,6 +16,8 @@ from app.dto import minio, resume
 from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from pkg.logging import logger
+
+
 class ResumeRouter:
     def __init__(self):
         self.resume_qdrant_repo = factory.get_resume_qdrant_repo()
@@ -66,6 +69,10 @@ class ResumeRouter:
                     text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
                     text_content += text
 
+                # Check profanity in content
+                if profanity.contains_profanity(text_content):
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
+
                 record.content = text_content
 
             # Start transaction
@@ -92,7 +99,9 @@ class ResumeRouter:
                     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
             return resume.CreateResumePostResponse(message="Upload successfully!")
-
+        
+        except HTTPException:
+            raise  # Let HTTPExceptions propagate as they are already handled
         except Exception:
             logger.error(f"create_resume failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
@@ -101,6 +110,7 @@ class ResumeRouter:
                 file.file.close()
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
+
     async def delete(
         self,
         req: resume.DeleteResumeRequest,
