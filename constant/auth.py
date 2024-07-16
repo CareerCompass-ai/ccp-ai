@@ -14,7 +14,6 @@ WHITELIST_PATHS = [
     "/api/qna/generate_v2",
     "/api/qna/questioning_v1",
     "/api/ai/jobs/questioning",
-    "/api/ai/resumes/questioning",
     "/api/admin/protected",
     "/api/admin/weaviate/create-job-class",
     "/api/admin/weaviate/create-jobqna-class",
@@ -40,7 +39,13 @@ ADMIN_PATHS = [
     "/api/analysis/salary-change-by-year",
     "/api/analysis/number-jobs-by-country",
     "/api/analysis/get-countries",
-    "/api/analysis/get-common-job-titles"
+    "/api/analysis/get-common-job-titles",
+    "/api/assistant/generate",
+    "/api/assistant/questioning",
+]
+
+RECRUITER_PAHTS = [
+    "/api/ai/resumes/questioning",
 ]
 
 PATH_CHECKS_BODY = {

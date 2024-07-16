@@ -76,6 +76,13 @@ class JWTMiddleware(BaseHTTPMiddleware):
                 return False
             else:
                 return True
+            
+        # Check if the path requires recruiter role
+        if current_path in auth_constant.RECRUITER_PAHTS:
+            if payload.get("role") != "RECRUITER":
+                return False
+            else:
+                return True
 
         if current_path in auth_constant.PATH_CHECKS_BODY:
             param_name = auth_constant.PATH_CHECKS_BODY[current_path]
