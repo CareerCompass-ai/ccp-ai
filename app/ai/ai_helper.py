@@ -199,14 +199,13 @@ class AI:
                 )
                 answer = response.choices[0].message.content.strip()
                 return answer
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -246,14 +245,13 @@ class AI:
                 )
                 answer = response.choices[0].message.content.strip()
                 return answer
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -284,17 +282,15 @@ class AI:
                 )
                 answer = response.choices[0].message.content.strip()
                 return answer
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
-
 
     async def get_embedding(self, input, max_retries=3):
         retries = 0
@@ -303,14 +299,13 @@ class AI:
                 response = self.openai_client.embeddings.create(input=input, model=self.embedding_model)
                 
                 return np.array(response.data[0].embedding)
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -329,14 +324,13 @@ class AI:
                 )
 
                 return response.choices[0].message.content.strip()
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
 
@@ -361,14 +355,13 @@ class AI:
                 )
                 tmp = json.loads(response.choices[0].message.content.strip())
                 return tmp.get("answer", "")
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -407,14 +400,13 @@ class AI:
 
                 tmp = json.loads(response.choices[0].message.content.strip())  
                 return tmp.get("answer", "")
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -453,14 +445,13 @@ class AI:
                     return tmp["answer"]
                 else:
                     return []
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    await asyncio.sleep(2)
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return []
     
@@ -488,17 +479,15 @@ class AI:
                     ],
                     top_p=0.2,
                 )
-
                 response = json.loads(response.choices[0].message.content.strip())  
                 return response.get("answer", "")
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    time.sleep(2) 
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -535,14 +524,13 @@ class AI:
 
                 tmp = json.loads(response.choices[0].message.content.strip())  
                 return tmp.get("answer", "")
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    time.sleep(2) 
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -585,13 +573,12 @@ class AI:
 
                 tmp = json.loads(response.choices[0].message.content.strip())  
                 return tmp.get("answer", "")
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error:: {e}")
-                    break
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying...")
-                    retries += 1
-                    time.sleep(2) 
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                time.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
