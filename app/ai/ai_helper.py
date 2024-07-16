@@ -375,14 +375,22 @@ class AI:
     async def get_acronyms_and_abbreviation_of_job(self, input:str, max_retries=3) -> str:
         retries = 0
         prompt = """
-            ### Resume: ### {input} ### 
-            Your task is to provide a detailed list of the skills and knowledge in this candidate's resume. 
-            Please answer with the corresponding position. 
-            The response must be a JSON object with a field "answer" and the value as a list/array containing the skills and knowledge in this candidate's resume.
+            ### Given this job and its job title: ### {input} ### 
+            Your task is to provide a detailed list of the acronyms and abbreviations for the job title. 
+            Please respond with the corresponding position. 
+            The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the acronyms and abbreviations of the job title, including both lowercase and uppercase versions.
 
-            ## Response Example - a JSON object ##
+            ## Response Example 1 - a JSON object ##
             {{
-                "answer": ["Software Engineer", "SWE", "Backend Engineer", "backend", "back-end", "Frontend Engineer", "frontend", "front-end", "Software Developer", "Dev", "Developer", "Frontend Developer", "Web dev", "Web developer", "Backend Developer", "BE", "FE", "Full Stack Developer", "Full-Stack Developer", "fullstack", "full-stack", "FSD", "fsd", "Application Developer", "App Dev"]
+                "answer": ["Software Engineer", "SWE", "swe", "Backend Engineer", "backend", "back-end", "Frontend Engineer", "frontend", "front-end", "Software Developer", "Dev", "Developer", "Frontend Developer", "Web dev", "Web developer", "Backend Developer", "BE", "FE", "Full Stack Developer", "Full-Stack Developer", "fullstack", "full-stack", "FSD", "fsd", "Application Developer", "App Dev"]
+            }}
+            ## Response Example 2 - a JSON object ##
+            {{
+                "answer": ["Data Engineer", "DE", "de"]
+            }}
+            ## Response Example 3 - a JSON object ##
+            {{
+                "answer": ["AI Engineer", "AI", "Artificial Intelligence Engineer", "Artificial Intelligence", "ai", "aie"]
             }}
         """
         content = prompt.format(input=input)
@@ -459,10 +467,10 @@ class AI:
     async def get_skills_and_knowledge_of_resume(self, input:str, max_retries=3) -> str:
         retries = 0
         prompt = """
-            ### Resume: ### {input} ### 
+            ### Given this resume: ### {input} ### 
             Your task is to provide a detailed list of the skills and knowledge in this candidate's resume. 
             Please answer with the corresponding position. 
-            The response must be a JSON object with a field "answer" and the value as a list/array containing the skills and knowledge in this candidate's resume.
+            The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the skills and knowledge in this candidate's resume.
 
             ## Response Example - a JSON object ##
             {{
@@ -497,7 +505,7 @@ class AI:
     async def get_candidate_level(self, input:str, max_retries=3) -> str:
         retries = 0
         prompt = """
-        ### Resume: ### {input} ### 
+        ### Given this resume: ### {input} ### 
         Based on the provided candidate's resume, your task is to predict the candidate's professional level. 
         Consider factors such as years of experience, job titles, responsibilities, achievements, and relevant skills mentioned in the resume.
 
@@ -506,7 +514,7 @@ class AI:
 
         Please predict at least 2 levels for the candidate.
 
-        Provide your answer as a JSON object with a field "answer" and the value as a list containing the predicted candidate's level(s).
+        The response must strictly be a JSON object with a field "answer" and the value as a list containing the predicted candidate's level(s).
 
         ## Response Example ##
         {{
@@ -541,14 +549,14 @@ class AI:
     async def get_candidate_major(self, input:str, max_retries=3) -> str:
         retries = 0
         prompt = """
-        ### Resume: ### {input} ### 
+        ### Given this resume: ### {input} ### 
         Based on the provided candidate's resume, your task is to predict the candidate's major. 
         Consider factors such as years of experience, job titles, responsibilities, and skills mentioned in the resume.
 
         Possible majors to choose from (answer must exist in the given list):
         ["Software Engineer", "Backend Engineer", "Backend Developer", "Frontend Engineer", "Frontend Developer", "DevOps Engineer", "System Engineer", "Data Analyst", "Full-stack Developer", "Mobile Engineer", "Mobile Developer", "Cloud Engineer", "Data Scientist", "Machine Learning Engineer", "AI Engineer", "Network Engineer", "Cybersecurity Engineer", "Database Administrator", "IT Support Specialist", "IT Helpdesk", "Quality Assurance Engineer", "QA QC, "Tester", "IT Project Manager", "Site Reliability Engineer (SRE)", "UX/UI Designer", "Game Developer", "Embedded Systems Engineer", "Embedded Engineer", "IoT Engineer", "IT Consultant", "Business Analyst", "Business Intelligence", "Systems Analyst", "Web Developer", "Robotics Engineer", "IT Architect", "Product Manager", "DevSecOps Engineer", "Infrastructure Engineer", "Integration Engineer", "Platform Engineer", "Application Developer", "Technical Support Engineer", "Automation Engineer", "Blockchain Developer", "AR/VR Developer", "Big Data Engineer", "Data Engineer", "Cloud Solutions Architect", "Systems Administrator", "Database Administrator", "Data Architect", "Solution Architect", "ERP Engineer", "ERP Consultant"]
         
-        Provide your answer as a JSON object with a field "answer" and the value as a list containing the predicted candidate's major(s).
+        The response must strictly be a JSON object with a field "answer" and the value as a list containing the predicted candidate's major(s).
 
         ## Response Example 1 ##
         {{

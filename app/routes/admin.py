@@ -79,7 +79,8 @@ class AdminRouter:
                 # summarize content
                 summarized_content = await self.ai_helper.get_job_summarized(job_agg.content)
 
-                acronyms_and_abbreviations = await self.ai_helper.get_acronyms_and_abbreviation_of_job(job_agg.content)
+                tmp_content = job_agg.content + "; Job title: " + job_agg.job_title
+                acronyms_and_abbreviations = await self.ai_helper.get_acronyms_and_abbreviation_of_job(tmp_content)
                 if isinstance(acronyms_and_abbreviations, list):
                     acronyms_and_abbreviations = ", ".join(acronyms_and_abbreviations)
 
@@ -119,7 +120,7 @@ class AdminRouter:
                     level = ", ".join(level)
 
                 # predict candidate's major
-                tmp_content = summarized_content + ", skills and knowledges: " + skills_and_knowledge + ", level: " + level
+                tmp_content = summarized_content + "; Skills and knowledges: " + skills_and_knowledge + "; Level: " + level
                 major = await self.ai_helper.get_candidate_major(tmp_content)
                 if isinstance(major, list):
                     major = ", ".join(major)
