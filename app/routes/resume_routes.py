@@ -36,6 +36,10 @@ class ResumeRouter:
         try:
             file_content = await file.read()
 
+            # Check profanity in file name
+            if profanity.contains_profanity(file.filename):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
+
             # Generate file name
             file_name = str(uuid.uuid4()) + "_" + file.filename
 
