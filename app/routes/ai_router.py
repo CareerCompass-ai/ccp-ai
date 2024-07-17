@@ -45,6 +45,8 @@ minio_repo = factory.get_minio_repo()
 qdrant_client = qdrant.setup_qdrant_connection()
 assistant_repo = factory.get_assistant_repo()
 application_repo = factory.get_application_repo()
+job_repo = factory.get_job_repo()
+recruiter_repo = factory.get_recruiter_repo()
 
 # Assistant
 @ai_router.post("/assistant/generate", response_model=ai.GenerateAssistantResponse)
@@ -561,6 +563,15 @@ async def resumes_questioning(
         db: Session = Depends(postgres.PostgresDB.get_db)
     ):
     try:
+        # get job
+        job = await job_repo.get_by_id(req.job_id)
+
+        if job is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+        
+        if job.recruiter_id != req.recruiter_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to access this resource")
+
         # get all resumes applied for the job
         applied_resume_ids = await application_repo.list_resume_ids_by_job_id(db=db, job_id=req.job_id)
 
