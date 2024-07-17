@@ -29,6 +29,7 @@ class JobQnAResponse(BaseModel):
     answer: str = ""
 
 class ResumeQnARequest(BaseModel):
+    job_id: int
     resume_ids: list[int]
     question: str = ""
     prev: list[PreviousContextItem] = []
