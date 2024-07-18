@@ -595,7 +595,7 @@ async def get_enhance_resume(req: ai.GetEnhanceResumeRequest):
     try:
         data = await ai_helper.get_enhance_resume_content(req.content)
 
-        if data is None:
+        if data is None or len(data) == 0:
             return ai.GetEnhanceResumeResponse(message=[])
 
         return ai.GetEnhanceResumeResponse(
