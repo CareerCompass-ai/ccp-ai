@@ -564,7 +564,7 @@ async def resumes_questioning(
     ):
     try:
         # get job
-        job = await job_repo.get_by_id(req.job_id)
+        job = await job_repo.get_by_id(db=db,id=req.job_id)
 
         if job is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
