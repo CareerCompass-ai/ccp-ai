@@ -402,6 +402,7 @@ class JobQdrantRepository:
                         query_filter=filter,
                         limit=limit,
                         offset=(input.page - 1) * input.size,
+                        score_threshold=0.3
                     )
                     return hits
 
