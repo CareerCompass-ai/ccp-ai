@@ -81,8 +81,13 @@ class JWTMiddleware(BaseHTTPMiddleware):
         if current_path in auth_constant.RECRUITER_PAHTS:
             if payload.get("role") != "RECRUITER":
                 return False
-            else:
+            
+            param_name = auth_constant.PATH_CHECKS_BODY[current_path]
+            param_value = await self.get_param_value_from_body(request, param_name)
+            if param_value and str(payload["userId"]) == str(param_value):
                 return True
+            else:
+                return False
 
         if current_path in auth_constant.PATH_CHECKS_BODY:
             param_name = auth_constant.PATH_CHECKS_BODY[current_path]
