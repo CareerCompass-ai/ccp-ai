@@ -36,4 +36,4 @@ class ApplicationRepository:
             all()
         )
         
-        return resume_ids
+        return [resume_id for (resume_id,) in resume_ids]
