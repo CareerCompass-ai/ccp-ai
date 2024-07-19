@@ -54,6 +54,7 @@ PATH_CHECKS_BODY = {
     "/api/job/apply": "candidate_id",
     "/api/job/close": "recruiter_id",
     "/api/resume/delete": "candidate_id",
+    "/api/ai/resumes/questioning": "recruiter_id",
 }
         
 PATH_CHECKS_FORM_DATA = {

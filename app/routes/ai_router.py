@@ -1,6 +1,7 @@
 import os
 from fastapi import status, HTTPException, APIRouter, Form, Depends
 import traceback
+from config import postgres
 import constant.config as minio_constant
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
@@ -43,6 +44,9 @@ resume_qdrant_repo = factory.get_resume_qdrant_repo()
 minio_repo = factory.get_minio_repo()
 qdrant_client = qdrant.setup_qdrant_connection()
 assistant_repo = factory.get_assistant_repo()
+application_repo = factory.get_application_repo()
+job_repo = factory.get_job_repo()
+recruiter_repo = factory.get_recruiter_repo()
 
 # Assistant
 @ai_router.post("/assistant/generate", response_model=ai.GenerateAssistantResponse)
@@ -554,8 +558,27 @@ async def questioning(req: ai.JobQnARequest):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
     
 @ai_router.post("/ai/resumes/questioning", response_model=ai.ResumeQnAResponse)
-async def resumes_questioning(req: ai.ResumeQnARequest):
+async def resumes_questioning(
+        req: ai.ResumeQnARequest,
+        db: Session = Depends(postgres.PostgresDB.get_db)
+    ):
     try:
+        # get job
+        job = await job_repo.get_by_id(req.job_id)
+
+        if job is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+        
+        if job.recruiter_id != req.recruiter_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to access this resource")
+
+        # get all resumes applied for the job
+        applied_resume_ids = await application_repo.list_resume_ids_by_job_id(db=db, job_id=req.job_id)
+
+        # check if any of the req.resume_ids is not in the list of resumes applied for the job
+        if any(resume_id not in applied_resume_ids for resume_id in req.resume_ids):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to access this resource")
+        
         data = await resume_qdrant_repo.list_resumes_by_ids(req.resume_ids)
 
         # Remove unnecessary fields
@@ -585,7 +608,9 @@ async def resumes_questioning(req: ai.ResumeQnARequest):
         return ai.ResumeQnAResponse(
             answer=answer
         )
-
+    
+    except HTTPException:
+        raise
     except Exception:
         logger.error(f"questioning failed error = {traceback.format_exc()}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")

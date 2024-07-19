@@ -28,3 +28,12 @@ class ApplicationRepository:
         )
         
         return applications
+    
+    async def list_resume_ids_by_job_id(self, db:Session, job_id: int) -> list[int]:
+        resume_ids = (
+            db.query(Application.resume_id).
+            filter(Application.job_id == job_id).
+            all()
+        )
+        
+        return resume_ids
