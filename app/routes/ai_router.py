@@ -515,7 +515,14 @@ async def questioning(req: ai.JobQnARequest):
             job_dict.pop('recruiter_id', None)
             job_dict.pop('is_applied', None)
             job_dict.pop('is_saved', None)
+            job_dict.pop('common_job_title', None)
+            job_dict.pop('matching_score', None)
 
+            if 'content_url' in job_dict:
+                job_dict['job_description_download_link'] = f"https://{job_dict.pop('content_url')}"
+
+            job_dict['view_job_detail_link'] = f"https://hcmus-careercompass.me/job/detail/{job_dict['id']}"
+            
             modified_data.append(job_dict)
 
         # previous_context_formatted = "\n".join(
@@ -588,6 +595,11 @@ async def resumes_questioning(
             resume_dict.pop('matching_score', None)
             resume_dict.pop('s_content', None)
             resume_dict.pop('matching_score', None)
+            resume_dict.pop('combined_content', None)
+
+            if 'resume_link' in resume_dict:
+                resume_dict['resume_download_link'] = f"https://{resume_dict.pop('resume_link')}"
+
             modified_data.append(resume_dict)
 
         if req.prev:
