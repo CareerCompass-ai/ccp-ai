@@ -17,6 +17,17 @@ class CommonRouter:
         self.city_repo = factory.get_city_repo()
         self.router = APIRouter(prefix="/api", tags=['Common'])
         self.router.add_api_route("/common/types", self.list_common_types, methods=["GET"], response_model=common.ListCommonTypes)
+        self.router.add_api_route("/v2/common/types", self.list_common_types_v2, methods=["GET"], response_model=common.ListCommonTypesv2)
+
+    def get_value_from_constant(self, record) -> list[common.CommonTypev2]:
+        records = []
+        for item in record:
+            records.append(
+                common.CommonTypev2(
+                    name=item
+                )
+            )
+        return records
 
     async def list_common_types(self, db: Session = Depends(PostgresDB.get_db)):
         try:
@@ -62,5 +73,51 @@ class CommonRouter:
             logger.error(f"list_common_types failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
+    async def list_common_types_v2(self, db: Session = Depends(PostgresDB.get_db)):
+        try:
+            tags = await self.tag_repo.list_tag_v2(db=db)
+            rec_tags = []
+            for item in tags:
+                rec_tags.append(
+                    common.CommonTypev2(
+                        name=item.tag_name
+                    )
+                )
 
+            countries = await self.country_repo.get_countries_v2(db=db)
+            rec_countries = []
+            for item in countries:
+                rec_countries.append(
+                    common.CommonTypev2(
+                        name=item.country_name
+                    )
+                )
+
+            cities = await self.city_repo.get_cities(db=db)
+            rec_cities = []
+            for _item in cities:
+                rec_cities.append(common.CommonTypev2(
+                        name=_item.city_name
+                    )
+                )
+
+            rec_hiring_levels = self.get_value_from_constant(constant.HIRING_LEVELS)
+            rec_job_types = self.get_value_from_constant(constant.JOB_TYPES)
+            rec_company_types = self.get_value_from_constant(constant.COMPANY_TYPES)
+            rec_work_places = self.get_value_from_constant(constant.WORK_PLACES)
+
+            data = common.ListCommonTypesv2(
+                job_tags=rec_tags,
+                hiring_levels=rec_hiring_levels,
+                job_types=rec_job_types,
+                company_types=rec_company_types,
+                work_places=rec_work_places,
+                countries=rec_countries,
+                cities=rec_cities
+            )
+            return data
+        except Exception:
+            logger.error(f"list_common_types failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        
 common_router = CommonRouter().router

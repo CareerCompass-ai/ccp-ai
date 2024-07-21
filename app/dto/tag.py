@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -11,7 +11,7 @@ class TagBase(BaseModel):
     updated_at: datetime
 
 class Tag(BaseModel):
-    id: int
+    id: Optional[int] = None
     tag_name: str
 
 class ListTagResponse(BaseModel):

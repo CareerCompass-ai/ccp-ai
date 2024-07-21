@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -24,3 +24,15 @@ class ListCommonTypes(BaseModel):
     work_place: list[str]
     countries: List[ListCountry]
     cities: List[Country]
+
+class CommonTypev2(BaseModel):
+    name: str
+    count: Optional[int] = 0
+class ListCommonTypesv2(BaseModel):
+    hiring_levels: list[CommonTypev2]
+    job_types: list[CommonTypev2]
+    work_places: list[CommonTypev2]
+    company_types: list[CommonTypev2]
+    cities: List[CommonTypev2]
+    countries: List[CommonTypev2]
+    job_tags: list[CommonTypev2]
