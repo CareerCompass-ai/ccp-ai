@@ -8,8 +8,6 @@ WHITELIST_PATHS = [
     "/api/related-jobs", 
     "/api/common/types",
     "/api/ai/resume/enhance",
-    "/api/assistant/generate",
-    "/api/assistant/questioning",
     "/api/qna/generate",
     "/api/qna/generate_v2",
     "/api/qna/questioning_v1",
