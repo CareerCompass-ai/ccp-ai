@@ -134,11 +134,11 @@ class JobRouter:
                     else:
                         search_input = input.strip()
 
-                    pre_cleaned_input = self.helper.clean_text(search_input)
-                    cleaned_input = self.helper.remove_stop_words(pre_cleaned_input.lower().strip())
+                    # pre_cleaned_input = self.helper.clean_text(search_input)
+                    # cleaned_input = self.helper.remove_stop_words(pre_cleaned_input.lower().strip())
                     logger.info(f"search_input = {search_input}")
 
-                    vectors = await self.ai_helper.get_embedding(cleaned_input)
+                    vectors = await self.ai_helper.get_embedding(search_input)
                     req.vectors = vectors.tolist() if vectors is not None else None
 
                 data = await self.job_qdrant_repo.list_jobs(input=req)
