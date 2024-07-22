@@ -20,6 +20,9 @@ WHITELIST_PATHS = [
     "/api/admin/manual-sync-jobs",
     "/api/admin/manual-sync-resumes",
     "/api/all-jobs-for-seo",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/",
 ] 
 
 ADMIN_PATHS = [
