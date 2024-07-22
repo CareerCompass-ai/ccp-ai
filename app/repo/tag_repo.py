@@ -22,3 +22,15 @@ class TagRepository:
             tags.append(tag_aggregate)
 
         return tags
+
+    async def list_tag_v2(self, db:Session) -> List[Tag]:
+        records = db.query(Tag.tag_name).all()
+
+        tags = []
+        for item in records:
+            tag_aggregate = tag.Tag(
+                tag_name=item.tag_name, 
+            )
+            tags.append(tag_aggregate)
+
+        return tags
