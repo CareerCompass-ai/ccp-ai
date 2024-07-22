@@ -23,3 +23,13 @@ class CountryRepository:
             country_aggregates.append(country_aggregate)
             
         return country_aggregates
+    
+    async def get_countries_v2(self, db:Session) -> List[Country]:
+        countries = db.query(Country.country_name).all()
+        country_aggregates = []
+        for item in countries:
+            country_aggregates.append(country.CountryBase(
+                country_name=item.country_name
+                )
+            )
+        return country_aggregates

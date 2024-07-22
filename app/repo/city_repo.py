@@ -25,3 +25,12 @@ class CityRepository:
             city_aggregates.append(city_aggregate)
         
         return city_aggregates
+
+    async def get_cities(self, db:Session) -> List[City]:
+        cities = db.query(City.city_name).all()
+        city_aggregates = []
+        for item in cities:
+            city_aggregates.append(city.CityBase(
+                city_name=item.city_name, 
+            ))
+        return city_aggregates

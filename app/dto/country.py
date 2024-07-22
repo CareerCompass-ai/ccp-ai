@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class CountryBase(BaseModel):
-    id: int
+    id: Optional[int] = None
     country_name: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
