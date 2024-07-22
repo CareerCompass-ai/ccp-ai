@@ -5,15 +5,16 @@ import nltk
 
 class Helper:
     def __init__(self):
-        self.stop_words = set(stopwords.words('english'))
+        pass
+    #     self.stop_words = set(stopwords.words('english'))
 
-    def remove_stop_words(self, text):
-        # Tokenize the text
-        words = word_tokenize(text)
-        # Remove stop words
-        filtered_words = [word for word in words if word.lower() not in self.stop_words]
-        # Reconstruct the text
-        return ' '.join(filtered_words)
+    # def remove_stop_words(self, text):
+    #     # Tokenize the text
+    #     words = word_tokenize(text)
+    #     # Remove stop words
+    #     filtered_words = [word for word in words if word.lower() not in self.stop_words]
+    #     # Reconstruct the text
+    #     return ' '.join(filtered_words)
     
     def clean_text(self, text):
         # Remove semicolons and other unwanted characters
