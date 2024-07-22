@@ -19,6 +19,7 @@ import constant.ai as constant
 import constant.config as minio_constant
 from app.dto import address, job, minio, resume
 from app.factory.factory import RepositoryFactory as factory
+from app.helper import helper
 from config import postgres
 from config.postgres import PostgresDB
 from constant import config as cfg
@@ -43,6 +44,8 @@ class JobRouter:
         self.talent_saved_repo = factory.get_talent_saved_repo()
         self.ai_helper = factory.get_ai_helper()
         self.kafka_producer = factory.get_kafka_producer()
+
+        self.helper = helper.Helper()
 
         self.router = APIRouter(prefix="/api", tags=['Job'])
         self.router.add_api_route("/jobs", self.list_jobs_from_qdrant, methods=["GET"], response_model=job.ListJobResponse)
@@ -131,7 +134,11 @@ class JobRouter:
                     else:
                         search_input = input.strip()
 
-                    vectors = await self.ai_helper.get_embedding(search_input)
+                    pre_cleaned_input = self.helper.clean_text(search_input)
+                    cleaned_input = self.helper.remove_stop_words(pre_cleaned_input.lower().strip())
+                    logger.info(f"search_input = {search_input}")
+
+                    vectors = await self.ai_helper.get_embedding(cleaned_input)
                     req.vectors = vectors.tolist() if vectors is not None else None
 
                 data = await self.job_qdrant_repo.list_jobs(input=req)

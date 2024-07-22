@@ -58,3 +58,4 @@ pyjwt==2.8.0
 elastic-transport==8.13.1
 elasticsearch==8.14.0
 better-profanity==0.7.0
+nltk==3.8.1
