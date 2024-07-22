@@ -582,3 +582,62 @@ class AI:
                 break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
+    
+    async def get_enhanced_input(self, input: str, max_retries=3) -> str:
+        start_time = time.time() 
+
+        retries = 0
+        prompt = """
+            ### Given this input: ### {input} ###
+            Your task is to provide a more detailed and contextually enriched version of this input. The enriched version should include possible expanded terms, relevant keywords, and common abbreviations related to the input. 
+
+            Please return the enhanced version of the input as a plain text string.
+            The response must strictly be a JSON object with a field "answer" and the value as the enhanced version of the input.
+
+            ## Input Example 1 ##
+            Original Input: "Junior DE"
+
+            ## Respose Example 1 ##
+            {{
+                "answer": ["Junior Data Engineer", "Junior Data Engineer Level", "Entry-Level Data Engineer"]
+            }}
+
+            ## Input Example 2 ##
+            Original Input: "Sen SWE"
+
+            ## Respose Example 2 ##
+            {{
+                "answer": ["Senior Software Engineer", "Senior Software Engineer Level", "Senior Software Developer"]
+            }}
+        """
+        content = prompt.format(input=input.strip())
+        
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.completion_model,
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant designed to expand and enrich input queries with additional context and relevant terms."},
+                        {"role": "user", "content": content}
+                    ],
+                    top_p=0.2,
+                )
+
+                end_time = time.time()
+
+                elapsed_time = end_time - start_time
+                logger.info(f"Get input enhanced time: {elapsed_time}")
+                
+                tmp = json.loads(response.choices[0].message.content.strip())  
+                return tmp.get("answer", "")
+                
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.error(f"Request to OpenAI API failed: {e}. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                await asyncio.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
+        
+        logger.error(f"Exceeded maximum number of retries. Please try again later.")
+        return None
