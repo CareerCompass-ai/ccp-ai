@@ -629,8 +629,8 @@ class AI:
                 logger.info(f"Get input enhanced time: {elapsed_time}")
                 
                 tmp = json.loads(response.choices[0].message.content.strip())  
-                logger.info(f"[enhanced_result]: {tmp["answer"]}")
-                return tmp.get("answer", "")
+                logger.info(f"[enhanced_result]: {tmp['answer']}")
+                return tmp.get("answer", [])
                 
             except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
                 logger.error(f"Request to OpenAI API failed: {e}. Retrying... (Attempt {retries + 1}/{max_retries})")

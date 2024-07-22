@@ -125,7 +125,10 @@ class JobRouter:
 
                 if input is not None:
                     enhanced_input = await self.ai_helper.get_enhanced_input(input)
-                    vectors = await self.ai_helper.get_embedding(enhanced_input)
+
+                    search_input = enhanced_input if enhanced_input else input
+                    
+                    vectors = await self.ai_helper.get_embedding(search_input)
                     req.vectors = vectors.tolist() if vectors is not None else None
 
                 data = await self.job_qdrant_repo.list_jobs(input=req)
