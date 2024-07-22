@@ -126,7 +126,10 @@ class JobRouter:
                 if input is not None:
                     enhanced_input = await self.ai_helper.get_enhanced_input(input)
 
-                    search_input = " ".join(enhanced_input) if enhanced_input else input
+                    if enhanced_input:
+                        search_input = input.strip() + " " + " ".join(enhanced_input)
+                    else:
+                        search_input = input.strip()
 
                     vectors = await self.ai_helper.get_embedding(search_input)
                     req.vectors = vectors.tolist() if vectors is not None else None
