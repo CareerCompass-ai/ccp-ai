@@ -239,7 +239,7 @@ class AI:
                         {"role": "system", "content": "You are a helpful assistant."},
                         {"role": "user", "content": prompt}
                     ],
-                    model=self.beast_completion_model,
+                    model=self.completion_model,
                     # max_tokens=4096,
                     temperature=0.2
                 )
@@ -276,7 +276,7 @@ class AI:
                         {"role": "system", "content": "You are a helpful assistant."},
                         {"role": "user", "content": prompt}
                     ],
-                    model=self.beast_completion_model,
+                    model=self.completion_model,
                     # max_tokens=4096,
                     temperature=0.2
                 )
