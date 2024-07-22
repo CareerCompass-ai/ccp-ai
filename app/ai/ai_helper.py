@@ -592,7 +592,7 @@ class AI:
             Your task is to enhance this query by providing additional relevant terms and context related to job searches in the Information Technology domain. 
             Please include variations, related terms, and any possible abbreviations or titles that could be relevant.
 
-            The response must strictly be a JSON object with a field "answer" and the value as the enhanced version of the input.
+            The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the enhanced search terms.
 
             ## Input Example 1 ##
             Original Input: "Junior DE"
