@@ -589,25 +589,23 @@ class AI:
         retries = 0
         prompt = """
             ### Given this input: ### {input} ###
-            Your task is to enhance this query by providing additional relevant terms and context related to job searches in the Information Technology domain. 
-            Please include variations, related terms, and any possible abbreviations or titles that could be relevant.
+            Your task is to enhance this query by providing a concise list of relevant terms and context related to job searches in the Information Technology domain.
+            Focus on variations, related terms, and common abbreviations of the given role. 
+            Avoid including unrelated roles or job functions. Avoid including job levels if the input does not contain any reference to levels
 
             The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the enhanced search terms.
-
             ## Input Example 1 ##
-            Original Input: "Junior DE"
+            Original Input: "SWE"
 
-            ## Respose Example 1 ##
+            ## Response Example 1 ##
             {{
-                "answer": ["Junior Data Engineer", "Junior Data Engineer Level", "Entry-Level Data Engineer"]
+                "answer": ["Software Engineer", "Software Developer", "Backend Engineer", "Backend Developer", "Frontend Engineer", "Frontend Developer"]
             }}
-
             ## Input Example 2 ##
-            Original Input: "Sen SWE"
-
-            ## Respose Example 2 ##
+            Original Input: "Junior DE"
+            ## Response Example 2 ##
             {{
-                "answer": ["Senior Software Engineer", "Senior Software Engineer Level", "Senior Software Developer"]
+                "answer": ["Junior Data Engineer", "Entry-Level Data Engineer"]
             }}
         """
         content = prompt.format(input=input.strip())
