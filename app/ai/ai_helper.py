@@ -589,9 +589,9 @@ class AI:
         retries = 0
         prompt = """
             ### Given this input: ### {input} ###
-            Your task is to provide a more detailed and contextually enriched version of this input. The enriched version should include possible expanded terms, relevant keywords, and common abbreviations related to the input. 
+            Your task is to enhance this query by providing additional relevant terms and context related to job searches in the Information Technology domain. 
+            Please include variations, related terms, and any possible abbreviations or titles that could be relevant.
 
-            Please return the enhanced version of the input as a plain text string.
             The response must strictly be a JSON object with a field "answer" and the value as the enhanced version of the input.
 
             ## Input Example 1 ##
@@ -617,7 +617,7 @@ class AI:
                 response = self.openai_client.chat.completions.create(
                     model=self.completion_model,
                     messages=[
-                        {"role": "system", "content": "You are a helpful assistant designed to expand and enrich input queries with additional context and relevant terms."},
+                        {"role": "system", "content": f"You are a helpful assistant designed to enhance search queries for job searches in the Information Technology domain. Follow the response format strictly."},
                         {"role": "user", "content": content}
                     ],
                     top_p=0.2,
