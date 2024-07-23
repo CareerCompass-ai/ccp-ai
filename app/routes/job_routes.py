@@ -433,7 +433,6 @@ class JobRouter:
                 resume_id=req.resume_id,
                 job_id=req.job_id,
                 created_at=now,
-                updated_at=now
             )
 
             session.autocommit = False # TODO: remove this?
