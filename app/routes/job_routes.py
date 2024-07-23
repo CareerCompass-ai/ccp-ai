@@ -122,9 +122,11 @@ class JobRouter:
 
             if search_type == "vector": # handle vector search
                 if resume_id is not None: 
+                    req.exclude = ""
                     resume_vector = await self.resume_qdrant_repo.get_resume_vector(resume_id=resume_id)
 
                     req.vectors = resume_vector if resume_vector not in (None, []) else None
+
 
                 if input is not None:
                     enhanced_input = await self.ai_helper.get_enhanced_input(input)
