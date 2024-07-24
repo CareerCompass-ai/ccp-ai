@@ -13,22 +13,30 @@ class CandidateRepository:
     async def get_by_id(self, db:Session, id):
         return db.query(Candidate).filter(Candidate.id == id).first()
     
-    async def get_applied_jobs(self, db:Session, id) -> candidate.ListResumesAppliedResponse:
-        applications = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
-            .join(Resume, Application.resume_id == Resume.id)\
-            .filter(Resume.candidate_id == id)\
-            .order_by(Application.updated_at.desc())\
-            .all()
-        records = []
-        for app in applications:
-            records.append(
-                candidate.ResumesAppliedResponse(
-                    job_id=app.job_id,
-                    resume_id=app.resume_id,
-                    resume_url=app.resume_link
-                )
+    async def get_applied_jobs(self, db: Session, candidate_id: int, input: str, offset: int, limit: int) -> candidate.ListResumesAppliedResponse:
+        query = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
+                .join(Resume, Application.resume_id == Resume.id)\
+                .join(Job, Application.job_id == Job.id)\
+                .filter(Resume.candidate_id == candidate_id)
+        
+        if input:
+            query = query.filter(Job.job_title.ilike(f"%{input}%"))
+        
+        total_records = query.count()
+
+        applications = query.order_by(Application.updated_at.desc())\
+                            .offset(offset).limit(limit).all()
+        
+        records = [
+            candidate.ResumesAppliedResponse(
+                job_id=app.job_id,
+                resume_id=app.resume_id,
+                resume_url=app.resume_link
             )
-        return candidate.ListResumesAppliedResponse(records=records)
+            for app in applications
+        ]
+        
+        return candidate.ListResumesAppliedResponse(count=total_records, records=records)
     
     async def create_saved_job(self, db:Session, record: JobSaved) -> JobSaved:
         db.add(record)

@@ -18,6 +18,7 @@ class ResumesAppliedResponse(BaseModel):
     resume_id: int
     resume_url: str
 class ListResumesAppliedResponse(BaseModel):
+    count: Optional[int] = 0
     records: List[ResumesAppliedResponse]
 class UpdateSaveJobRequest(BaseModel):
     candidate_id: int
