@@ -239,7 +239,7 @@ class AI:
                         {"role": "system", "content": "You are a helpful assistant."},
                         {"role": "user", "content": prompt}
                     ],
-                    model=self.beast_completion_model,
+                    model=self.completion_model,
                     # max_tokens=4096,
                     temperature=0.2
                 )
@@ -276,7 +276,7 @@ class AI:
                         {"role": "system", "content": "You are a helpful assistant."},
                         {"role": "user", "content": prompt}
                     ],
-                    model=self.beast_completion_model,
+                    model=self.completion_model,
                     # max_tokens=4096,
                     temperature=0.2
                 )
@@ -615,4 +615,62 @@ class AI:
                 logger.error(f"Unexpected error: {e}")
                 break
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
+        return None
+    
+    async def get_enhanced_input(self, input: str, max_retries=3) -> str:
+        start_time = time.time() 
+
+        retries = 0
+        prompt = """
+            ### Given this input: ### {input} ###
+            Your task is to enhance this query by providing a concise list of relevant terms and context related to job searches in the Information Technology domain.
+            Focus on variations, related terms, and common abbreviations of the given role. 
+            Avoid including unrelated roles or job functions. Avoid including job levels if the input does not contain any reference to levels
+
+            The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the enhanced search terms.
+            ## Input Example 1 ##
+            Original Input: "SWE"
+
+            ## Response Example 1 ##
+            {{
+                "answer": ["Software Engineer", "Software Developer", "Backend Engineer", "Backend Developer", "Frontend Engineer", "Frontend Developer"]
+            }}
+            ## Input Example 2 ##
+            Original Input: "Junior DE"
+            ## Response Example 2 ##
+            {{
+                "answer": ["Junior Data Engineer", "Entry-Level Data Engineer"]
+            }}
+        """
+        content = prompt.format(input=input.strip())
+        
+        while retries < max_retries:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=self.completion_model,
+                    messages=[
+                        {"role": "system", "content": f"You are a helpful assistant designed to enhance search queries for job searches in the Information Technology domain. Follow the response format strictly."},
+                        {"role": "user", "content": content}
+                    ],
+                    top_p=0.2,
+                )
+
+                end_time = time.time()
+
+                elapsed_time = end_time - start_time
+                logger.info(f"Get input enhanced time: {elapsed_time}")
+                
+                tmp = json.loads(response.choices[0].message.content.strip())  
+                logger.info(f"[enhanced_result]: {tmp['answer']}")
+                return tmp.get("answer", [])
+                
+            except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
+                logger.error(f"Request to OpenAI API failed: {e}. Retrying... (Attempt {retries + 1}/{max_retries})")
+                retries += 1
+                await asyncio.sleep(2)
+            except Exception as e:
+                logger.error(f"Unexpected error: {e}")
+                break
+        
+        logger.error(f"Exceeded maximum number of retries. Please try again later.")
         return None

@@ -9,8 +9,6 @@ WHITELIST_PATHS = [
     "/api/common/types",
     "/api/v2/common/types",
     "/api/ai/resume/enhance",
-    "/api/assistant/generate",
-    "/api/assistant/questioning",
     "/api/qna/generate",
     "/api/qna/generate_v2",
     "/api/qna/questioning_v1",
@@ -22,6 +20,9 @@ WHITELIST_PATHS = [
     "/api/admin/manual-sync-jobs",
     "/api/admin/manual-sync-resumes",
     "/api/all-jobs-for-seo",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/",
 ] 
 
 ADMIN_PATHS = [
