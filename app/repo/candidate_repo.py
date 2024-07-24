@@ -13,22 +13,30 @@ class CandidateRepository:
     async def get_by_id(self, db:Session, id):
         return db.query(Candidate).filter(Candidate.id == id).first()
     
-    async def get_applied_jobs(self, db:Session, id) -> candidate.ListResumesAppliedResponse:
-        applications = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
-            .join(Resume, Application.resume_id == Resume.id)\
-            .filter(Resume.candidate_id == id)\
-            .order_by(Application.updated_at.desc())\
-            .all()
-        records = []
-        for app in applications:
-            records.append(
-                candidate.ResumesAppliedResponse(
-                    job_id=app.job_id,
-                    resume_id=app.resume_id,
-                    resume_url=app.resume_link
-                )
+    async def get_applied_jobs(self, db: Session, candidate_id: int, input: str, offset: int, limit: int) -> candidate.ListResumesAppliedResponse:
+        query = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
+                .join(Resume, Application.resume_id == Resume.id)\
+                .join(Job, Application.job_id == Job.id)\
+                .filter(Resume.candidate_id == candidate_id)
+        
+        if input:
+            query = query.filter(Job.job_title.ilike(f"%{input}%"))
+        
+        total_records = query.count()
+
+        applications = query.order_by(Application.updated_at.desc())\
+                            .offset(offset).limit(limit).all()
+        
+        records = [
+            candidate.ResumesAppliedResponse(
+                job_id=app.job_id,
+                resume_id=app.resume_id,
+                resume_url=app.resume_link
             )
-        return candidate.ListResumesAppliedResponse(records=records)
+            for app in applications
+        ]
+        
+        return candidate.ListResumesAppliedResponse(count=total_records, records=records)
     
     async def create_saved_job(self, db:Session, record: JobSaved) -> JobSaved:
         db.add(record)
@@ -40,17 +48,22 @@ class CandidateRepository:
         db.query(JobSaved).filter_by(candidate_id=record.candidate_id, job_id=record.job_id).delete()
         db.commit()
 
-    async def get_saved_jobs(self, db:Session, id) -> List[int]:
-
-        jobs = db.query(JobSaved.job_id)\
-            .filter(JobSaved.candidate_id == id)\
-            .order_by(JobSaved.updated_at.desc())\
-            .all()
-        records = []
-        for job in jobs:
-            records.append(job.job_id)
+    async def get_saved_jobs(self, db: Session, candidate_id: int, input: str, offset: int, limit: int):
+        query = db.query(JobSaved.job_id)\
+                .join(Job, JobSaved.job_id == Job.id)\
+                .filter(JobSaved.candidate_id == candidate_id)
         
-        return records
+        if input:
+            query = query.filter(Job.job_title.ilike(f"%{input}%"))
+
+        total_records = query.count()
+        
+        jobs = query.order_by(JobSaved.updated_at.desc())\
+                    .offset(offset).limit(limit).all()
+        
+        records = [job.job_id for job in jobs]
+        
+        return total_records, records
     
     # TODO: Refactor this file
     async def get_job_saved_by_candidate_id(self, db:Session, user_id, job_id) -> JobSaved:
