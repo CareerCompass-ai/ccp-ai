@@ -16,19 +16,22 @@ class RecruiterRepository:
         result = db.query().filter(User.id == id).first()
         return result
 
-    async def get_jobs_posted(self, db:Session, id: int, is_hiring: bool) -> List[int]:
-        result = db.query(
-            Job.id
-        ).filter(
+    async def get_jobs_posted(self, db: Session, id: int, is_hiring: bool, input: str, offset: int, limit: int):
+        query = db.query(Job.id).filter(
             Job.recruiter_id == id,
-            Job.is_hiring == is_hiring
-        ).order_by(Job.updated_at.desc()
-        ).all()
-        records = []
-        for job in result:
-            records.append(job.id)
+            Job.is_hiring == is_hiring,
+        )
         
-        return records
+        if input:
+            query = query.filter(Job.job_title.ilike(f"%{input}%"))
+        
+        total_records = query.count()
+        
+        result = query.order_by(Job.updated_at.desc()).offset(offset).limit(limit).all()
+        
+        records = [job.id for job in result]
+        
+        return total_records, records
 
     
     async def get_talents_saved(self, db:Session, id) -> List[int]:

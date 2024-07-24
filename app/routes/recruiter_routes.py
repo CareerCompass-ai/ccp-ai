@@ -41,36 +41,16 @@ class RecruiterRouter:
                 size = 10
             if size >= 100:
                 size = 100
+            offset = (page - 1) * size
+            total_records, job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, is_hiring=is_hiring, input=input, offset=offset, limit=size)
 
-            if input != "":
-                offset = (page - 1) * size
-                total_records, data = await self.job_repo.list_posted_job(db=db, recruiter_id=recruiter_id, input=input, limit=size, offset=offset, is_hiring=is_hiring)
-
-                tasks = [self.aggregate_repo.get_job(db=db, id=job.id) for job in data]
-                
-                records = await asyncio.gather(*tasks)
-
-                return recruiter.ListJobsPostedAggregate(
-                    count=total_records,
-                    page=page,
-                    size=size,
-                    records=records
-                )
-            else:
-                job_ids = await self.recruiter_repo.get_jobs_posted(db=db, id=recruiter_id, is_hiring=is_hiring)
-                total_records = len(job_ids)
-
-                offset = (page - 1) * size
-
-                paging_list = job_ids[offset:offset+size]
-
-                data = await self.job_qdrant_repo.list_jobs_by_ids(ids=paging_list)
-                return recruiter.ListJobsPostedAggregate(
-                    count=total_records,
-                    page=page,
-                    size=size,
-                    records=data
-                )
+            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=job_ids)
+            return recruiter.ListJobsPostedAggregate(
+                count=total_records,
+                page=page,
+                size=size,
+                records=data
+            )
         except Exception:
             logger.error(f"list_jobs_posted failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
