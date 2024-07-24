@@ -91,24 +91,19 @@ class CandidateRouter:
             candidate_id: Optional[int] = Query(None, description="Candidate/User ID"), 
             page: int = Query(None, description="Page"),
             size: int = Query(None, description="Size"),
+            input: str = Query(None, description="Search input"),
             db: Session = Depends(PostgresDB.get_db)):
         try:
-            if page <= 0:
+            if page is None or page <= 0:
                 page = 1
-            if size <= 0:
+            if size is None or size <= 0:
                 size = 10
             if size >= 100:
                 size = 100
-
-            job_ids = await self.candidate_repo.get_saved_jobs(db=db, id=candidate_id)
-
-            total_records = len(job_ids)
-
             offset = (page - 1) * size
-
-            paging_list = job_ids[offset:offset+size]
+            total_records, job_ids = await self.candidate_repo.get_saved_jobs(db=db, candidate_id=candidate_id, input=input, offset=offset, limit=size)
             
-            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=paging_list)
+            data = await self.job_qdrant_repo.list_jobs_by_ids(ids=job_ids)
             return candidate.ListJobsSaved(
                 count=total_records,
                 page=page,

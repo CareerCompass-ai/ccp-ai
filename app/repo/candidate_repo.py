@@ -48,17 +48,22 @@ class CandidateRepository:
         db.query(JobSaved).filter_by(candidate_id=record.candidate_id, job_id=record.job_id).delete()
         db.commit()
 
-    async def get_saved_jobs(self, db:Session, id) -> List[int]:
-
-        jobs = db.query(JobSaved.job_id)\
-            .filter(JobSaved.candidate_id == id)\
-            .order_by(JobSaved.updated_at.desc())\
-            .all()
-        records = []
-        for job in jobs:
-            records.append(job.job_id)
+    async def get_saved_jobs(self, db: Session, candidate_id: int, input: str, offset: int, limit: int):
+        query = db.query(JobSaved.job_id)\
+                .join(Job, JobSaved.job_id == Job.id)\
+                .filter(JobSaved.candidate_id == candidate_id)
         
-        return records
+        if input:
+            query = query.filter(Job.job_title.ilike(f"%{input}%"))
+
+        total_records = query.count()
+        
+        jobs = query.order_by(JobSaved.updated_at.desc())\
+                    .offset(offset).limit(limit).all()
+        
+        records = [job.job_id for job in jobs]
+        
+        return total_records, records
     
     # TODO: Refactor this file
     async def get_job_saved_by_candidate_id(self, db:Session, user_id, job_id) -> JobSaved:
