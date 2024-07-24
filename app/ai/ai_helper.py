@@ -38,15 +38,23 @@ class AI:
 
                 assistant = self.openai_client.beta.assistants.create(
                     name="Data Visualization",
-                    instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
-                    f"The two uploaded files are in csv format. The file named job_{time_from}-{time_to}.csv contains data about jobs posted between {time_from} and {time_to}, including job information and recruiter information that posts that job. The file named user_{time_from}-{time_to}.csv contains data about all user information in the entire system without time limit, including recruiter information and candidate information." 
-                    f"You have access to a sandboxed environment for writing and testing code."
-                    f"When you are asked to create a visualization you should follow these steps:"
-                    f"1. Write the code."
-                    f"2. Anytime you write new code display a preview of the code to show your work."
-                    f"3. Run the code to confirm that it runs."
-                    f"4. If the code is successful display the visualization."
-                    f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.",
+                    instructions=f"""
+                        You are a helpful AI assistant tasked with cleaning and understanding the structure of CSV files.
+                        Two uploaded files are in CSV format. The first file contains data about jobs posted between {time_from} and {time_to}. The second file contains data about all user information in the entire system without time limit.
+
+                        As soon as you are created, perform the following tasks:
+                        1. Load the contents of both CSV files.
+                        2. Examine their structure to understand the columns and data types.
+                        3. Display the summary of the structure for both files.
+                        Your focus should be on understanding the structure, not performing any detailed statistical analysis or creating visualizations at this stage.
+
+                        You have access to a sandboxed environment for writing and testing code. When you are asked to create a visualization, you should follows these steps:
+                        1. Write the code.
+                        2. Anytime you write new code display a preview of the code to show your work.
+                        3. Run the code to confirm that it runs.
+                        4. If the code is successful display the visualization.
+                        5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.
+                        """,
                     tools=[{"type": "code_interpreter"}],
                     model=self.beast_completion_model,
                     tool_resources={
@@ -66,11 +74,41 @@ class AI:
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
     
-    async def create_thread(self, max_retries=3):
+    async def create_thread(self, assistant_id, max_retries=3):
         retries = 0
         while retries < max_retries:
             try:
                 thread = self.openai_client.beta.threads.create()
+
+                self.openai_client.beta.threads.messages.create(
+                    thread_id=thread.id,
+                    role="user",
+                    content="Please load the contents of the uploaded CSV files and examine their structure. This will help you understand the data and create suitable visualizations."
+                )
+
+                run = self.openai_client.beta.threads.runs.create(
+                    thread_id=thread.id,
+                    assistant_id=assistant_id,
+                )
+
+                start_time = datetime.now()
+                timeout = timedelta(minutes=5)
+
+                while True:
+                    run_status = self.openai_client.beta.threads.runs.retrieve(
+                        thread_id=thread.id,
+                        run_id=run.id
+                    )
+                    if run_status.status == "completed":
+                        break
+                    elif run_status.status == "failed":
+                        logger.error(f"Assistant run failed: {run_status.error}")
+                        return {"status": "error", "message": "Assistant run failed"}
+                    elif datetime.now() - start_time > timeout:
+                        logger.error("Assistant run timed out.")
+                        return {"status": "error", "message": "Assistant run timed out"}
+                    await asyncio.sleep(2)  # TODO: Think up a solution to improve this case. Note: Asynchronously sleep for a bit before checking again
+                
                 return thread.id
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
@@ -340,16 +378,50 @@ class AI:
     async def get_resume_summarized(self, input, max_retries=3):
         return await self.get_summarized_content(input, constant.SUMMARIZE_RESUME_PROMPT, "resume", max_retries)
     
-    async def get_common_job_title(self, input:str, prompt:str, max_retries=3):
+    async def get_common_job_title(self, input:str, max_retries=3):
         retries = 0
-        content = prompt.format(input=input)
+        prompt = f"""
+            ### Given this job title:## {input} ##, which is considered to belong to which position in the following IT job list: ["Software Engineer", "Product Owner/Product Manager", "Business Analyst", "Tech Lead", "UI/UX Designer", "Tester/QA-QC", "System Engineer", "DevOps Engineer", "IT Support", "Data Scientist", "Data Analyst/Data Engineer", "ML/AI Engineer", "Blockchain Engineer", "Database Administrator", "Embedded/IoT/Robotics Engineer"].
+
+            This job title may contain company name, hiring level, programming languages, technologies,...
+
+            Your response **must** be in the following JSON format exactly:
+
+            {{"answer": "<Position>"}}
+
+            <Position> **must** be the value in above list.
+
+            If the job title does not match any of the positions in the IT job list above, you **must** respond with:
+            {{"answer": "Other position"}}
+
+            **Additional Rules and Examples**:
+            - If the job title contains a programming language (e.g., 'Java', 'Python', 'C++'), it should be classified under "Software Engineer".
+            - If the job title contains terms like 'Senior', 'Junior', 'Lead', or company names, these should be ignored, and the core job function should be identified.
+            - If the job title includes technologies or tools, map them to the closest relevant position. For example, 'AWS DevOps Engineer' should be classified as 'DevOps Engineer'.
+
+            Examples:
+            - If the job title is 'Senior Software Developer', your response should be:
+            {{"answer": "Software Engineer"}}
+            - If the job title is 'Google Software Engineer', your response should be:
+            {{"answer": "Software Engineer"}}
+            - If the job title is 'Java Developer', your response should be:
+            {{"answer": "Software Engineer"}}
+            - If the job title is 'AWS DevOps Engineer', your response should be:
+            {{"answer": "DevOps Engineer"}}
+            - If the job title is 'Python Data Scientist', your response should be:
+            {{"answer": "Data Scientist"}}
+            - If the job title is 'Marketing Manager', your response should be:
+            {{"answer": "Other position"}}
+            - If the job title is 'Data Engineer', your response should be:
+            {{"answer": "Data Analyst/Data Engineer"}}
+        """
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
                     model=self.completion_model,
                     messages=[
                         {"role": "system", "content": f"You are a helpful assistant designed to determine the position of the job title. And must follow the response format"},
-                        {"role": "system", "content": content}
+                        {"role": "system", "content": prompt}
                     ],
                     top_p=0.2,
                 )

@@ -99,7 +99,7 @@ async def generate_assistant (
         #Remove all assistant exist??
         assistant_id, file_ids = await ai_helper.create_assistant(file_paths=[_file_name_job, _file_name_user], time_from=req.time_from, time_to=req.time_to)
 
-        thread_id = await ai_helper.create_thread()
+        thread_id = await ai_helper.create_thread(assistant_id=assistant_id)
 
         now = datetime.now()
 

@@ -36,6 +36,8 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
             j.applied_count AS "applied_count (Number of job applications)",
             j.hiring_level AS "hiring_level (Level of hiring)",
             j.created_at AS "created_at (Job creation date)",
+            j.opened_date AS "opened_date (Job opened date)",
+            j.closed_date AS "closed_date (Job closed date)",
             c.city_name AS "city_name (Name of the city)",
             co.country_name AS "country_name (Name of the country)",
             j.recruiter_id AS "recruiter_id (ID of the recruiter)",
@@ -57,7 +59,7 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
         JOIN ccp_city c ON a.city_id = c.id
         JOIN ccp_country co ON c.country_id = co.id
         JOIN ccp_user u ON j.recruiter_id = u.id
-        WHERE j.updated_at BETWEEN '{time_from}' AND '{time_to}'
+        WHERE j.opened_date BETWEEN '{time_from}' AND '{time_to}'
         ORDER BY j.id ASC;
     """
     res_1 = db.execute(text(query1))
@@ -75,6 +77,8 @@ async def generate_analysis_file(db: Session, time_from: str, time_to: str, file
         "applied_count (Number of job applications)",
         "hiring_level (Level of hiring)", 
         "created_at (Job creation date)",
+        "opened_date (Job opened date)",
+        "closed_date (Job closed date)",
         "city_name (Name of the city)", 
         "country_name (Name of the country)", 
         "recruiter_id (ID of the recruiter)",
