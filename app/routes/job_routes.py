@@ -274,7 +274,7 @@ class JobRouter:
 
             now = datetime.now()
 
-            common_job_title = await self.ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
+            common_job_title = await self.ai_helper.get_common_job_title(job_title)
 
             record = job.JobBase(
                 job_title=job_title,
@@ -537,7 +537,7 @@ class JobRouter:
 
             # Change common_job_title if change job_title
             if new_job_title is not None:
-                common_job_title = await self.ai_helper.get_common_job_title(job_title, constant.COMMON_JOB_TITLE_PROMPT)
+                common_job_title = await self.ai_helper.get_common_job_title(job_title)
                 props["common_job_title"] = common_job_title
 
             if file is not None:

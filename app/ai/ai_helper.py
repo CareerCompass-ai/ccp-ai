@@ -340,16 +340,50 @@ class AI:
     async def get_resume_summarized(self, input, max_retries=3):
         return await self.get_summarized_content(input, constant.SUMMARIZE_RESUME_PROMPT, "resume", max_retries)
     
-    async def get_common_job_title(self, input:str, prompt:str, max_retries=3):
+    async def get_common_job_title(self, input:str, max_retries=3):
         retries = 0
-        content = prompt.format(input=input)
+        prompt = f"""
+            ### Given this job title:## {input} ##, which is considered to belong to which position in the following IT job list: ["Software Engineer", "Product Owner/Product Manager", "Business Analyst", "Tech Lead", "UI/UX Designer", "Tester/QA-QC", "System Engineer", "DevOps Engineer", "IT Support", "Data Scientist", "Data Analyst/Data Engineer", "ML/AI Engineer", "Blockchain Engineer", "Database Administrator", "Embedded/IoT/Robotics Engineer"].
+
+            This job title may contain company name, hiring level, programming languages, technologies,...
+
+            Your response **must** be in the following JSON format exactly:
+
+            {{"answer": "<Position>"}}
+
+            <Position> **must** be the value in above list.
+
+            If the job title does not match any of the positions in the IT job list above, you **must** respond with:
+            {{"answer": "Other position"}}
+
+            **Additional Rules and Examples**:
+            - If the job title contains a programming language (e.g., 'Java', 'Python', 'C++'), it should be classified under "Software Engineer".
+            - If the job title contains terms like 'Senior', 'Junior', 'Lead', or company names, these should be ignored, and the core job function should be identified.
+            - If the job title includes technologies or tools, map them to the closest relevant position. For example, 'AWS DevOps Engineer' should be classified as 'DevOps Engineer'.
+
+            Examples:
+            - If the job title is 'Senior Software Developer', your response should be:
+            {{"answer": "Software Engineer"}}
+            - If the job title is 'Google Software Engineer', your response should be:
+            {{"answer": "Software Engineer"}}
+            - If the job title is 'Java Developer', your response should be:
+            {{"answer": "Software Engineer"}}
+            - If the job title is 'AWS DevOps Engineer', your response should be:
+            {{"answer": "DevOps Engineer"}}
+            - If the job title is 'Python Data Scientist', your response should be:
+            {{"answer": "Data Scientist"}}
+            - If the job title is 'Marketing Manager', your response should be:
+            {{"answer": "Other position"}}
+            - If the job title is 'Data Engineer', your response should be:
+            {{"answer": "Data Analyst/Data Engineer"}}
+        """
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
-                    model=self.completion_model,
+                    model="gpt-3.5-turbo-0125",
                     messages=[
                         {"role": "system", "content": f"You are a helpful assistant designed to determine the position of the job title. And must follow the response format"},
-                        {"role": "system", "content": content}
+                        {"role": "system", "content": prompt}
                     ],
                     top_p=0.2,
                 )
