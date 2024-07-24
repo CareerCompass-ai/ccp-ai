@@ -55,6 +55,7 @@ class AI:
                         4. If the code is successful display the visualization.
                         5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.
                         """,
+                    top_p=0.2,
                     tools=[{"type": "code_interpreter"}],
                     model=self.beast_completion_model,
                     tool_resources={
@@ -89,6 +90,7 @@ class AI:
                 run = self.openai_client.beta.threads.runs.create(
                     thread_id=thread.id,
                     assistant_id=assistant_id,
+                    top_p=0.2
                 )
 
                 start_time = datetime.now()
@@ -135,6 +137,7 @@ class AI:
                 run = self.openai_client.beta.threads.runs.create(
                     thread_id=input.thread_id,
                     assistant_id=input.assistant_id,
+                    top_p=0.2
                 )
 
                 start_time = datetime.now()
