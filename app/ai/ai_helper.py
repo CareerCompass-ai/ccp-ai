@@ -593,19 +593,19 @@ class AI:
             Focus on variations, related terms, and common abbreviations of the given role. 
             Avoid including unrelated roles or job functions. Avoid including job levels if the input does not contain any reference to levels
 
-            The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the enhanced search terms.
+            The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the enhanced search terms, including both lowercase and uppercase versions.
             ## Input Example 1 ##
             Original Input: "SWE"
 
             ## Response Example 1 ##
             {{
-                "answer": ["Software Engineer", "Software Developer", "Backend Engineer", "Backend Developer", "Frontend Engineer", "Frontend Developer"]
+                "answer": ["Software Engineer", "software engineer", "Software Developer", "software developer", "Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Frontend Engineer", "frontend engineer", "frontend developer", "Frontend Developer"]
             }}
             ## Input Example 2 ##
             Original Input: "Junior DE"
             ## Response Example 2 ##
             {{
-                "answer": ["Junior Data Engineer", "Entry-Level Data Engineer"]
+                "answer": ["Junior Data Engineer", "junior data engineer", "Entry-Level Data Engineer", "entry level data engineer"]
             }}
         """
         content = prompt.format(input=input.strip())
