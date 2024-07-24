@@ -38,16 +38,22 @@ class AI:
 
                 assistant = self.openai_client.beta.assistants.create(
                     name="Data Visualization",
-                    instructions=f"""You are a helpful AI assistant tasked with cleaning and understanding the structure of CSV files.
+                    instructions=f"""
+                        You are a helpful AI assistant tasked with cleaning and understanding the structure of CSV files.
                         Two uploaded files are in CSV format. The first file contains data about jobs posted between {time_from} and {time_to}. The second file contains data about all user information in the entire system without time limit.
-                        You have access to a sandboxed environment for writing and testing code.
 
                         As soon as you are created, perform the following tasks:
                         1. Load the contents of both CSV files.
                         2. Examine their structure to understand the columns and data types.
                         3. Display the summary of the structure for both files.
-
                         Your focus should be on understanding the structure, not performing any detailed statistical analysis or creating visualizations at this stage.
+
+                        You have access to a sandboxed environment for writing and testing code. When you are asked to create a visualization, you should follows these steps:
+                        1. Write the code.
+                        2. Anytime you write new code display a preview of the code to show your work.
+                        3. Run the code to confirm that it runs.
+                        4. If the code is successful display the visualization.
+                        5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.
                         """,
                     tools=[{"type": "code_interpreter"}],
                     model=self.beast_completion_model,
