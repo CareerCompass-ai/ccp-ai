@@ -38,15 +38,17 @@ class AI:
 
                 assistant = self.openai_client.beta.assistants.create(
                     name="Data Visualization",
-                    instructions=f"You are a helpful AI assistant who makes interesting visualizations based on data." 
-                    f"The two uploaded files are in csv format. The file named job_{time_from}-{time_to}.csv contains data about jobs posted between {time_from} and {time_to}, including job information and recruiter information that posts that job. The file named user_{time_from}-{time_to}.csv contains data about all user information in the entire system without time limit, including recruiter information and candidate information." 
-                    f"You have access to a sandboxed environment for writing and testing code."
-                    f"When you are asked to create a visualization you should follow these steps:"
-                    f"1. Write the code."
-                    f"2. Anytime you write new code display a preview of the code to show your work."
-                    f"3. Run the code to confirm that it runs."
-                    f"4. If the code is successful display the visualization."
-                    f"5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.",
+                    instructions=f"""You are a helpful AI assistant tasked with cleaning and understanding the structure of CSV files.
+                        Two uploaded files are in CSV format. The first file contains data about jobs posted between {time_from} and {time_to}. The second file contains data about all user information in the entire system without time limit.
+                        You have access to a sandboxed environment for writing and testing code.
+
+                        As soon as you are created, perform the following tasks:
+                        1. Load the contents of both CSV files.
+                        2. Examine their structure to understand the columns and data types.
+                        3. Display the summary of the structure for both files.
+
+                        Your focus should be on understanding the structure, not performing any detailed statistical analysis or creating visualizations at this stage.
+                        """,
                     tools=[{"type": "code_interpreter"}],
                     model=self.beast_completion_model,
                     tool_resources={
@@ -66,11 +68,41 @@ class AI:
         logger.info("Exceeded maximum number of retries. Please try again later.")
         return None
     
-    async def create_thread(self, max_retries=3):
+    async def create_thread(self, assistant_id, max_retries=3):
         retries = 0
         while retries < max_retries:
             try:
                 thread = self.openai_client.beta.threads.create()
+
+                self.openai_client.beta.threads.messages.create(
+                    thread_id=thread.id,
+                    role="user",
+                    content="Please load the contents of the uploaded CSV files and examine their structure. This will help you understand the data and create suitable visualizations."
+                )
+
+                run = self.openai_client.beta.threads.runs.create(
+                    thread_id=thread.id,
+                    assistant_id=assistant_id,
+                )
+
+                start_time = datetime.now()
+                timeout = timedelta(minutes=5)
+
+                while True:
+                    run_status = self.openai_client.beta.threads.runs.retrieve(
+                        thread_id=thread.id,
+                        run_id=run.id
+                    )
+                    if run_status.status == "completed":
+                        break
+                    elif run_status.status == "failed":
+                        logger.error(f"Assistant run failed: {run_status.error}")
+                        return {"status": "error", "message": "Assistant run failed"}
+                    elif datetime.now() - start_time > timeout:
+                        logger.error("Assistant run timed out.")
+                        return {"status": "error", "message": "Assistant run timed out"}
+                    await asyncio.sleep(2)  # TODO: Think up a solution to improve this case. Note: Asynchronously sleep for a bit before checking again
+                
                 return thread.id
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 400:
@@ -380,7 +412,7 @@ class AI:
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
-                    model="gpt-3.5-turbo-0125",
+                    model=self.completion_model,
                     messages=[
                         {"role": "system", "content": f"You are a helpful assistant designed to determine the position of the job title. And must follow the response format"},
                         {"role": "system", "content": prompt}
