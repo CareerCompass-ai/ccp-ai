@@ -10,7 +10,7 @@ COPY ./dep/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download NLTK data
-RUN python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt
+# RUN python -m nltk.downloader -d /usr/local/share/nltk_data stopwords punkt
 
 # Copy the rest of the application code into the container
 COPY . .
