@@ -552,6 +552,15 @@ class JobQdrantRepository:
                     )
                 )
 
+            if input.role:
+                input.role = input.role.split(',')
+                filter.must.append(
+                    models.FieldCondition(
+                        key="common_job_title",
+                        match=models.MatchAny(any=input.role)
+                    )
+                )
+
             _res = await self.count_total_record(filter)
             total_record += _res.count
 
