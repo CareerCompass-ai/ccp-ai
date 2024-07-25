@@ -36,4 +36,4 @@ class ListCommonTypesv2(BaseModel):
     cities: List[CommonTypev2]
     countries: List[CommonTypev2]
     job_tags: list[CommonTypev2]
-    labels: list[CommonTypev2]
+    roles: list[CommonTypev2]

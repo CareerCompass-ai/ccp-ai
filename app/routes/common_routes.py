@@ -115,7 +115,7 @@ class CommonRouter:
                 work_places=rec_work_places,
                 countries=rec_countries,
                 cities=rec_cities,
-                labels=rec_common_job_titles,
+                roles=rec_common_job_titles,
             )
             return data
         except Exception:

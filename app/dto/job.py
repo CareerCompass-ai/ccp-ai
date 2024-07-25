@@ -49,6 +49,7 @@ class ListJobRequest(BaseModel):
     is_hiring: Optional[bool] = None
     latest_job_id: Optional[int] = None
     exclude: Optional[str] = None
+    role: Optional[str] = None
 
 class ListRelatedJobRequest(BaseModel):
     page: Optional[int]
