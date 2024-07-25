@@ -79,6 +79,32 @@ class GetResumesOfCandidateResponse(BaseModel):
 
 class DeleteResumeResponse(BaseModel):
     msg: str
+    
+class WorkExperience(BaseModel):
+    company: str
+    position: str
+    start_date: str
+    end_date: str
+    description: str
+
+class Project(BaseModel):
+    name: str
+    description: str
+
+class GenerateResumePayload(BaseModel):
+    user_name: str
+    work_experience: List[WorkExperience]
+    projects: List[Project]
+    summary: str
+
+class GenerateResumeRequest(BaseModel):
+    template: int
+    resume_name: str
+    payload: GenerateResumePayload
+    
+class GenerateResumeResponse(BaseModel):
+    status: str
+    download_url: str
 
 class DeleteResumeRequest(BaseModel):
     resume_id: int

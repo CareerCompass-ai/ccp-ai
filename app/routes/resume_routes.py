@@ -1,13 +1,18 @@
 import os
 import traceback
+from typing import Optional
 import uuid
 from datetime import datetime
 from io import BytesIO
 
+import pdfkit
 import PyPDF2
+from xhtml2pdf import pisa
+from weasyprint import HTML
 from better_profanity import profanity
 from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
                      status)
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -23,9 +28,67 @@ class ResumeRouter:
         self.resume_qdrant_repo = factory.get_resume_qdrant_repo()
         self.resume_repo = factory.get_resume_repo()
         self.minio_repo = factory.get_minio_repo()
+
         self.router = APIRouter(prefix="/api", tags=['Resume'])
         self.router.add_api_route("/resume/create", self.upload, methods=["POST"], response_model=resume.CreateResumePostResponse)
         self.router.add_api_route("/resume/delete", self.delete, methods=["PUT"], response_model=resume.DeleteResumeResponse)
+        self.router.add_api_route("/resume/generate", self.generate, methods=["POST"], response_model=resume.GenerateResumeResponse)
+
+        self.templates = Jinja2Templates(directory="app/templates")
+
+    async def generate(
+        self,
+        req: Optional[resume.GenerateResumeRequest] = None, 
+    ):
+        temp_file_path = None  # Initialize temp_file_path
+        try:
+            # Generate template name and load template
+            template_name = "resume_template_" + str(req.template) + ".html"
+            template = self.templates.get_template(template_name)
+            
+            # Render HTML content
+            html_content = template.render(
+                user_name=req.payload.user_name,
+                work_experience=req.payload.work_experience,
+                projects=req.payload.projects,
+                summary=req.payload.summary,
+            )
+
+            # Generate file name
+            file_name = str(uuid.uuid4()) + "_" + req.resume_name + ".pdf"
+
+            # Define URL before uploading to MinIO
+            public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_RESUME}/{file_name}"
+            download_url = "https://" + public_url
+            pdf_file_path = file_name + ".pdf"
+
+            # Create PDF and save to a temporary file
+            result = BytesIO()
+            pisa.CreatePDF(BytesIO(html_content.encode('utf-8')), dest=result)
+
+            temp_dir = os.path.dirname(os.path.abspath(__file__))
+            temp_file_path = os.path.join(temp_dir, pdf_file_path)
+
+            with open(temp_file_path, 'wb') as f:
+                f.write(result.getvalue())
+
+            # Upload to MinIO
+            await self.minio_repo.upload(
+                minio.UploadMinioRequest(
+                    bucket_name=minio_constant.MINIO_BUCKET_RESUME,
+                    temp_path=temp_file_path,
+                    file_name=file_name
+                )
+            )
+
+            return resume.GenerateResumeResponse(status="Generate successfully!", download_url=download_url)
+        except Exception:
+            logger.error(f"generate_resume failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
+        finally:
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+
 
     async def upload(
         self,
