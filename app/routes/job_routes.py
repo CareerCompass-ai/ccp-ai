@@ -96,6 +96,7 @@ class JobRouter:
         alpha:  Optional[float] = Query(None, description="Alpha (config for hybrid search)"),
         resume_id: Optional[int] = Query(None, description="Resume id"),
         exclude: Optional[str] = Query(None, description="Exclude job id"),
+        role: Optional[str] = Query(None, description="Role filter"),
     ):
         # map query params to req
         try:
@@ -118,6 +119,7 @@ class JobRouter:
                 is_hiring=is_hiring,
                 alpha=alpha,
                 exclude=exclude,
+                role=role,
             )
 
             if search_type == "vector": # handle vector search
