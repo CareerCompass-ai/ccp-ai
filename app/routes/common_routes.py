@@ -101,6 +101,7 @@ class CommonRouter:
                     )
                 )
 
+            rec_common_job_titles = self.get_value_from_constant(constant.COMMON_JOB_TITLES)
             rec_hiring_levels = self.get_value_from_constant(constant.HIRING_LEVELS)
             rec_job_types = self.get_value_from_constant(constant.JOB_TYPES)
             rec_company_types = self.get_value_from_constant(constant.COMPANY_TYPES)
@@ -113,7 +114,8 @@ class CommonRouter:
                 company_types=rec_company_types,
                 work_places=rec_work_places,
                 countries=rec_countries,
-                cities=rec_cities
+                cities=rec_cities,
+                labels=rec_common_job_titles,
             )
             return data
         except Exception:
