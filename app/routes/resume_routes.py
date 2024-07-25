@@ -20,6 +20,8 @@ from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from pkg.logging import logger
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from .template_helper import nl2br_bullet 
 
 class ResumeRouter:
     def __init__(self):
@@ -34,6 +36,13 @@ class ResumeRouter:
 
         self.templates = Jinja2Templates(directory="app/templates")
 
+        template_dir = "app/templates"
+        self.env = Environment(
+            loader=FileSystemLoader(template_dir),
+            autoescape=select_autoescape(['html', 'xml'])
+        )
+        self.env.filters['nl2br_bullet'] = nl2br_bullet
+
     async def generate(
         self,
         req: Optional[resume.GenerateResumeRequest] = None, 
@@ -42,8 +51,8 @@ class ResumeRouter:
         try:
             # Generate template name and load template
             template_name = "resume_template_" + str(req.template) + ".html"
-            template = self.templates.get_template(template_name)
-            
+            template = self.env.get_template(template_name)
+
             # Render HTML content
             html_content = template.render(
                 user_name=req.payload.user_name,
