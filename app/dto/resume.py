@@ -84,6 +84,13 @@ class DeleteResumeRequest(BaseModel):
     resume_id: int
     candidate_id: int
     
+class Education(BaseModel):
+    name: str
+    gpa: str
+    start_date: str
+    end_date: str
+    description: str
+
 class WorkExperience(BaseModel):
     company: str
     position: str
@@ -99,6 +106,9 @@ class Publication(BaseModel):
     title: str
     details: str
 
+class HonorAndAward(BaseModel):
+    award: str
+
 class VolunteerExperience(BaseModel):
     role: str
     organization: str
@@ -106,18 +116,18 @@ class VolunteerExperience(BaseModel):
 
 class GenerateResumePayload(BaseModel):
     user_name: str
+    title: str
     email: str
     portfolio: str
     mobile: str
     github: str
-    education_institution: str
-    education_details: str
+    educations: List[Education]
     skills_summary: Dict[str, str]
     work_experience: List[WorkExperience]
     projects: List[Project]
-    publications: Optional[List[Publication]] = None
-    honors_and_awards: Optional[List[str]] = None
-    volunteer_experience: Optional[List[VolunteerExperience]] = None
+    publications: List[Publication]
+    honors_and_awards: List[str]
+    volunteer_experience: List[VolunteerExperience]
     summary: str
 
 class GenerateResumeRequest(BaseModel):
