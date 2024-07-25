@@ -23,6 +23,7 @@ WHITELIST_PATHS = [
     "/sitemap.xml",
     "/robots.txt",
     "/",
+    "/api/resume/generate",
 ] 
 
 ADMIN_PATHS = [

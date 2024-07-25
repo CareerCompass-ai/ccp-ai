@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume</title>
+    <style>
+      /* Your styles here */
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="info-section">
+        <h1>{{ user_name }}</h1>
+        <div class="summary-section">
+          <h2>Summary</h2>
+          <div class="summary-content">{{ summary | safe }}</div>
+        </div>
+        <!-- Other sections like work experience and projects -->
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Template</title>
+    <style>
+      .container {
+        min-height: 1240px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        border: 2px solid;
+        border-radius: 8px;
+        align-items: center;
+        width: 100%;
+      }
+      .section-title {
+        text-align: center;
+        font-size: 30px;
+        font-weight: 500;
+      }
+      .section-divider {
+        width: 769px;
+        border: 1px solid #718096;
+      }
+      .content {
+        width: 775px;
+      }
+      .info-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      }
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+      }
+      .dot {
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        background-color: black;
+        border-radius: 50%;
+        margin: 0 8px;
+      }
+      .summary-title {
+        text-align: center;
+        font-size: 30px;
+        margin-top: 8px;
+        font-weight: 500;
+      }
+      .summary-container {
+        width: 769px;
+        border: 1px solid #718096;
+      }
+      .summary-content {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 8px;
+      }
+      .editor-wrapper {
+        display: flex;
+        justify-content: space-between;
+        margin-left: 28px;
+        margin-right: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="section-title">Summary</h2>
+      <hr class="section-divider" />
+      <div class="content">
+          <p>{{ summary }}</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-row">
+          <span>{{ user_name }}</span>
+        </div>
+        <div class="info-row">
+          <span>{{ user_name }}</span>
+        </div>
+        <div class="info-row">
+          <div class="info-row">
+            <span>{{ user_name }}</span>
+            <span class="dot"></span>
+            <span>{{ user_name }}</span>
+          </div>
+        </div>
+        <h2 class="summary-title">Summary</h2>
+        <hr class="summary-container" />
+        <div class="summary-content">
+          <div class="editor-wrapper">
+            <span>{{ user_name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Work Experience</h2>
+      <hr class="section-divider" />
+      <div class="content">
+        {% for work in work_experience %}
+        <div>
+          <h3>{{ work.company }}</h3>
+          <p>{{ work.position }}</p>
+          <p>{{ work.start_date }} - {{ work.end_date }}</p>
+          <p>{{ work.description }}</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <h2 class="section-title">Projects</h2>
+      <hr class="section-divider" />
+      <div class="content">
+        {% for project in projects %}
+        <div>
+          <h3>{{ project.name }}</h3>
+          <p>{{ project.description }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>
