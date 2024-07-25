@@ -29,6 +29,7 @@ class CommonTypev2(BaseModel):
     name: str
     count: Optional[int] = 0
 class ListCommonTypesv2(BaseModel):
+    roles: list[CommonTypev2]
     hiring_levels: list[CommonTypev2]
     job_types: list[CommonTypev2]
     work_places: list[CommonTypev2]
@@ -36,4 +37,3 @@ class ListCommonTypesv2(BaseModel):
     cities: List[CommonTypev2]
     countries: List[CommonTypev2]
     job_tags: list[CommonTypev2]
-    roles: list[CommonTypev2]
