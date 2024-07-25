@@ -26,7 +26,8 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         applied_count=payload["applied_count"],
         address_id=payload["address_id"],
         work_place=payload["work_place"],
-        display_content=payload["display_content"]
+        display_content=payload["display_content"],
+        common_job_title=payload["common_job_title"]
     )
 
 def toJobWeaviateDTO(payload: dict) -> job.JobAggregate:
@@ -55,7 +56,8 @@ def toJobWeaviateDTO(payload: dict) -> job.JobAggregate:
         applied_count=payload.properties["applied_count"],
         address_id=payload.properties["address_id"],
         work_place=payload.properties["work_place"],
-        display_content=payload.properties["display_content"]
+        display_content=payload.properties["display_content"],
+        common_job_title=payload.properties["common_job_title"]
     )
 
 def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
