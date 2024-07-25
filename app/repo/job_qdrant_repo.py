@@ -444,7 +444,7 @@ class JobQdrantRepository:
 
                     records.append(job_dto)
 
-                await self.update_dynamic_filters(results[1], dynamic_filters)
+                # await self.update_dynamic_filters(results[1], dynamic_filters)
                 del filter
                 del results
         else:
@@ -602,7 +602,7 @@ class JobQdrantRepository:
                 filter.must_not=[]
                 
                 tasks.append(search_task(input.size))
-                tasks.append(search_task(total_record))
+                # tasks.append(search_task(total_record))
             else:
                 # get the latest updated record to start from
                 initial_result = self.client.scroll(
@@ -620,7 +620,7 @@ class JobQdrantRepository:
                     latest_updated_at = initial_result[0][0].payload['updated_at']
 
                     tasks.append(scroll_task(input.size, latest_updated_at))
-                    tasks.append(scroll_task(total_record, latest_updated_at))
+                    # tasks.append(scroll_task(total_record, latest_updated_at))
 
             results = await asyncio.gather(*tasks)
 
@@ -640,15 +640,15 @@ class JobQdrantRepository:
 
                     records.append(job_dto)
 
-            # NOTE: results[0] - first task, result 1 - second task
-            if input.vectors is not None:
-                await self.update_dynamic_filters(results[1], dynamic_filters)
-            else:
-                await self.update_dynamic_filters(results[1][0], dynamic_filters)
+            # # NOTE: results[0] - first task, result 1 - second task
+            # if input.vectors is not None:
+            #     await self.update_dynamic_filters(results[1], dynamic_filters)
+            # else:
+            #     await self.update_dynamic_filters(results[1][0], dynamic_filters)
             del filter
             del results
 
-        dynamic_filters_obj = await self.build_dynamic_filters(dynamic_filters)
+        # dynamic_filters_obj = await self.build_dynamic_filters(dynamic_filters)
 
         end_time = time.time()
 
@@ -660,7 +660,7 @@ class JobQdrantRepository:
             page=input.page,
             size=input.size,
             records=records,
-            dynamic_filters=dynamic_filters_obj
+            # dynamic_filters=dynamic_filters_obj
         )
 
     async def list_jobs_applied(self, job_ids: List[int], resume_ids: List[int], resume_urls: List[str]) -> List[candidate.AppliedJobsResponse]:
