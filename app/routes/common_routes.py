@@ -109,13 +109,13 @@ class CommonRouter:
 
             data = common.ListCommonTypesv2(
                 job_tags=rec_tags,
+                roles=rec_common_job_titles,
                 hiring_levels=rec_hiring_levels,
                 job_types=rec_job_types,
                 company_types=rec_company_types,
                 work_places=rec_work_places,
                 countries=rec_countries,
                 cities=rec_cities,
-                roles=rec_common_job_titles,
             )
             return data
         except Exception:
