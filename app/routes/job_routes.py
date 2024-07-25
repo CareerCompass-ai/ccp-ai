@@ -45,7 +45,7 @@ class JobRouter:
         self.ai_helper = factory.get_ai_helper()
         self.kafka_producer = factory.get_kafka_producer()
 
-        self.helper = helper.Helper()
+        # self.helper = helper.Helper()
 
         self.router = APIRouter(prefix="/api", tags=['Job'])
         self.router.add_api_route("/jobs", self.list_jobs_from_qdrant, methods=["GET"], response_model=job.ListJobResponse)

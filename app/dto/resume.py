@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -79,6 +79,10 @@ class GetResumesOfCandidateResponse(BaseModel):
 
 class DeleteResumeResponse(BaseModel):
     msg: str
+
+class DeleteResumeRequest(BaseModel):
+    resume_id: int
+    candidate_id: int
     
 class WorkExperience(BaseModel):
     company: str
@@ -91,10 +95,29 @@ class Project(BaseModel):
     name: str
     description: str
 
+class Publication(BaseModel):
+    title: str
+    details: str
+
+class VolunteerExperience(BaseModel):
+    role: str
+    organization: str
+    details: str
+
 class GenerateResumePayload(BaseModel):
     user_name: str
+    email: str
+    portfolio: str
+    mobile: str
+    github: str
+    education_institution: str
+    education_details: str
+    skills_summary: Dict[str, str]
     work_experience: List[WorkExperience]
     projects: List[Project]
+    publications: Optional[List[Publication]] = None
+    honors_and_awards: Optional[List[str]] = None
+    volunteer_experience: Optional[List[VolunteerExperience]] = None
     summary: str
 
 class GenerateResumeRequest(BaseModel):
@@ -106,6 +129,3 @@ class GenerateResumeResponse(BaseModel):
     status: str
     download_url: str
 
-class DeleteResumeRequest(BaseModel):
-    resume_id: int
-    candidate_id: int

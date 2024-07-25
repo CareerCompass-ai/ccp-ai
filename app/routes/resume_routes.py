@@ -47,8 +47,18 @@ class ResumeRouter:
             # Render HTML content
             html_content = template.render(
                 user_name=req.payload.user_name,
+                email=req.payload.email,
+                portfolio=req.payload.portfolio,
+                mobile=req.payload.mobile,
+                github=req.payload.github,
+                education_institution=req.payload.education_institution,
+                education_details=req.payload.education_details,
+                skills_summary=req.payload.skills_summary,
                 work_experience=req.payload.work_experience,
                 projects=req.payload.projects,
+                publications=req.payload.publications or [],
+                honors_and_awards=req.payload.honors_and_awards or [],
+                volunteer_experience=req.payload.volunteer_experience or [],
                 summary=req.payload.summary,
             )
 
