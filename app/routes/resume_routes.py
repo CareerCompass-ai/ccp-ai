@@ -5,10 +5,8 @@ import uuid
 from datetime import datetime
 from io import BytesIO
 
-import pdfkit
 import PyPDF2
 from xhtml2pdf import pisa
-from weasyprint import HTML
 from better_profanity import profanity
 from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
                      status)
