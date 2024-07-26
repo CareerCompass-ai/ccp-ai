@@ -679,13 +679,20 @@ class AI:
 
         retries = 0
         prompt = """
-            ### Given this input: ### {input} ###
-            Your task is to enhance this query by providing a concise list of relevant terms and context related to job searches in the Information Technology domain.
-            Focus on variations, related terms, and common abbreviations of the given role.
-            Avoid including unrelated roles or job functions. Avoid including job levels if the input does not contain any reference to levels.
+            ### Task: Enhance Job Search Query using for vector search ###
 
-            The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the enhanced search terms, including both lowercase and uppercase versions.
-            Only include roles that are directly related to the input term, like if input is "python", response must not inlude inrelevant roles like "Fullstack Developer",...
+            ### Given this input: ### {input} ###
+            Given the input term provided, your task is to generate a concise and accurate list of relevant search terms related to job searches in the Information Technology (IT) domain. 
+            The list should include variations, related terms, and common abbreviations of the given role. 
+            The generated list should exclude unrelated roles or job functions and avoid including job levels if the input term does not reference them.
+
+            **Instructions:**
+            1. **Relevance:** Include only those roles that are directly related to the input term. For example:
+            - If the input is "python," the response should exclude irrelevant roles like "Fullstack Developer"
+            - If the input is "frontend," the response should exclude terms like "vuejs" if there is no relevant information to include about "vuejs, angular"
+            2. **Case Sensitivity:** Provide both lowercase and uppercase versions of each term.
+            3. **Job Levels:** If the input term includes references to job levels (e.g., Junior, Senior), include variations of these levels. If the input does not mention job levels, do not include them.
+            4. **Format:** The response must strictly be a JSON object with a single field `"answer"` which contains a list/array of the enhanced search terms.
 
             ## Input Example 1 ##
             Original Input: "SWE"
@@ -705,7 +712,7 @@ class AI:
             Original Input: "junior de"
             ## Response Example 3 ##
             {{
-                "answer": ["Junior Data Engineer", "junior data engineer", "Entry-Level Data Engineer", "entry level data engineer"]
+                "answer": ["Junior Data Engineer", "junior data engineer", "Entry-Level Data Engineer", "entry level data engineer", "Junior ETL Developer", "junior etl developer", "Junior Data Pipeline Engineer", "junior data pipeline engineer", "Junior Data Warehouse Engineer", "junior data warehouse engineer", "Junior Cloud Data Engineer, "junior cloud data engineer", "Junior Big Data Engineer", "junior big data engineer"]
             }}
 
             ## Input Example 4 ##
@@ -713,6 +720,13 @@ class AI:
             ## Response Example 4 ##
             {{
                 "answer": ["Python Developer", "python developer", "Python Engineer", "python engineer", "Backend Developer Python", "backend developer python", "Data Scientist", "data scientist", "Data Analyst", "data analyst", "Machine Learning Engineer", "machine learning engineer"]
+            }}
+
+            ## Input Example 5 ##
+            Original Input: "be"
+            ## Response Example 5 ##
+            {{
+                "answer": ["Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Software Engineer", "software engineer", "Software Developer", "software developer"]
             }}
         """
         content = prompt.format(input=input.strip())
