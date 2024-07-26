@@ -384,7 +384,13 @@ class AI:
     async def get_resume_summarized(self, input, max_retries=3):
         return await self.get_summarized_content(input, constant.SUMMARIZE_RESUME_PROMPT, "resume", max_retries)
     
-    async def get_common_job_title(self, input:str, max_retries=3):
+    async def get_common_job_title(self, input: str, max_retries=3):
+        cache_key = f"common_job_title:{input}"
+        cached_result = self.redis_repo.get(cache_key)
+
+        if cached_result:
+            return cached_result.decode('utf-8')
+
         retries = 0
         prompt = f"""
             ### Given this job title:## {input} ##, which is considered to belong to which position in the following IT job list: ["Software Engineer", "Product Owner/Product Manager", "Business Analyst", "Tech Lead", "UI/UX Designer", "Tester/QA-QC", "System Engineer", "DevOps Engineer", "IT Support", "Data Scientist", "Data Analyst/Data Engineer", "ML/AI Engineer", "Blockchain Engineer", "Database Administrator", "Embedded/IoT/Robotics Engineer"].
@@ -421,6 +427,7 @@ class AI:
             - If the job title is 'Data Engineer', your response should be:
             {{"answer": "Data Analyst/Data Engineer"}}
         """
+
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
@@ -432,7 +439,12 @@ class AI:
                     top_p=0.2,
                 )
                 tmp = json.loads(response.choices[0].message.content.strip())
-                return tmp.get("answer", "")
+                result = tmp.get("answer", "")
+
+                # Cache the result in Redis for 30 days
+                self.redis_repo.set(cache_key, result, expire=time_constant.SECONDS_PER_DAY*time_constant.DAYS_PER_MONTH)
+                return result
+
             except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
                 logger.info(f"Request to OpenAI API failed. Retrying... (Attempt {retries + 1}/{max_retries})")
                 retries += 1
@@ -440,6 +452,7 @@ class AI:
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
                 break
+
         logger.info(f"Exceeded maximum number of retries. Please try again later.")
         return None
     
@@ -689,7 +702,8 @@ class AI:
         content = prompt.format(input=input.strip())
 
         # Check cache first
-        cached_input = self.redis_repo.get(f"search_input:{input}")
+        cache_key = f"search_input:{input}"
+        cached_input = self.redis_repo.get(cache_key)
         if cached_input:
             search_input = cached_input.decode('utf-8')
             return search_input.split()  # Convert string back to list
