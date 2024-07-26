@@ -8,8 +8,10 @@ from datetime import datetime, timedelta
 import asyncio
 from openai import OpenAI
 
+from app.repo.redis_repo import RedisRepository
 import constant.ai as constant
 import constant.config as minio_constant
+import constant.time as time_constant
 from pkg.logging import logger
 
 from app.dto import ai, minio
@@ -23,6 +25,7 @@ class AI:
         self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
         self.resume_question_and_answering_prompt = constant.RESUME_QUESTION_AND_ANSWERING_PROMPT
         self.minio_repo = MinioRepository()
+        self.redis_repo = RedisRepository()
 
     async def create_assistant(self, file_paths, time_from, time_to, max_retries=3):
         retries = 0
@@ -684,6 +687,12 @@ class AI:
             }}
         """
         content = prompt.format(input=input.strip())
+
+        # Check cache first
+        cached_input = self.redis_repo.get(f"search_input:{input}")
+        if cached_input:
+            search_input = cached_input.decode('utf-8')
+            return search_input.split()  # Convert string back to list
         
         while retries < max_retries:
             try:
@@ -697,14 +706,19 @@ class AI:
                 )
 
                 end_time = time.time()
-
                 elapsed_time = end_time - start_time
                 logger.info(f"Get input enhanced time: {elapsed_time}")
-                
-                tmp = json.loads(response.choices[0].message.content.strip())  
-                logger.info(f"[enhanced_result]: {tmp['answer']}")
-                return tmp.get("answer", [])
-                
+
+                tmp = json.loads(response.choices[0].message.content.strip())
+                enhanced_input = tmp.get("answer", [])
+                logger.info(f"[enhanced_result]: {enhanced_input}")
+
+                # Cache the result
+                search_input = " ".join(enhanced_input)
+                self.redis_repo.set(f"search_input:{input}", search_input, expire=time_constant.SECONDS_PER_DAY*time_constant.DAYS_PER_MONTH)  # Cache for 30 days
+
+                return enhanced_input
+
             except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
                 logger.error(f"Request to OpenAI API failed: {e}. Retrying... (Attempt {retries + 1}/{max_retries})")
                 retries += 1
@@ -712,6 +726,6 @@ class AI:
             except Exception as e:
                 logger.error(f"Unexpected error: {e}")
                 break
-        
+
         logger.error(f"Exceeded maximum number of retries. Please try again later.")
         return None

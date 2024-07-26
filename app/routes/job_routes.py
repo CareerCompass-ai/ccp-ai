@@ -132,21 +132,10 @@ class JobRouter:
 
 
                 if input:
-                    # Try to get the cached value from Redis
-                    cached_input = self.redis_repo.get(f"search_input:{input}")
-
-                    if cached_input:
-                        search_input = cached_input.decode('utf-8')
-                    else:
-                        # Perform enhanced input processing
-                        enhanced_input = await self.ai_helper.get_enhanced_input(input)
-                        search_input = input.strip() + " " + " ".join(enhanced_input) if enhanced_input else input.strip()
-
-                        logger.info(f"[redis] cached_search_input = {search_input}")
-                        
-                        # Cache the combined search input in Redis for a month
-                        self.redis_repo.set(f"search_input:{input}", search_input, expire=2592000)  # Cache for 30 days
-
+                    # Perform enhanced input processing using ai_helper
+                    enhanced_input = await self.ai_helper.get_enhanced_input(input)
+                    search_input = input.strip() + " " + " ".join(enhanced_input) if enhanced_input else input.strip()
+                    
                     # Use the search input to get vectors
                     vectors = await self.ai_helper.get_embedding(search_input)
                     req.vectors = vectors.tolist() if vectors is not None else None
