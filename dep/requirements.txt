@@ -60,3 +60,4 @@ elasticsearch==8.14.0
 better-profanity==0.7.0
 # nltk==3.8.1
 xhtml2pdf==0.2.16
+redis==5.0.7
