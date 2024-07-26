@@ -681,22 +681,38 @@ class AI:
         prompt = """
             ### Given this input: ### {input} ###
             Your task is to enhance this query by providing a concise list of relevant terms and context related to job searches in the Information Technology domain.
-            Focus on variations, related terms, and common abbreviations of the given role. 
-            Avoid including unrelated roles or job functions. Avoid including job levels if the input does not contain any reference to levels
+            Focus on variations, related terms, and common abbreviations of the given role.
+            Avoid including unrelated roles or job functions. Avoid including job levels if the input does not contain any reference to levels.
 
             The response must strictly be a JSON object with a field "answer" and the value as a list/array containing the enhanced search terms, including both lowercase and uppercase versions.
+            Only include roles that are directly related to the input term, like if input is "python", response must not inlude inrelevant roles like "Fullstack Developer",...
+
             ## Input Example 1 ##
             Original Input: "SWE"
-
             ## Response Example 1 ##
             {{
                 "answer": ["Software Engineer", "software engineer", "Software Developer", "software developer", "Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Frontend Engineer", "frontend engineer", "frontend developer", "Frontend Developer"]
             }}
+
             ## Input Example 2 ##
             Original Input: "Junior DE"
             ## Response Example 2 ##
             {{
                 "answer": ["Junior Data Engineer", "junior data engineer", "Entry-Level Data Engineer", "entry level data engineer"]
+            }}
+
+            ## Input Example 3 ##
+            Original Input: "junior de"
+            ## Response Example 3 ##
+            {{
+                "answer": ["Junior Data Engineer", "junior data engineer", "Entry-Level Data Engineer", "entry level data engineer"]
+            }}
+
+            ## Input Example 4 ##
+            Original Input: "python"
+            ## Response Example 4 ##
+            {{
+                "answer": ["Python Developer", "python developer", "Python Engineer", "python engineer", "Backend Developer Python", "backend developer python", "Data Scientist", "data scientist", "Data Analyst", "data analyst", "Machine Learning Engineer", "machine learning engineer"]
             }}
         """
         content = prompt.format(input=input.strip())
