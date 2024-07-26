@@ -22,6 +22,7 @@ from app.repo.resume_repo import ResumeRepository
 from app.repo.tag_repo import TagRepository
 from app.repo.talent_saved_repo import TalentSavedRepository
 from app.repo.jobtags_repo import JobTagsRepository
+from app.repo.redis_repo import RedisRepository
 from producer.producer import KafkaProducer
 
 
@@ -121,3 +122,7 @@ class RepositoryFactory:
     @staticmethod
     def get_kafka_producer():
         return KafkaProducer()
+    
+    @staticmethod
+    def get_redis_repo():
+        return RedisRepository()

@@ -215,27 +215,40 @@ services:
         aliases:
           - weaviate
 
-  # elasticsearch:
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
-  #   container_name: elasticsearch
-  #   environment:
-  #     - xpack.security.enabled=true
-  #     - "discovery.type=single-node"
-  #     - ES_JAVA_OPTS=-Xms750m -Xmx750m
-  #     - ELASTIC_PASSWORD=change_me
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #   volumes:
-  #     - elasticsearch-data:/usr/share/elasticsearch/data
-  #   ports:
-  #     - 9200:9200
-  #     - 9300:9300
-  #   networks:
-  #     ccp_network:
-  #       aliases:
-  #         - elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=true
+      - "discovery.type=single-node"
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - ELASTIC_PASSWORD=change_me
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      ccp_network:
+        aliases:
+          - elasticsearch
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      ccp_network:
+        aliases:
+          - redis
 
 networks:
   ccp_network:
@@ -257,5 +270,7 @@ volumes:
     driver: local
   weaviate-data:
     driver: local
-  # elasticsearch-data:
-  #   driver: local
+  elasticsearch-data:
+    driver: local
+  redis-data:
+    driver: local
