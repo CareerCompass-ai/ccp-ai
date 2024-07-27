@@ -291,6 +291,7 @@ class JobRouter:
 
                 # Generate a temporary file path for the PDF
                 file_name = f"{uuid.uuid4()}.pdf"
+                file_name = str(uuid.uuid4()) + "_" + job_title + ".pdf"
                 temp_file_path = os.path.join("/tmp", file_name)
 
                 # Convert Markdown to PDF
@@ -610,7 +611,7 @@ class JobRouter:
                 markdown_content = await helper.html_to_markdown(description)
 
                 # Generate a temporary file path for the PDF
-                file_name = f"{uuid.uuid4()}.pdf"
+                file_name = str(uuid.uuid4()) + "_" + (new_job_title or job_title) + ".pdf"
                 temp_file_path = os.path.join("/tmp", file_name)
 
                 # Convert Markdown to PDF
