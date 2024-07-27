@@ -317,6 +317,7 @@ class JobRouter:
                     recruiter_id=recruiter_id,
                     hiring_level=hiring_level,
                     file_name=file_name,
+                    content=markdown_content,
                     display_content=markdown_content,
                     created_at=now,
                     updated_at=now,
@@ -534,43 +535,44 @@ class JobRouter:
         self,
         job_id: int = Form(None),
         job_title: str = Form(None),
-        new_job_title: str = Form(None) , #None if there is no change
-        opened_date: str = Form(None) ,
-        closed_date: str = Form(None) ,
-        salary_from: str = Form(None) ,
-        salary_to: str = Form(None) ,
-        job_type: str = Form(None) ,
-        company_type: str = Form(None) ,
-        address_id: str = Form(None) , # TODO: Use city_id and country_id instead of address_id, example: replace by: city_id: str = Form(None), country_id: str = Form(None)
+        new_job_title: str = Form(None),  # None if there is no change
+        opened_date: str = Form(None),
+        closed_date: str = Form(None),
+        salary_from: str = Form(None),
+        salary_to: str = Form(None),
+        job_type: str = Form(None),
+        company_type: str = Form(None),
+        address_id: str = Form(None),  # TODO: Use city_id and country_id instead of address_id, example: replace by: city_id: str = Form(None), country_id: str = Form(None)
         address_detail: str = Form(None),
         city_id: str = Form(None),
-        hiring_level: str = Form(None), 
-        work_place: str = Form(None) ,
+        hiring_level: str = Form(None),
+        work_place: str = Form(None),
         tags: str = Form(None),
         is_hiring: str = Form(None),
         recruiter_id: str = Form(None),
         file: UploadFile = File(None),
+        description: str = Form(None),
         session: Session = Depends(postgres.PostgresDB.get_db),
     ):
         try:
             now = datetime.now()
-            #Remove jobtags
+            temp_file_path = None
+
+            # Remove jobtags
             await self.jobtag_repo.delete_jobtags(db=session, job_id=job_id)
             if tags is not None:
-                #Update jobtags
+                # Update jobtags
                 with session.begin():
                     try:
                         tags = tags.split(',')
                         for tag_id in tags:
                             await self.jobtag_repo.create(session, tag_id=int(tag_id), job_id=job_id)
-                    
                     except IntegrityError:
                         session.rollback()
                         logger.error(f"create jobtags failed error [IntegrityError] = {traceback.format_exc()}")
                         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jobtags create failed.")
 
-
-            #Update address
+            # Update address
             a_props = {
                 "city_id": city_id,
                 "detailed_address": address_detail,
@@ -593,18 +595,41 @@ class JobRouter:
             if is_hiring == "true":
                 props["is_hiring"] = True
 
-            # Change common_job_title if change job_title
+            # Change common_job_title if changing job_title
             if new_job_title is not None:
                 common_job_title = await self.ai_helper.get_common_job_title(job_title)
                 props["common_job_title"] = common_job_title
 
-            if file is not None:
-                #Get file name
+            # Handle description field if provided
+            if description:
+                # Check profanity in content
+                if profanity.contains_profanity(description):
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
+
+                # Convert HTML description to Markdown
+                markdown_content = await helper.html_to_markdown(description)
+
+                # Generate a temporary file path for the PDF
+                file_name = f"{uuid.uuid4()}.pdf"
+                temp_file_path = os.path.join("/tmp", file_name)
+
+                # Convert Markdown to PDF
+                await helper.markdown_to_pdf(markdown_content, temp_file_path)
+
+                public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
+
+                props["content"] = markdown_content
+                props["display_content"] = markdown_content
+                props["content_url"] = public_url
+                props["file_name"] = file_name
+
+            # Handle file upload if present and no description provided
+            elif file:
+                # Get file name
                 file_name = await self.job_repo.get_file_name(db=session, job_id=job_id)
 
-                #Delete file in minio
+                # Delete file in Minio
                 await self.minio_repo.remove_object(bucket_name=minio_constant.MINIO_BUCKET_JOB, file_name=file_name)
-
 
                 file_content = await file.read()
 
@@ -614,8 +639,8 @@ class JobRouter:
                 with open(temp_file_path, "wb") as temp_file:
                     temp_file.write(file_content)
 
-                #Generate file name
-                new_file_name  = str(uuid.uuid4())+"-"+file.filename
+                # Generate file name
+                new_file_name = str(uuid.uuid4()) + "_" + file.filename
 
                 url = await self.minio_repo.upload(
                     minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=new_file_name)
@@ -623,7 +648,7 @@ class JobRouter:
 
                 os.remove(temp_file_path)
 
-                #Get content from pdf
+                # Get content from PDF
                 pdf_file = BytesIO(file_content)
 
                 pdf_document = fitz.open(stream=pdf_file, filetype="pdf")
@@ -632,7 +657,7 @@ class JobRouter:
 
                 markdown_content = markdown_content.replace('\n--\n', '\n')
                 markdown_content = re.sub(r'\n-+\n', '\n', markdown_content)
-                
+
                 props["display_content"] = markdown_content
 
                 pdf_reader = PyPDF2.PdfReader(pdf_file)
@@ -644,13 +669,12 @@ class JobRouter:
                 props["content"] = text_content
                 props["content_url"] = url.url
                 props["file_name"] = new_file_name
-            
 
             try:
-                #update address
+                # Update address
                 await self.address_repo.update_with_map(db=session, address_id=address_id, props=a_props)
 
-                #update job
+                # Update job
                 await self.job_repo.update_with_map(db=session, job_id=job_id, props=props)
 
                 return job.UpdateJobResponse(message="Update successfully!")
@@ -659,10 +683,13 @@ class JobRouter:
                 session.rollback()
                 logger.error(f"update_job failed error [SQLAlchemyError] = {traceback.format_exc()}")
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-            
+
         except Exception:
             logger.error(f"update_job failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        finally:
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
         
     
     async def check_is_saved_or_applied(
