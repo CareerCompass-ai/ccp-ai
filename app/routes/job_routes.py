@@ -287,14 +287,14 @@ class JobRouter:
                     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
                 
                 # Convert HTML description to Markdown
-                markdown_content = helper.html_to_markdown(description)
+                markdown_content = await helper.html_to_markdown(description)
 
                 # Generate a temporary file path for the PDF
                 file_name = f"{uuid.uuid4()}.pdf"
                 temp_file_path = os.path.join("/tmp", file_name)
 
                 # Convert Markdown to PDF
-                helper.markdown_to_pdf(markdown_content, temp_file_path)
+                await helper.markdown_to_pdf(markdown_content, temp_file_path)
 
                 public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
 
