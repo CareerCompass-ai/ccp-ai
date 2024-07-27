@@ -22,7 +22,7 @@ import constant.ai as constant
 import constant.config as minio_constant
 from app.dto import address, job, minio, resume
 from app.factory.factory import RepositoryFactory as factory
-import helper
+from app.routes import helper
 from config import postgres
 from config.postgres import PostgresDB
 from constant import config as cfg
