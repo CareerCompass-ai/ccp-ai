@@ -22,7 +22,7 @@ import constant.ai as constant
 import constant.config as minio_constant
 from app.dto import address, job, minio, resume
 from app.factory.factory import RepositoryFactory as factory
-from app.helper import helper
+import helper
 from config import postgres
 from config.postgres import PostgresDB
 from constant import config as cfg
@@ -250,15 +250,6 @@ class JobRouter:
         except Exception:
             logger.error(f"get_job_from_qdrant failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
-
-    # Function to convert HTML to Markdown
-    def html_to_markdown(self, html_content):
-        return markdownify.markdownify(html_content, heading_style="ATX")
-
-    # Function to convert Markdown to PDF
-    def markdown_to_pdf(self, markdown_content, output_path):
-        html_content = markdown2.markdown(markdown_content)
-        HTML(string=html_content).write_pdf(output_path)
     
     async def create(
         self,
@@ -296,14 +287,14 @@ class JobRouter:
                     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
                 
                 # Convert HTML description to Markdown
-                markdown_content = self.html_to_markdown(description)
+                markdown_content = helper.html_to_markdown(description)
 
                 # Generate a temporary file path for the PDF
                 file_name = f"{uuid.uuid4()}.pdf"
                 temp_file_path = os.path.join("/tmp", file_name)
 
                 # Convert Markdown to PDF
-                self.markdown_to_pdf(markdown_content, temp_file_path)
+                helper.markdown_to_pdf(markdown_content, temp_file_path)
 
                 public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
 

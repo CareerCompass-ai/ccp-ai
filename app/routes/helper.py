@@ -3,6 +3,19 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 import pandas as pd
 
+import markdownify
+import markdown2
+from weasyprint import HTML
+
+# Function to convert HTML to Markdown
+async def html_to_markdown(self, html_content):
+    return markdownify.markdownify(html_content, heading_style="ATX")
+
+# Function to convert Markdown to PDF
+async def markdown_to_pdf(self, markdown_content, output_path):
+    html_content = markdown2.markdown(markdown_content)
+    HTML(string=html_content).write_pdf(output_path)
+
 
 async def combine_job_content(job_agg: job.JobAggregate, summarized_content: str, acronyms_and_abbreviations: str) -> str:
         combined_content = (
