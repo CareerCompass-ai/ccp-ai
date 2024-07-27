@@ -624,6 +624,11 @@ class JobRouter:
                 props["content_url"] = public_url
                 props["file_name"] = file_name
 
+                # Upload the new PDF to Minio
+                await self.minio_repo.upload(
+                    minio.UploadMinioRequest(bucket_name=minio_constant.MINIO_BUCKET_JOB, temp_path=temp_file_path, file_name=file_name)
+                )
+
             # Handle file upload if present and no description provided
             elif file:
                 # Get file name
