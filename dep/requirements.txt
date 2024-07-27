@@ -61,3 +61,6 @@ better-profanity==0.7.0
 # nltk==3.8.1
 xhtml2pdf==0.2.16
 redis==5.0.7
+weasyprint==62.3
+markdown2==2.5.0
+markdownify==0.13.1

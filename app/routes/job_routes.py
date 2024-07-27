@@ -14,6 +14,9 @@ from fastapi import (APIRouter, Depends, File, Form, HTTPException, Path,
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from better_profanity import profanity
+import markdownify
+import markdown2
+from weasyprint import HTML
 
 import constant.ai as constant
 import constant.config as minio_constant
@@ -248,6 +251,15 @@ class JobRouter:
             logger.error(f"get_job_from_qdrant failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
+    # Function to convert HTML to Markdown
+    def html_to_markdown(self, html_content):
+        return markdownify.markdownify(html_content, heading_style="ATX")
+
+    # Function to convert Markdown to PDF
+    def markdown_to_pdf(self, markdown_content, output_path):
+        html_content = markdown2.markdown(markdown_content)
+        HTML(string=html_content).write_pdf(output_path)
+    
     async def create(
         self,
         job_title: str = Form(None),
@@ -265,6 +277,7 @@ class JobRouter:
         work_place: str = Form(None),
         tags: str = Form(None),
         file: UploadFile = File(None),
+        description: str = Form(None),
         session: Session = Depends(postgres.PostgresDB.get_db),
     ):
         try:
@@ -275,71 +288,112 @@ class JobRouter:
             for field in fields_to_check:
                 if field and profanity.contains_profanity(field):
                     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Field '{field}' contains profanity and cannot be accepted.")
-                
-            file_content = await file.read()
 
-            # Check profanity in file name
-            if profanity.contains_profanity(file.filename):
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"File name contains profanity and cannot be accepted.")
-            # Generate file name
-            file_name = str(uuid.uuid4()) + "_" + file.filename
-            public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
-
-            now = datetime.now()
-
-            common_job_title = await self.ai_helper.get_common_job_title(job_title)
-
-            record = job.JobBase(
-                job_title=job_title,
-                common_job_title=common_job_title,
-                content_url=public_url,
-                is_hiring=is_hiring,
-                opened_date=opened_date,
-                closed_date=closed_date,
-                salary_from=salary_from,
-                salary_to=salary_to,
-                job_type=job_type,
-                work_place=work_place,
-                company_type=company_type,
-                recruiter_id=recruiter_id,
-                hiring_level=hiring_level,
-                file_name=file_name,
-                created_at=now,
-                updated_at=now,
-            )
-
-            temp_dir = os.path.dirname(os.path.abspath(__file__))
-            temp_file_path = os.path.join(temp_dir, file.filename)
-            with open(temp_file_path, "wb") as temp_file:
-                temp_file.write(file_content)
-
-            if file is not None:
-                # Extract text with formatting from PDF using PyMuPDF
-                pdf_file = BytesIO(file_content)
-
-                pdf_document = fitz.open(stream=pdf_file, filetype="pdf")
-
-                markdown_content = pymupdf4llm.to_markdown(pdf_document)
-
-                markdown_content = markdown_content.replace('\n--\n', '\n')
-                markdown_content = re.sub(r'\n-+\n', '\n', markdown_content)
-                
-                record.display_content = markdown_content
-
-                # get text content from pdf
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-
-                text_content = ""
-                for page_num in range(len(pdf_reader.pages)):
-                    text = pdf_reader.pages[page_num].extract_text()
-                    text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
-                    text_content += text
-
+            # Handle description field if provided
+            if description:
                 # Check profanity in content
-                if profanity.contains_profanity(text_content):
+                if profanity.contains_profanity(description):
                     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
+                
+                # Convert HTML description to Markdown
+                markdown_content = self.html_to_markdown(description)
 
-                record.content = text_content          
+                # Generate a temporary file path for the PDF
+                file_name = f"{uuid.uuid4()}.pdf"
+                temp_file_path = os.path.join("/tmp", file_name)
+
+                # Convert Markdown to PDF
+                self.markdown_to_pdf(markdown_content, temp_file_path)
+
+                public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
+
+                now = datetime.now()
+
+                common_job_title = await self.ai_helper.get_common_job_title(job_title)
+
+                record = job.JobBase(
+                    job_title=job_title,
+                    common_job_title=common_job_title,
+                    content_url=public_url,
+                    is_hiring=is_hiring,
+                    opened_date=opened_date,
+                    closed_date=closed_date,
+                    salary_from=salary_from,
+                    salary_to=salary_to,
+                    job_type=job_type,
+                    work_place=work_place,
+                    company_type=company_type,
+                    recruiter_id=recruiter_id,
+                    hiring_level=hiring_level,
+                    file_name=file_name,
+                    display_content=markdown_content,
+                    created_at=now,
+                    updated_at=now,
+                )
+            # Handle file upload if present and no description provided
+            elif file:
+                file_content = await file.read()
+
+                # Check profanity in file name
+                if profanity.contains_profanity(file.filename):
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"File name contains profanity and cannot be accepted.")
+
+                # Generate file name
+                file_name = str(uuid.uuid4()) + "_" + file.filename
+                public_url = f"{minio_constant.SERVER_DOMAIN}/minio/{minio_constant.MINIO_BUCKET_JOB}/{file_name}"
+
+                now = datetime.now()
+
+                common_job_title = await self.ai_helper.get_common_job_title(job_title)
+
+                record = job.JobBase(
+                    job_title=job_title,
+                    common_job_title=common_job_title,
+                    content_url=public_url,
+                    is_hiring=is_hiring,
+                    opened_date=opened_date,
+                    closed_date=closed_date,
+                    salary_from=salary_from,
+                    salary_to=salary_to,
+                    job_type=job_type,
+                    work_place=work_place,
+                    company_type=company_type,
+                    recruiter_id=recruiter_id,
+                    hiring_level=hiring_level,
+                    file_name=file_name,
+                    created_at=now,
+                    updated_at=now,
+                )
+
+                temp_dir = os.path.dirname(os.path.abspath(__file__))
+                temp_file_path = os.path.join(temp_dir, file.filename)
+                with open(temp_file_path, "wb") as temp_file:
+                    temp_file.write(file_content)
+
+                if file:
+                    # Extract text with formatting from PDF using PyMuPDF
+                    pdf_file = BytesIO(file_content)
+                    pdf_document = fitz.open(stream=pdf_file, filetype="pdf")
+
+                    markdown_content = pymupdf4llm.to_markdown(pdf_document)
+                    markdown_content = markdown_content.replace('\n--\n', '\n')
+                    markdown_content = re.sub(r'\n-+\n', '\n', markdown_content)
+
+                    record.display_content = markdown_content
+
+                    # Get text content from PDF
+                    pdf_reader = PyPDF2.PdfReader(pdf_file)
+                    text_content = ""
+                    for page_num in range(len(pdf_reader.pages)):
+                        text = pdf_reader.pages[page_num].extract_text()
+                        text = text.replace('\x00', '').replace('\n', '').replace('\r', '').replace('\t', '').replace('\x1b', '')
+                        text_content += text
+
+                    # Check profanity in content
+                    if profanity.contains_profanity(text_content):
+                        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Content contains profanity and cannot be accepted.")
+
+                    record.content = text_content
 
             with session.begin():
                 try:
@@ -350,7 +404,7 @@ class JobRouter:
                             created_at=now,
                             updated_at=now
                         )
-                        
+
                         if address_detail is not None:
                             address_record.detailed_address = address_detail
 
@@ -381,7 +435,7 @@ class JobRouter:
                     session.rollback()
                     logger.error(f"create_job failed with SQLAlchemyError: {e}")
                     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
-            
+
             return job.CreateJobPostResponse()
 
         except HTTPException:
@@ -390,7 +444,7 @@ class JobRouter:
             logger.error(f"create_job failed with unexpected error: {e}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
         finally:
-            if file is not None and temp_file_path and os.path.exists(temp_file_path):
+            if temp_file_path and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
 
     async def list_resumes_from_qdrant(
