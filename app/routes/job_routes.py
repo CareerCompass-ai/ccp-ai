@@ -151,7 +151,10 @@ class JobRouter:
 
                 return data
             elif search_type == "fulltext": # handle full-text search
-                print(req)
+                enhanced_input = await self.ai_helper.get_enhanced_input(input)
+                search_input = input.strip() + " " + " ".join(enhanced_input) if enhanced_input else input.strip()
+
+                req.input = search_input
                 data = self.job_es_repo.list_jobs(input=req)
 
                 return data
@@ -479,7 +482,7 @@ class JobRouter:
                 resume_id=req.resume_id,
                 job_id=req.job_id,
                 created_at=now,
-                # updated_at=now
+                updated_at=now
             )
 
             session.autocommit = False # TODO: remove this?
