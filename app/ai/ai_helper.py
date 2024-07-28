@@ -420,6 +420,10 @@ class AI:
             {{"answer": "Software Engineer"}}
             - If the job title is 'AWS DevOps Engineer', your response should be:
             {{"answer": "DevOps Engineer"}}
+            - If the job title is 'Fresher Game Developer', your response should be:
+            {{"answer": "Game"}}
+            - If the job title is 'Application Security', your response should be:
+            {{"answer": "Network & Security"}}
             - If the job title is 'Python Data Scientist', your response should be:
             {{"answer": "Data Scientist"}}
             - If the job title is 'Marketing Manager', your response should be:
