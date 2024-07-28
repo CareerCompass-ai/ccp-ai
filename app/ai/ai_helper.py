@@ -442,7 +442,7 @@ class AI:
                 result = tmp.get("answer", "")
 
                 # Cache the result in Redis for 30 days
-                self.redis_repo.set(cache_key, result, expire=time_constant.SECONDS_PER_DAY*time_constant.DAYS_PER_MONTH)
+                self.redis_repo.set(cache_key, result) # Never expire
                 return result
 
             except (httpx.HTTPStatusError, json.JSONDecodeError, AttributeError) as e:
@@ -759,7 +759,7 @@ class AI:
 
                 # Cache the result
                 search_input = " ".join(enhanced_input)
-                self.redis_repo.set(f"search_input:{input}", search_input, expire=time_constant.SECONDS_PER_DAY*time_constant.DAYS_PER_MONTH)  # Cache for 30 days
+                self.redis_repo.set(f"search_input:{input}", search_input)  # Never expire
 
                 return enhanced_input
 
