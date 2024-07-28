@@ -34,7 +34,8 @@ class JobQdrantRepository:
     async def process_batch(self, batch, dynamic_filters):
         await self.update_dynamic_filters(batch, dynamic_filters)
         
-    async def list_recommend_jobs(self, input: job.ListRecommendJobRequest) -> List[job.JobAggregate]:
+    async def list_recommend_jobs(self, input: job.ListRecommendJobRequest) -> job.ListRelatedJobResponse:
+        # Constructing the filter to include only jobs that are hiring
         query_filter = models.Filter(must=[], should=[], must_not=[])
         query_filter.must.append(
             models.FieldCondition(
@@ -42,8 +43,10 @@ class JobQdrantRepository:
                 match=models.MatchValue(value=True)
             )
         )
+
         records = []
 
+        # Return early if there are no resume IDs provided
         if not input.resume_ids:
             return job.ListRelatedJobResponse(
                 page=input.page,
@@ -51,41 +54,53 @@ class JobQdrantRepository:
                 records=[]
             )
 
-        hits = self.client.recommend(
-            collection_name=self.index_name,
-            positive=input.resume_ids,
-            lookup_from=models.LookupLocation(
-                collection=cfg.QDRANT_INDEX_RESUME_SEARCH
-            ),
-            limit=input.size,
-            offset=(input.page - 1) * input.size,
-            query_filter=query_filter
-        )
+        try:
+            # Using the recommend method to find jobs based on provided resume IDs
+            hits = self.client.recommend(
+                collection_name=self.index_name,
+                positive=input.resume_ids,
+                lookup_from=models.LookupLocation(
+                    collection=cfg.QDRANT_INDEX_RESUME_SEARCH
+                ),
+                limit=input.size,
+                offset=(input.page - 1) * input.size,
+                query_filter=query_filter
+            )
 
-        if not hits:
+            # Handling the case where no hits are found
+            if not hits:
+                return job.ListRelatedJobResponse(
+                    page=input.page,
+                    size=input.size,
+                    records=[]
+                )
+
+            # Processing the hits to map them to Job DTOs
+            for item in hits:
+                score = item.score
+                payload = item.payload
+
+                result = mapper.toJobDTO(payload)
+                result.matching_score = score
+
+                records.append(result)
+                del result
+
+            return job.ListRelatedJobResponse(
+                page=input.page,
+                size=input.size,
+                records=records,
+            )
+        except Exception as e:
+            logger.error(f"list_recommend_jobs failed with error: {e}")
             return job.ListRelatedJobResponse(
                 page=input.page,
                 size=input.size,
                 records=[]
             )
-        
-        for item in hits:
-            score = item.score
-            payload = item.payload
-
-            result = mapper.toJobDTO(payload)
-            result.matching_score = score
-
-            records.append(result)  
-            del result
-
-        return job.ListRelatedJobResponse(
-            page=input.page,
-            size=input.size,
-            records=records,
-        )
     
-    async def list_related_jobs(self, input: job.ListRelatedJobRequest) -> List[job.JobAggregate]:
+    async def list_related_jobs(self, input: job.ListRelatedJobRequest) -> job.ListRelatedJobResponse:
+        # Constructing the filter to include only jobs that are hiring
         query_filter = models.Filter(must=[], should=[], must_not=[])
         query_filter.must.append(
             models.FieldCondition(
@@ -96,41 +111,47 @@ class JobQdrantRepository:
 
         records = []
 
-        hits = self.client.recommend(
-            collection_name=self.index_name,
-            positive=[input.job_id],
-            # lookup_from=types.LookupLocation(
-            #     models.LookupLocation(
-            #         collection_name=cfg.ES_INDEX_RESUME_SEARCH,
-            #     )
-            # ),
-            limit=input.size,
-            offset=(input.page - 1) * input.size,
-            query_filter=query_filter
-        )
+        try:
+            # Using the recommend method to find similar jobs
+            hits = self.client.recommend(
+                collection_name=self.index_name,
+                positive=[input.job_id],
+                limit=input.size,
+                offset=(input.page - 1) * input.size,
+                query_filter=query_filter
+            )
 
-        if not hits:
+            # Handling the case where no hits are found
+            if not hits:
+                return job.ListRelatedJobResponse(
+                    page=input.page,
+                    size=input.size,
+                    records=[]
+                )
+
+            # Processing the hits to map them to Job DTOs
+            for item in hits:
+                score = item.score
+                payload = item.payload
+
+                result = mapper.toJobDTO(payload)
+                result.matching_score = score
+
+                records.append(result)
+                del result
+
+            return job.ListRelatedJobResponse(
+                page=input.page,
+                size=input.size,
+                records=records,
+            )
+        except Exception as e:
+            logger.error(f"list_related_jobs failed with error: {e}")
             return job.ListRelatedJobResponse(
                 page=input.page,
                 size=input.size,
                 records=[]
             )
-        
-        for item in hits:
-            score = item.score
-            payload = item.payload
-
-            result = mapper.toJobDTO(payload)
-            result.matching_score = score
-
-            records.append(result)  
-            del result
-
-        return job.ListRelatedJobResponse(
-            page=input.page,
-            size=input.size,
-            records=records,
-        )
 
     async def list_jobs_by_ids(self, ids: List[int]) -> List[job.JobAggregate]:
         records = self.client.retrieve(
