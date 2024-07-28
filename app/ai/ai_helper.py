@@ -393,7 +393,7 @@ class AI:
 
         retries = 0
         prompt = f"""
-            ### Given this job title:## {input} ##, which is considered to belong to which position in the following IT job list: ["Software Engineer", "Product Owner/Product Manager", "Business Analyst", "Tech Lead", "UI/UX Designer", "Tester/QA-QC", "System Engineer", "DevOps Engineer", "IT Support", "Data Scientist", "Data Analyst/Data Engineer", "ML/AI Engineer", "Blockchain Engineer", "Database Administrator", "Embedded/IoT/Robotics Engineer"].
+            ### Given this job title:## {input} ##, which is considered to belong to which position in the following IT job list: ["Software Engineer", "Product Owner/Product Manager", "Business Analyst", "Tech Lead", "UI/UX Designer", "Tester/QA-QC", "System Engineer", "DevOps Engineer", "IT Support", "Data Scientist", "Data Analyst/Data Engineer", "ML/AI Engineer", "Blockchain Engineer", "Database Administrator", "Embedded/IoT/Robotics Engineer", "Network & Security", "Game"].
 
             This job title may contain company name, hiring level, programming languages, technologies,...
 
