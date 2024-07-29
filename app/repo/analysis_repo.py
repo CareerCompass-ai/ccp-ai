@@ -190,6 +190,7 @@ class AnalysisRepository:
             sql_query += f'''
             WHERE created_at >= '{time_from}' AND created_at <= '{time_to}'
             '''
+
         records = db.execute(text(sql_query))
 
         data = []

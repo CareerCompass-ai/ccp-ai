@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from dateutil.relativedelta import relativedelta
 
 from app.dto import analysis
 from app.factory.factory import RepositoryFactory as factory
@@ -47,14 +48,15 @@ class AnalysisRouter:
     async def format_month_time_range(self, time_from=None, time_to=None):
         if time_from:
             input_tz = timezone('UTC')
-            time_from_dt = datetime.strptime(time_from, "%Y/%m").replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
+            time_from_dt = datetime.strptime(time_from, "%Y/%m").replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
             time_from = time_from_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
-        
+
         if time_to:
             input_tz = timezone('UTC')
-            time_to_dt = datetime.strptime(time_to, "%Y/%m").replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=input_tz)
-            time_to = time_to_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
-        
+            time_to_dt = datetime.strptime(time_to, "%Y/%m").replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
+            last_day_of_month = (time_to_dt + relativedelta(months=1, days=-1)).replace(hour=23, minute=59, second=59, microsecond=999999)
+            time_to = last_day_of_month.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+
         return time_from, time_to
     
 
