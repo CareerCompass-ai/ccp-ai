@@ -137,6 +137,16 @@ class JobRouter:
 
 
                 if input:
+                    # profanity check
+                    if profanity.contains_profanity(input):
+                        return job.ListJobResponse(
+                            count=0,
+                            page=req.page,
+                            size=req.size,
+                            records=[],
+                            dynamic_filters=job.DynamicFilters()
+                        )
+
                     # Perform enhanced input processing using ai_helper
                     enhanced_input = await self.ai_helper.get_enhanced_input(input)
                     search_input = input.strip() + " " + " ".join(enhanced_input) if enhanced_input else input.strip()
@@ -165,7 +175,8 @@ class JobRouter:
                     count=0,
                     page=req.page,
                     size=req.size,
-                    records=list[job.JobAggregate]
+                    records=[],
+                    dynamic_filters=job.DynamicFilters()
                 )
 
         except Exception:
