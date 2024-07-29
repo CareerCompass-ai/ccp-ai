@@ -138,7 +138,6 @@ class JobRouter:
 
                 if input:
                     # Perform enhanced input processing using ai_helper
-                    logger.info("enhanced input processing")
                     enhanced_input = await self.ai_helper.get_enhanced_input(input)
                     search_input = input.strip() + " " + " ".join(enhanced_input) if enhanced_input else input.strip()
                     

@@ -745,7 +745,6 @@ class AI:
 
         while retries < max_retries:
             try:
-                logger.info(f"Calling openai to enhance input: {input}")
                 response = self.openai_client.chat.completions.create(
                     model=self.completion_model,
                     messages=[
@@ -765,7 +764,6 @@ class AI:
 
                 # Cache the result
                 search_input = " ".join(enhanced_input)
-                logger.info(f"setting cache with key: {cache_key}, value: {search_input}")
                 self.redis_repo.set(f"search_input:{input}", search_input)  # Never expire
 
                 return enhanced_input
