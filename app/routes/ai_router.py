@@ -504,7 +504,7 @@ async def questioning(req: ai.JobQnARequest):
 
         # Remove unnecessary fields
         modified_data = []
-        for job in data:
+        for index, job in enumerate(data, start=1):
             job_dict = job.model_dump()
             job_dict.pop('address_id', None)
             job_dict.pop('recruiter_id', None)
@@ -522,7 +522,10 @@ async def questioning(req: ai.JobQnARequest):
                 job_dict['job_description_download_link'] = f"https://{job_dict.pop('content_url')}"
 
             job_dict['view_job_detail_link'] = f"https://hcmus-careercompass.me/job/detail/{job_dict['id']}"
-            
+
+            # Add the order field
+            job_dict['order'] = f"Job number {index}"
+
             modified_data.append(job_dict)
 
         # previous_context_formatted = "\n".join(
@@ -590,7 +593,7 @@ async def resumes_questioning(
 
         # Remove unnecessary fields
         modified_data = []
-        for resume in data:
+        for index, resume in data:
             resume_dict = resume.model_dump()
             resume_dict.pop('matching_score', None)
             resume_dict.pop('s_content', None)
@@ -599,6 +602,9 @@ async def resumes_questioning(
 
             if 'resume_link' in resume_dict:
                 resume_dict['resume_download_link'] = f"https://{resume_dict.pop('resume_link')}"
+
+            # Add the order field
+            resume_dict['order'] = f"Resume number {index}"
 
             modified_data.append(resume_dict)
 
