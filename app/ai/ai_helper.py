@@ -683,12 +683,12 @@ class AI:
         start_time = time.time()
 
         retries = 0
-        prompt = """
+        prompt = f"""
             ### Task: Enhance Job Search Query using for vector search ###
 
             ### Given this input: ### {input} ###
             Given the input term provided, your task is to generate a concise and accurate list of relevant search terms related to job searches in the Information Technology (IT) domain. 
-            The list should include variations, related terms, and common abbreviations of the given role. 
+            The list should include variations, related terms, job titles, common job titles and common abbreviations of the given role. 
             The generated list should exclude unrelated roles or job functions and avoid including job levels if the input term does not reference them.
 
             **Instructions:**
@@ -732,6 +732,13 @@ class AI:
             ## Response Example 5 ##
             {{
                 "answer": ["Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Software Engineer", "software engineer", "Software Developer", "software developer"]
+            }}
+
+            ## Input Example 6 ##
+            Original Input: "game"
+            ## Response Example 6 ##
+            {{
+                "answer": ["Game Developer", "game developer", "Game Programmer", "game programmer", "Game Designer", "game designer", "Game Engineer", "game engineer", "Gameplay Developer", "gameplay developer", "Gameplay Engineer", "gameplay engineer", "Unity Developer", "unity developer", "Unreal Engine Developer", "unreal engine developer", "3D Game Developer", "3d game developer", "2D Game Developer", "2d game developer", "VR Developer", "vr developer", "AR Developer", "ar developer"]
             }}
         """
         content = prompt
