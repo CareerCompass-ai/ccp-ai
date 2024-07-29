@@ -17,10 +17,11 @@ from pkg.logging import logger
 from app.dto import ai, minio
 from app.repo.minio_repo import MinioRepository
 class AI:
-    def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL):
+    def __init__(self, api_key=constant.OPENAI_API_KEY, embedding_model=constant.OPENAI_EMBEDDING_MODEL, completion_model=constant.OPENAI_COMPLETION_MODEL, completion_model_mini=constant.OPENAI_COMPLETION_MODEL_MINI):
         self.openai_client = OpenAI(api_key=api_key)
         self.embedding_model = embedding_model
         self.completion_model = completion_model
+        self.completion_model_mini = completion_model_mini
         self.beast_completion_model = constant.OPENAI_BEAST_COMPLETION_MODEL
         self.job_question_and_answering_prompt = constant.JOB_QUESTION_AND_ANSWERING_PROMPT
         self.resume_question_and_answering_prompt = constant.RESUME_QUESTION_AND_ANSWERING_PROMPT
@@ -283,7 +284,7 @@ class AI:
                         {"role": "system", "content": "You are a helpful assistant."},
                         {"role": "user", "content": prompt}
                     ],
-                    model=self.completion_model,
+                    model=self.completion_model_mini,
                     # max_tokens=4096,
                     temperature=0.2
                 )
@@ -320,7 +321,7 @@ class AI:
                         {"role": "system", "content": "You are a helpful assistant."},
                         {"role": "user", "content": prompt}
                     ],
-                    model=self.completion_model,
+                    model=self.completion_model_mini,
                     # max_tokens=4096,
                     temperature=0.2
                 )
