@@ -389,7 +389,7 @@ class AI:
         cached_result = self.redis_repo.get(cache_key)
 
         if cached_result:
-            return cached_result.decode('utf-8')
+            return cached_result
 
         retries = 0
         prompt = f"""
@@ -679,7 +679,7 @@ class AI:
         return None
     
     async def get_enhanced_input(self, input: str, max_retries=3) -> str:
-        start_time = time.time() 
+        start_time = time.time()
 
         retries = 0
         prompt = """
@@ -716,7 +716,7 @@ class AI:
             Original Input: "junior de"
             ## Response Example 3 ##
             {{
-                "answer": ["Junior Data Engineer", "junior data engineer", "Entry-Level Data Engineer", "entry level data engineer", "Junior ETL Developer", "junior etl developer", "Junior Data Pipeline Engineer", "junior data pipeline engineer", "Junior Data Warehouse Engineer", "junior data warehouse engineer", "Junior Cloud Data Engineer, "junior cloud data engineer", "Junior Big Data Engineer", "junior big data engineer"]
+                "answer": ["Junior Data Engineer", "junior data engineer", "Entry-Level Data Engineer", "entry level data engineer", "Junior ETL Developer", "junior etl developer", "Junior Data Pipeline Engineer", "junior data pipeline engineer", "Junior Data Warehouse Engineer", "junior data warehouse engineer", "Junior Cloud Data Engineer", "junior cloud data engineer", "Junior Big Data Engineer", "junior big data engineer"]
             }}
 
             ## Input Example 4 ##
@@ -733,15 +733,15 @@ class AI:
                 "answer": ["Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Software Engineer", "software engineer", "Software Developer", "software developer"]
             }}
         """
-        content = prompt.format(input=input.strip())
+        content = prompt
 
         # Check cache first
         cache_key = f"search_input:{input}"
         cached_input = self.redis_repo.get(cache_key)
         if cached_input:
-            search_input = cached_input.decode('utf-8')
+            search_input = cached_input  # already decoded
             return search_input.split()  # Convert string back to list
-        
+
         while retries < max_retries:
             try:
                 response = self.openai_client.chat.completions.create(
