@@ -442,6 +442,7 @@ class AI:
                         {"role": "system", "content": prompt}
                     ],
                     top_p=0.2,
+                    max_tokens=200,
                 )
                 tmp = json.loads(response.choices[0].message.content.strip())
                 result = tmp.get("answer", "")
@@ -492,6 +493,7 @@ class AI:
                         {"role": "system", "content": content}
                     ],
                     top_p=0.2,
+                    max_tokens=200,
                 )
 
                 tmp = json.loads(response.choices[0].message.content.strip())  
@@ -534,6 +536,7 @@ class AI:
                         {"role": "system", "content": content}
                     ],
                     top_p=0.2,
+                    max_tokens=1000,
                 )
 
                 tmp = json.loads(response.choices[0].message.content.strip())
@@ -574,6 +577,7 @@ class AI:
                         {"role": "system", "content": content}
                     ],
                     top_p=0.2,
+                    max_tokens=400,
                 )
                 response = json.loads(response.choices[0].message.content.strip())  
                 return response.get("answer", "")
@@ -616,6 +620,7 @@ class AI:
                         {"role": "system", "content": content}
                     ],
                     top_p=0.2,
+                    max_tokens=200,
                 )
 
                 tmp = json.loads(response.choices[0].message.content.strip())  
@@ -665,6 +670,7 @@ class AI:
                         {"role": "system", "content": content}
                     ],
                     top_p=0.2,
+                    max_tokens=200,
                 )
 
                 tmp = json.loads(response.choices[0].message.content.strip())  
@@ -759,6 +765,7 @@ class AI:
                         {"role": "user", "content": content}
                     ],
                     top_p=0.2,
+                    max_tokens=200,
                 )
 
                 end_time = time.time()
