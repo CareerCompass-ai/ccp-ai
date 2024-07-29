@@ -93,13 +93,15 @@ class AnalysisRouter:
         db: Session = Depends(PostgresDB.get_db)
     ):
         try:
-            time_from, time_to = await self.format_time_range(time_from, time_to)
+            # if both time from and time to are provided, we will use them
+            if time_from != "None" and time_to != "None":
+                time_from, time_to = await self.format_time_range(time_from, time_to)
 
             data = await self.analysis_repo.get_number_of_new_user(db=db, time=time, time_from=time_from, time_to=time_to)
             return data
         except Exception:
             logger.error(f"list_new_user_in_time_range failed error = {traceback.format_exc()}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
         
     async def count_new_user_by_role(
         self,

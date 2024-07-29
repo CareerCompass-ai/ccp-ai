@@ -175,31 +175,26 @@ class AnalysisRepository:
 
         return analysis.GetNumberOfCompanyTypeResponse(data=data)
     
-    async def get_number_of_new_user(self, db:Session, time, time_from, time_to) -> analysis.GetNumberOfNewUser:
-        sql_query= '''
-        select id, role, created_at
-        from ccp_user
+    async def get_number_of_new_user(self, db: Session, time: str, time_from: str, time_to: str):
+        sql_query = '''
+        SELECT id, role, created_at
+        FROM ccp_user
         '''
-        if time is not None and time.lower() != 'none':
-            time = time.lower()
-            if "'" in time:
-                time = time.replace("'", "")
+        if time:
+            if time.lower() == 'year':
+                sql_query += " WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)"
+            elif time.lower() == 'month':
+                sql_query += " WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE) AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)"
+        elif time_from and time_to:
             sql_query += f'''
-             where created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
-        elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
-            if "'" in time_to or "'" in time_from:
-                time_from = time_from.replace("'", "")
-                time_to =  time_to.replace("'", "")
-            sql_query += f'''
-            where created_at >= to_date('{time_from}', 'YYYY/MM')  AND
-            created_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+            WHERE created_at >= '{time_from}' AND created_at <= '{time_to}'
             '''
         records = db.execute(text(sql_query))
 
         data = []
 
         for item in records:
-            data.append (
+            data.append(
                 analysis.NumberOfNewUser(
                     id=item.id,
                     role=item.role,
@@ -208,6 +203,40 @@ class AnalysisRepository:
             )
 
         return analysis.GetNumberOfNewUser(data=data)
+    
+    # async def get_number_of_new_user(self, db:Session, time, time_from, time_to) -> analysis.GetNumberOfNewUser:
+    #     sql_query= '''
+    #     select id, role, created_at
+    #     from ccp_user
+    #     '''
+    #     if time is not None and time.lower() != 'none':
+    #         time = time.lower()
+    #         if "'" in time:
+    #             time = time.replace("'", "")
+    #         sql_query += f'''
+    #          where created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+    #     elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
+    #         if "'" in time_to or "'" in time_from:
+    #             time_from = time_from.replace("'", "")
+    #             time_to =  time_to.replace("'", "")
+    #         sql_query += f'''
+    #         where created_at >= to_date('{time_from}', 'YYYY/MM')  AND
+    #         created_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
+    #         '''
+    #     records = db.execute(text(sql_query))
+
+    #     data = []
+
+    #     for item in records:
+    #         data.append (
+    #             analysis.NumberOfNewUser(
+    #                 id=item.id,
+    #                 role=item.role,
+    #                 created_at=item.created_at
+    #             )
+    #         )
+
+    #     return analysis.GetNumberOfNewUser(data=data)
     
     async def count_all_number_of_user_by_role(self, db:Session) -> analysis.GetNumberOfAllNewUser:
         records = db.query(User.role, func.count(User.id).label('user_count')).group_by(User.role).all()
