@@ -10,6 +10,7 @@ from models.ccp_job import Job
 from models.ccp_user import User
 from models.ccp_viewedjob import ViewedJob
 
+from pkg.logging import logger
 
 class AnalysisRepository:
     async def get_top_job_titles(self, db:Session, top_number, time_from=None, time_to=None) -> analysis.ListTopJobTitlesResponse:
@@ -180,12 +181,12 @@ class AnalysisRepository:
         SELECT id, role, created_at
         FROM ccp_user
         '''
-        if time:
+        if time.lower() != "none":
             if time.lower() == 'year':
                 sql_query += " WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)"
             elif time.lower() == 'month':
                 sql_query += " WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE) AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)"
-        elif time_from and time_to:
+        else:
             sql_query += f'''
             WHERE created_at >= '{time_from}' AND created_at <= '{time_to}'
             '''
@@ -194,13 +195,16 @@ class AnalysisRepository:
         data = []
 
         for item in records:
-            data.append(
-                analysis.NumberOfNewUser(
-                    id=item.id,
-                    role=item.role,
-                    created_at=item.created_at
+            if item.created_at is not None:
+                data.append(
+                    analysis.NumberOfNewUser(
+                        id=item.id,
+                        role=item.role,
+                        created_at=item.created_at
+                    )
                 )
-            )
+            else:
+                logger.warning(f"Record with id {item.id} has no created_at value.")
 
         return analysis.GetNumberOfNewUser(data=data)
     

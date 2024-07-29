@@ -43,6 +43,21 @@ class AnalysisRouter:
             time_to = time_to_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
         
         return time_from, time_to
+    
+    async def format_month_time_range(self, time_from=None, time_to=None):
+        if time_from:
+            input_tz = timezone('UTC')
+            time_from_dt = datetime.strptime(time_from, "%Y/%m").replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=input_tz)
+            time_from = time_from_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+        
+        if time_to:
+            input_tz = timezone('UTC')
+            time_to_dt = datetime.strptime(time_to, "%Y/%m").replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=input_tz)
+            time_to = time_to_dt.astimezone(timezone('UTC')).strftime("%Y-%m-%d %H:%M:%S.%f")
+        
+        return time_from, time_to
+    
+
     async def list_top_job_titles(self, top_number: int = Query(None, description="Top number of hiring jobs"), time_from: str = Query(None, description="Start time of time to get the top hiring jobs"), time_to: str = Query(None, description="End time of time to get the top hiring jobs"), db: Session = Depends(PostgresDB.get_db)):
         try:
             time_from, time_to = await self.format_time_range(time_from, time_to)
@@ -94,8 +109,8 @@ class AnalysisRouter:
     ):
         try:
             # if both time from and time to are provided, we will use them
-            if time_from != "None" and time_to != "None":
-                time_from, time_to = await self.format_time_range(time_from, time_to)
+            if time_from and time_to and time_from.lower() != "none" and time_to.lower() != "none":
+                time_from, time_to = await self.format_month_time_range(time_from, time_to)
 
             data = await self.analysis_repo.get_number_of_new_user(db=db, time=time, time_from=time_from, time_to=time_to)
             return data
