@@ -125,6 +125,8 @@ class JobRouter:
                 exclude=exclude,
                 role=role,
             )
+            #log request
+            logger.info(f"list_jobs_from_qdrant request = {req}")
 
             if search_type == "vector": # handle vector search
                 if resume_id is not None: 
