@@ -46,4 +46,5 @@ COMMON_JOB_TITLES = [
     'Blockchain Engineer',
     'Database Administrator',
     'Embedded/IoT/Robotics Engineer',
+    'Game',
 ]
