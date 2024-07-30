@@ -20,6 +20,7 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
 
     # Check if 'is_verified' exists in payload, default to False if not
     is_verified = payload.get("is_verified", False)
+    recruiter_email = payload.get("recruiter_email", "")
 
     return job.JobAggregate(
         id=payload["id"],
@@ -49,7 +50,8 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         work_place=payload["work_place"],
         display_content=payload["display_content"],
         common_job_title=payload["common_job_title"],
-        is_verified=is_verified
+        is_verified=is_verified,
+        recruiter_email=recruiter_email
     )
 
 def toJobWeaviateDTO(payload: dict) -> job.JobAggregate:

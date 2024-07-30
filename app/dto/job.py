@@ -73,6 +73,7 @@ class JobAggregate(JobBase):
     recruiter_id: Optional[int] = 0
     recruiter_name: Optional[str] = ""
     is_verified: Optional[bool] = False
+    recruiter_email: Optional[str] = ""
 
 class DynamicFilterCommonField(BaseModel):
     name: Optional[str]
