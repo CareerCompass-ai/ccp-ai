@@ -15,6 +15,7 @@ class JobBase(BaseModel):
     closed_date: Optional[datetime] = None
     salary_from: Optional[float] = 0.0
     salary_to: Optional[float] = 0.0
+    salary_text: Optional[str] = ""
     job_type: Optional[str] = ""
     company_type: Optional[str] = ""
     address_id: Optional[int] = None
