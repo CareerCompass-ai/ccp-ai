@@ -704,6 +704,7 @@ class AI:
             2. **Case Sensitivity:** Provide both lowercase and uppercase versions of each term.
             3. **Job Levels:** If the input term includes references to job levels (e.g., Junior, Senior), include variations of these levels. If the input does not mention job levels, do not include them.
             4. **Format:** The response must strictly be a JSON object with a single field `"answer"` which contains a list/array of the enhanced search terms.
+            5. **With Given Shorthand Input:** Interpret abbreviations correctly within the IT domain. For example: DE is Data Engineer, DS is Data Scientist, SWE is Software Engineer, BE is Backend Engineer, FE is Frontend Engineer, etc.
 
             ## Input Example 1 ##
             Original Input: "SWE"
