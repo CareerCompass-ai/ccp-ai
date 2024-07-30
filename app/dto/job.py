@@ -15,7 +15,6 @@ class JobBase(BaseModel):
     closed_date: Optional[datetime] = None
     salary_from: Optional[float] = 0.0
     salary_to: Optional[float] = 0.0
-    salary_text: Optional[str] = ""
     job_type: Optional[str] = ""
     company_type: Optional[str] = ""
     address_id: Optional[int] = None
@@ -74,6 +73,7 @@ class JobAggregate(JobBase):
     recruiter_name: Optional[str] = ""
     is_verified: Optional[bool] = False
     recruiter_email: Optional[str] = ""
+    salary_text: Optional[str] = ""
 
 class DynamicFilterCommonField(BaseModel):
     name: Optional[str]
