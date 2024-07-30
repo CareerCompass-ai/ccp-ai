@@ -20,6 +20,7 @@ WHITELIST_PATHS = [
     "/api/admin/weaviate/delete-class",
     "/api/admin/manual-sync-jobs",
     "/api/admin/manual-sync-resumes",
+    "/api/admin/manual-add-search-suggestion",
     "/api/all-jobs-for-seo",
     "/sitemap.xml",
     "/robots.txt",

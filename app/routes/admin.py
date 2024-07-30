@@ -12,7 +12,7 @@ from config.weaviate import WeaviateVDB as weaviate
 from constant import config
 from pkg.logging import logger
 
-from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest, ManualSyncResumeRequest
+from ..dto.admin import DeleteClassRequest, ManualSyncJobRequest, ManualSyncResumeRequest, ManualCreateSearchSuggestion
 from .helper import combine_job_content
 
 security = HTTPBasic()
@@ -32,6 +32,7 @@ class AdminRouter:
     def __init__(self):
         self.agg_repo = factory.get_aggregate_repo()
         self.ai_helper = factory.get_ai_helper()
+        self.redis_repo = factory.get_redis_repo()
         self.qdrant_client = qdrant.setup_qdrant_connection()
         self.weaviate_client = weaviate.setup_weaviate_connection()
         self.sync_helper = SyncHelper(qdrant_client=self.qdrant_client, weaviate_client=self.weaviate_client)
@@ -43,7 +44,18 @@ class AdminRouter:
         self.router.add_api_route("/weaviate/delete-class", self.delete_class, methods=["DELETE"])
         self.router.add_api_route("/manual-sync-jobs", self.manual_sync_jobs, methods=["POST"])
         self.router.add_api_route("/manual-sync-resumes", self.manual_sync_resumes, methods=["POST"])
+        self.router.add_api_route("/manual-add-search-suggestion", self.create_search_suggestion, methods=["POST"])
 
+    async def create_search_suggestion(self, req: ManualCreateSearchSuggestion):
+        try:
+            pattern = f"search_suggestion"
+            for value in req.data:
+                self.redis_repo.sadd(pattern=pattern, value=value)
+            return {"message": "success"}
+        except Exception:
+            logger.error(f"create_search_suggestion failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        
     async def protected_route(self, is_authenticated: bool = Depends(authenticate_user)):
         return {"message": "You are authorized to access this resource"}
 
