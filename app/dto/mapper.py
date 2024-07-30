@@ -1,6 +1,23 @@
 from app.dto import job, resume, candidate
 
 def toJobDTO(payload: dict) -> job.JobAggregate:
+    # Helper function to format salary without float display
+    def format_salary(salary):
+        return int(salary) if salary == int(salary) else salary
+
+    salary_from = format_salary(payload["salary_from"])
+    salary_to = format_salary(payload["salary_to"])
+
+    # Determine the salary text
+    if payload["salary_from"] == 0 and payload["salary_to"] == 0:
+        salary_text = "Negotiable"
+    elif payload["salary_from"] == 0 and payload["salary_to"] != 0:
+        salary_text = f"Up to {salary_to}"
+    elif payload["salary_from"] != 0 and payload["salary_to"] == 0:
+        salary_text = f"From {salary_from}"
+    else:
+        salary_text = ""
+
     return job.JobAggregate(
         id=payload["id"],
         job_title=payload["job_title"],
@@ -12,6 +29,7 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         closed_date=payload["closed_date"],
         salary_from=payload["salary_from"],
         salary_to=payload["salary_to"],
+        salary_text=salary_text,
         job_type=payload["job_type"],
         company_type=payload["company_type"],
         created_at=payload["created_at"],
