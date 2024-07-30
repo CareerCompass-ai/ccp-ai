@@ -9,3 +9,6 @@ class ManualSyncJobRequest(BaseModel):
 
 class ManualSyncResumeRequest(BaseModel):
     ids: list[int]
+
+class ManualCreateSearchSuggestion(BaseModel):
+    data: list[str]

@@ -1,6 +1,6 @@
 import traceback
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 import constant.common as constant
@@ -8,17 +8,28 @@ from app.dto import common
 from app.factory.factory import RepositoryFactory as factory
 from config.postgres import PostgresDB
 from pkg.logging import logger
-
-
+from typing import Optional
 class CommonRouter:
     def __init__(self):
         self.tag_repo = factory.get_tag_repo()
         self.country_repo = factory.get_country_repo()
         self.city_repo = factory.get_city_repo()
+        self.redis_repo = factory.get_redis_repo()
+
         self.router = APIRouter(prefix="/api", tags=['Common'])
         self.router.add_api_route("/common/types", self.list_common_types, methods=["GET"], response_model=common.ListCommonTypes)
         self.router.add_api_route("/v2/common/types", self.list_common_types_v2, methods=["GET"], response_model=common.ListCommonTypesv2)
+        self.router.add_api_route("/common/search-suggestion", self.list_search_suggestion, methods=["GET"])
 
+    async def list_search_suggestion(self):
+        try:
+            pattern = f"search_suggestion"
+            keys = self.redis_repo.smembers(pattern=pattern)
+            return keys
+        except Exception:
+            logger.error(f"list_search_suggestion failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        
     def get_value_from_constant(self, record) -> list[common.CommonTypev2]:
         records = []
         for item in record:
