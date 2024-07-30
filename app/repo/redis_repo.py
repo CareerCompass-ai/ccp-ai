@@ -48,3 +48,24 @@ class RedisRepository:
             return self.redis.exists(key)
         except RedisError as e:
             logger.error(f"Failed to check existence of key:{key} with error: {traceback.format_exc()}")
+
+    def scan(self, pattern):
+        try:
+            cursor = '0'
+            matched_keys = []
+
+            while cursor != 0:
+                cursor, keys = self.redis.scan(cursor=cursor, match=pattern)
+                matched_keys.extend(keys)
+
+            return matched_keys
+        except RedisError as e:
+            logger.error(f"Failed to scan with pattern:{pattern} with error: {traceback.format_exc()}")
+
+    def smembers(self, pattern: str) -> list[str]:
+        try:
+            keys = self.redis.smembers(pattern)
+            str_list = [x.decode('utf-8') for x in keys]
+            return str_list
+        except RedisError as e:
+            logger.error(f"Failed to scan with pattern:{pattern} with error: {traceback.format_exc()}")
