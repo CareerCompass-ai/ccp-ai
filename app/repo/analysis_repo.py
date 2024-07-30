@@ -59,7 +59,7 @@ class AnalysisRepository:
             if "'" in time:
                 time = time.replace("'", "")
             sql_query += f'''
-             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE + INTERVAL '1 day' - INTERVAL '1 second' '''
         elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
             if "'" in time_to or "'" in time_from:
                 time_from = time_from.replace("'", "")
@@ -141,7 +141,7 @@ class AnalysisRepository:
         FROM ccp_tag
         JOIN ccp_jobtags on ccp_tag.id = ccp_jobtags.tag_id
         WHERE 
-            ccp_jobtags.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+            ccp_jobtags.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE + INTERVAL '1 day' - INTERVAL '1 second'
         GROUP BY ccp_tag.id, ccp_tag.tag_name
         ORDER BY count DESC
         LIMIT {top_number}
@@ -287,7 +287,7 @@ class AnalysisRepository:
             if "'" in time:
                 time = time.replace("'", "")
             sql_query += f'''
-             where j.created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+             where j.created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE + INTERVAL '1 day' - INTERVAL '1 second' '''
         elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
             if "'" in time_to or "'" in time_from:
                 time_from = time_from.replace("'", "")
@@ -400,7 +400,7 @@ class AnalysisRepository:
             if "'" in time:
                 time = time.replace("'", "")
             sql_query += f'''
-                AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE
+                AND ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE + INTERVAL '1 day' - INTERVAL '1 second'
                     '''
         elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
                 if "'" in time_to or "'" in time_from:
@@ -490,7 +490,7 @@ class AnalysisRepository:
             if "'" in time:
                 time = time.replace("'", "")
             sql_query += f'''
-             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE '''
+             and ccp_job.updated_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE + INTERVAL '1 day' - INTERVAL '1 second' '''
         elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
             if "'" in time_to or "'" in time_from:
                 time_from = time_from.replace("'", "")
