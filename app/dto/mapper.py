@@ -18,6 +18,9 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
     else:
         salary_text = ""
 
+    # Check if 'is_verified' exists in payload, default to False if not
+    is_verified = payload.get("is_verified", False)
+
     return job.JobAggregate(
         id=payload["id"],
         job_title=payload["job_title"],
@@ -45,7 +48,8 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
         address_id=payload["address_id"],
         work_place=payload["work_place"],
         display_content=payload["display_content"],
-        common_job_title=payload["common_job_title"]
+        common_job_title=payload["common_job_title"],
+        is_verified=is_verified
     )
 
 def toJobWeaviateDTO(payload: dict) -> job.JobAggregate:
