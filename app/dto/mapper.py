@@ -12,9 +12,9 @@ def toJobDTO(payload: dict) -> job.JobAggregate:
     if payload["salary_from"] == 0 and payload["salary_to"] == 0:
         salary_text = "Negotiable"
     elif payload["salary_from"] == 0 and payload["salary_to"] != 0:
-        salary_text = f"Up to {salary_to}"
+        salary_text = f"Up to {salary_to}$"
     elif payload["salary_from"] != 0 and payload["salary_to"] == 0:
-        salary_text = f"From {salary_from}"
+        salary_text = f"From {salary_from}$"
     else:
         salary_text = ""
 
@@ -119,9 +119,9 @@ def toAppliedJobDTO(payload: dict, resume_id, resume_url) -> candidate.AppliedJo
     if payload["salary_from"] == 0 and payload["salary_to"] == 0:
         salary_text = "Negotiable"
     elif payload["salary_from"] == 0 and payload["salary_to"] != 0:
-        salary_text = f"Up to {salary_to}"
+        salary_text = f"Up to {salary_to}$"
     elif payload["salary_from"] != 0 and payload["salary_to"] == 0:
-        salary_text = f"From {salary_from}"
+        salary_text = f"From {salary_from}$"
     else:
         salary_text = ""
 
