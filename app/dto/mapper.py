@@ -108,6 +108,27 @@ def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
     )
 
 def toAppliedJobDTO(payload: dict, resume_id, resume_url) -> candidate.AppliedJobsResponse:
+    # Helper function to format salary without float display
+    def format_salary(salary):
+        return int(salary) if salary == int(salary) else salary
+    
+    salary_from = format_salary(payload["salary_from"])
+    salary_to = format_salary(payload["salary_to"])
+
+    # Determine the salary text
+    if payload["salary_from"] == 0 and payload["salary_to"] == 0:
+        salary_text = "Negotiable"
+    elif payload["salary_from"] == 0 and payload["salary_to"] != 0:
+        salary_text = f"Up to {salary_to}"
+    elif payload["salary_from"] != 0 and payload["salary_to"] == 0:
+        salary_text = f"From {salary_from}"
+    else:
+        salary_text = ""
+
+    # Check if 'is_verified' exists in payload, default to False if not
+    is_verified = payload.get("is_verified", False)
+    recruiter_email = payload.get("recruiter_email", "")
+
     return candidate.AppliedJobsResponse(
         id=payload["id"],
         job_title=payload["job_title"],
@@ -119,6 +140,7 @@ def toAppliedJobDTO(payload: dict, resume_id, resume_url) -> candidate.AppliedJo
         closed_date=payload["closed_date"],
         salary_from=payload["salary_from"],
         salary_to=payload["salary_to"],
+        salary_text=salary_text,
         job_type=payload["job_type"],
         company_type=payload["company_type"],
         created_at=payload["created_at"],
@@ -134,6 +156,9 @@ def toAppliedJobDTO(payload: dict, resume_id, resume_url) -> candidate.AppliedJo
         address_id=payload["address_id"],
         work_place=payload["work_place"],
         display_content=payload["display_content"],
+        common_job_title=payload["common_job_title"],
         resume_id=resume_id,
-        resume_url=resume_url
+        resume_url=resume_url,
+        is_verified=is_verified,
+        recruiter_email=recruiter_email
     )
