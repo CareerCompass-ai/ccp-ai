@@ -13,6 +13,7 @@ from fastapi import (APIRouter, Depends, File, Form, HTTPException, Path,
                      Query, UploadFile, status)
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlalchemy import Null
 from better_profanity import profanity
 import markdownify
 import markdown2
@@ -604,8 +605,8 @@ class JobRouter:
             # Update address
             a_props = None
             f_address = None #0: update 1: create
-            if address_id != 0:
-                if city_id != "":
+            if address_id != '0' or address_id == "":
+                if city_id is not None:
                     # Update existing address with new city and possibly new details
                     a_props = {
                         "city_id": city_id,
@@ -618,14 +619,15 @@ class JobRouter:
                     # Delete address record for this job
                     props["address_id"] = None  # Use None for null representation
             else:
-                if city_id != "":
+                if city_id is not None:
                     # Create new address with given city and details
-                    a_props = {
-                        "city_id": city_id,
-                        "updated_at": now
-                    }
+                    address_record = address.AddressBase(
+                        city_id=city_id,
+                        created_at=now,
+                        updated_at=now
+                    )
                     if address_detail != "":
-                        a_props["detailed_address"] = address_detail
+                        address_record.detailed_address = address_detail
                     f_address = 1
 
             if is_hiring == "true":
@@ -717,7 +719,7 @@ class JobRouter:
                     if f_address == 0:
                         await self.address_repo.update_with_map(db=session, address_id=address_id, props=a_props)
                     else: 
-                        rec_address = await self.address_repo.create(session=session, record=a_props)
+                        rec_address = await self.address_repo.create(session=session, record=address_record)
                         props["address_id"] = rec_address.id
 
                 # Update job
