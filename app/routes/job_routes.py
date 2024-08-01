@@ -604,7 +604,7 @@ class JobRouter:
             # Update address
             a_props = None
             f_address = None #0: update 1: create
-            if address_id != "":
+            if address_id != 0:
                 if city_id != "":
                     # Update existing address with new city and possibly new details
                     a_props = {
