@@ -407,8 +407,8 @@ class JobRouter:
             with session.begin():
                 try:
                     address_record = None
-                    # If either address_detail or city_id is provided, create a new address record
-                    if address_detail is not None or city_id is not None:
+                    # If city_id is not provided, it means this job not have address
+                    if city_id is not None:
                         address_record = address.AddressBase(
                             created_at=now,
                             updated_at=now
@@ -417,8 +417,7 @@ class JobRouter:
                         if address_detail is not None:
                             address_record.detailed_address = address_detail
 
-                        if city_id is not None:
-                            address_record.city_id = city_id
+                        address_record.city_id = city_id
 
                         address_rec = await self.address_repo.create(session, address_record)
                         record.address_id = address_rec.id
@@ -588,14 +587,7 @@ class JobRouter:
                         session.rollback()
                         logger.error(f"create jobtags failed error [IntegrityError] = {traceback.format_exc()}")
                         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Jobtags create failed.")
-
-            # Update address
-            a_props = {
-                "city_id": city_id,
-                "detailed_address": address_detail,
-                "updated_at": now
-            }
-
+                    
             props = {
                 "job_title": job_title,
                 "opened_date": opened_date,
@@ -608,6 +600,33 @@ class JobRouter:
                 "work_place": work_place,
                 "updated_at": now,
             }
+
+            # Update address
+            a_props = None
+            f_address = None #0: update 1: create
+            if address_id != "":
+                if city_id != "":
+                    # Update existing address with new city and possibly new details
+                    a_props = {
+                        "city_id": city_id,
+                        "updated_at": now
+                    }
+                    if address_detail != "":
+                        a_props["detailed_address"] = address_detail
+                    f_address = 0
+                else:
+                    # Delete address record for this job
+                    props["address_id"] = None  # Use None for null representation
+            else:
+                if city_id != "":
+                    # Create new address with given city and details
+                    a_props = {
+                        "city_id": city_id,
+                        "updated_at": now
+                    }
+                    if address_detail != "":
+                        a_props["detailed_address"] = address_detail
+                    f_address = 1
 
             if is_hiring == "true":
                 props["is_hiring"] = True
@@ -694,7 +713,12 @@ class JobRouter:
 
             try:
                 # Update address
-                await self.address_repo.update_with_map(db=session, address_id=address_id, props=a_props)
+                if f_address is not None:
+                    if f_address == 0:
+                        await self.address_repo.update_with_map(db=session, address_id=address_id, props=a_props)
+                    else: 
+                        rec_address = await self.address_repo.create(session=session, record=a_props)
+                        props["address_id"] = rec_address.id
 
                 # Update job
                 await self.job_repo.update_with_map(db=session, job_id=job_id, props=props)
