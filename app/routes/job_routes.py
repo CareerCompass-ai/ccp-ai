@@ -407,8 +407,8 @@ class JobRouter:
             with session.begin():
                 try:
                     address_record = None
-                    # If either address_detail or city_id is provided, create a new address record
-                    if address_detail is not None or city_id is not None:
+                    # If city_id is not provided, it means this job not have address
+                    if city_id is not None:
                         address_record = address.AddressBase(
                             created_at=now,
                             updated_at=now
@@ -417,8 +417,7 @@ class JobRouter:
                         if address_detail is not None:
                             address_record.detailed_address = address_detail
 
-                        if city_id is not None:
-                            address_record.city_id = city_id
+                        address_record.city_id = city_id
 
                         address_rec = await self.address_repo.create(session, address_record)
                         record.address_id = address_rec.id
