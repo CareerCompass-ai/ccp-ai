@@ -688,8 +688,6 @@ class AI:
     async def get_enhanced_input(self, input: str, max_retries=3) -> str:
         start_time = time.time()
 
-        input = "golang 2-3 years"
-
         retries = 0
         prompt = f"""
             ### Task: Enhance Job Search Query using for vector search ###
