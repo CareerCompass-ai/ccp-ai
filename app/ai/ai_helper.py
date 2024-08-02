@@ -747,6 +747,13 @@ class AI:
             {{
                 "answer": ["Game Developer", "game developer", "Game Programmer", "game programmer", "Game Designer", "game designer", "Game Engineer", "game engineer", "Gameplay Developer", "gameplay developer", "Gameplay Engineer", "gameplay engineer", "Unity Developer", "unity developer", "Unreal Engine Developer", "unreal engine developer", "3D Game Developer", "3d game developer", "2D Game Developer", "2d game developer", "VR Developer", "vr developer", "AR Developer", "ar developer"]
             }}
+
+            ## Input Example 7 ##
+            Original Input: "Devops 2-3 years"
+            ## Response Example 6 ##
+            {{
+                "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer"]
+            }}
         """
         content = prompt
 
