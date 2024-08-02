@@ -688,6 +688,8 @@ class AI:
     async def get_enhanced_input(self, input: str, max_retries=3) -> str:
         start_time = time.time()
 
+        input = "golang 2-3 years"
+
         retries = 0
         prompt = f"""
             ### Task: Enhance Job Search Query using for vector search ###
@@ -703,11 +705,12 @@ class AI:
             - If the input is "frontend," the response should exclude terms like "vuejs" if there is no relevant information to include about "vuejs, angular"
             2. **Case Sensitivity:** Provide both lowercase and uppercase versions of each term.
             3. **Job Levels:** If the input term includes references to job levels (e.g., Junior, Senior), include variations of these levels. If the input does not mention job levels, do not include them.
-            4. **Experience and Proficiency:** If the input contains years of experience or words related to proficiency with certain skills, predict the level of those skills. For example:
-            - If the input is "1 year with golang" the model should predict this as a junior golang developer, junior golang backend engineer, etc.
-            - If the input is "2-3 years with python" the model should predict this as a mid-level python developer, mid-senior level python software engineer, etc.
-            5. **Format:** The response must strictly be a JSON object with a single field `"answer"` which contains a list/array of the enhanced search terms.
-            6. **With Given Shorthand Input:** Interpret abbreviations correctly within the IT domain. For example: DE is Data Engineer, DS is Data Scientist, SWE is Software Engineer, BE is Backend Engineer, FE is Frontend Engineer, etc.
+            4. **Experience and Proficiency:** If the input contains years of experience or words related to proficiency with certain skills, **MUST** respond the level of those skills. For example prediction response:
+            - If the input is "1 year with golang" the model response **MUST** contain this as a junior golang developer, junior golang backend engineer, golang software engineer etc.
+            - If the input is "2-3 years with python" the model response **MUST** contain this as a mid-level python developer, mid-senior level python software engineer, python software engineer, etc.
+            5.	Response Order: The experience or proficiency level must be placed at the beginning of the response.
+            6. **Format:** The response must strictly be a JSON object (not json string, do not wrapped in triple backticks and labeled as json) with a single field "answer" which contains a list/array of the enhanced search terms.
+            7. **With Given Shorthand Input:** Interpret abbreviations correctly within the IT domain. For example: DE is Data Engineer, DS is Data Scientist, SWE is Software Engineer, BE is Backend Engineer, FE is Frontend Engineer, etc.
 
             ## Input Example 1 ##
             Original Input: "SWE"
@@ -755,7 +758,7 @@ class AI:
             Original Input: "Devops 2-3 years"
             ## Response Example 6 ##
             {{
-                "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer"]
+                "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer", "Devops Engineer", "devops engineer"]
             }}
         """
         content = prompt
