@@ -703,8 +703,11 @@ class AI:
             - If the input is "frontend," the response should exclude terms like "vuejs" if there is no relevant information to include about "vuejs, angular"
             2. **Case Sensitivity:** Provide both lowercase and uppercase versions of each term.
             3. **Job Levels:** If the input term includes references to job levels (e.g., Junior, Senior), include variations of these levels. If the input does not mention job levels, do not include them.
-            4. **Format:** The response must strictly be a JSON object with a single field `"answer"` which contains a list/array of the enhanced search terms.
-            5. **With Given Shorthand Input:** Interpret abbreviations correctly within the IT domain. For example: DE is Data Engineer, DS is Data Scientist, SWE is Software Engineer, BE is Backend Engineer, FE is Frontend Engineer, etc.
+            4. **Experience and Proficiency:** If the input contains years of experience or words related to proficiency with certain skills, predict the level of those skills. For example:
+            - If the input is "1 year with golang" the model should predict this as a junior golang developer, junior golang backend engineer, etc.
+            - If the input is "2-3 years with python" the model should predict this as a mid-level python developer, mid-senior level python software engineer, etc.
+            5. **Format:** The response must strictly be a JSON object with a single field `"answer"` which contains a list/array of the enhanced search terms.
+            6. **With Given Shorthand Input:** Interpret abbreviations correctly within the IT domain. For example: DE is Data Engineer, DS is Data Scientist, SWE is Software Engineer, BE is Backend Engineer, FE is Frontend Engineer, etc.
 
             ## Input Example 1 ##
             Original Input: "SWE"
