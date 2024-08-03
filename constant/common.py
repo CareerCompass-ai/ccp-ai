@@ -10,7 +10,12 @@ HIRING_LEVELS = [
     'Executive'
 ]
 
-JOB_TYPES = ['Contract', 'Part-time', 'Full-time', 'Temporary']
+JOB_TYPES = [
+    'Temporary',
+    'Part-time',
+    'Contract',
+    'Full-time'
+]
 
 COMPANY_TYPES = [
     'Banking',
@@ -31,20 +36,20 @@ COMPANY_TYPES = [
 WORK_PLACES = ['On-site', 'Remote', 'Hybrid']
 
 COMMON_JOB_TITLES = [
-    'Software Engineer',
-    'Product Owner/Product Manager',
-    'Business Analyst',
-    'Tech Lead',
-    'UI/UX Designer',
-    'Tester/QA-QC',
-    'System Engineer',
-    'DevOps Engineer',
-    'IT Support',
-    'Data Scientist',
-    'Data Analyst/Data Engineer',
-    'ML/AI Engineer',
     'Blockchain Engineer',
+    'Business Analyst',
+    'Data Analyst/Data Engineer',
+    'Data Scientist',
     'Database Administrator',
+    'DevOps Engineer',
     'Embedded/IoT/Robotics Engineer',
     'Game',
+    'IT Support',
+    'ML/AI Engineer',
+    'Product Owner/Product Manager',
+    'Software Engineer',
+    'System Engineer',
+    'Tech Lead',
+    'Tester/QA-QC',
+    'UI/UX Designer'
 ]
