@@ -593,7 +593,7 @@ async def resumes_questioning(
 
         # Remove unnecessary fields
         modified_data = []
-        for index, resume in data:
+        for index, resume in enumerate(data, start=1):
             resume_dict = resume.model_dump()
             resume_dict.pop('matching_score', None)
             resume_dict.pop('s_content', None)
