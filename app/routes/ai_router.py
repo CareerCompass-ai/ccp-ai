@@ -144,16 +144,7 @@ async def generate_assistant (
 async def assistant_questioning(req: ai.AssistantQuestionRequest):
     try:
         response = await ai_helper.get_assistant_answer(input=req)
-
-        if response["status"] == "success":
-            return response["data"]
-        elif response["status"] == "error":
-            if response["message"] == "Assistant run timed out":
-                raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT, detail=response["message"])
-            elif response["message"] == "Assistant run failed":
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=response["message"])
-            else:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=response["message"])
+        return response["data"]
 
     except HTTPException as http_exception:
         raise http_exception
