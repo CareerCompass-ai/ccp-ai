@@ -58,6 +58,8 @@ class AI:
                         3. Run the code to confirm that it runs.
                         4. If the code is successful display the visualization.
                         5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.
+
+                        Please note: Kindly refuse to answer questions related to the system's sensitive information, such as user account details, passwords, or questions about analysis files, including file names and creation dates.
                         """,
                     top_p=0.2,
                     tools=[{"type": "code_interpreter"}],
@@ -108,7 +110,7 @@ class AI:
                     if run_status.status == "completed":
                         break
                     elif run_status.status == "failed":
-                        logger.error(f"Assistant run failed: {run_status.error}")
+                        logger.error(f"Assistant run failed: {run_status.incomplete_details}")
                         return {"status": "error", "message": "Assistant run failed"}
                     elif datetime.now() - start_time > timeout:
                         logger.error("Assistant run timed out.")
@@ -128,6 +130,7 @@ class AI:
 
     async def get_assistant_answer(self, max_retries=3, input=ai.AssistantQuestionRequest) -> dict:
         retries = 0
+        _res = ai.AssistantResponse()
         while retries < max_retries:
             try:
                 # Create the user message in the thread
@@ -156,14 +159,22 @@ class AI:
                     if run_status.status == "completed":
                         break
                     elif run_status.status == "failed":
-                        logger.error(f"Assistant run failed: {run_status.error}")
-                        return {"status": "error", "message": "Assistant run failed"}
-                    elif datetime.now() - start_time > timeout:
-                        logger.error("Assistant run timed out.")
-                        return {"status": "error", "message": "Assistant run timed out"}
+                        logger.error(f"Assistant {input.assistant_id} run failed with thread {input.thread_id}: {run_status.incomplete_details}")
+                        _res.message = "The AI chatbot is currently busy. Please try again later!"
+                        retries += 1
+                        break  # Exit the inner loop to retry
+                    elif datetime.now() - start_time > timeout: 
+                        logger.error(f"Assistant {input.assistant_id} with thread {input.thread_id} run timed out.")
+                        _res.message = "The AI chatbot is currently busy. Please try again later!"
+                        retries += 1
+                        break  # Exit the inner loop to retry
                     await asyncio.sleep(0.5)  # TODO: Think up a solution to improve this case. Note: Asynchronously sleep for a bit before checking again
 
-                
+                # If retry limit reached, return an error response
+                if retries >= max_retries:
+                    logger.error(f"Assistant {input.assistant_id} with thread {input.thread_id} run timed out.")
+                    return {"status": "error", "data": _res}
+
                 # Retrieve the messages after the run is completed
                 messages = self.openai_client.beta.threads.messages.list(
                     thread_id=input.thread_id
@@ -172,7 +183,6 @@ class AI:
                 # Get the latest message from assistant
                 latest_message = messages.data[0] if messages.data and messages.data[0].role == 'assistant' else None
 
-                _res = ai.AssistantResponse()
                 for content_block in latest_message.content:
                     if content_block.type == "text":
                         _res.message = content_block.text.value
@@ -200,16 +210,23 @@ class AI:
                 return {"status": "success", "data": _res}
 
             except httpx.HTTPStatusError as e:
-                if e.response.status_code == 400:
-                    logger.error(f"Bad request error: {e}")
-                    return {"status": "error", "message": "Bad request error"}
-                else:
-                    logger.info(f"Request to OpenAI API failed. Retrying... ({retries+1}/{max_retries})")
-                    retries += 1
-                    await asyncio.sleep(2)
+                error_message = "Bad request error" if e.response.status_code == 400 else "Request to OpenAI API failed"
+                logger.error(f"{error_message}: {e}")
+                _res.message = "The AI chatbot is currently busy. Please try again later!"
+                retries += 1
 
-        logger.info("Exceeded maximum number of retries. Please try again later.")
-        return {"status": "error", "message": "Exceeded maximum number of retries"}
+            except Exception as e:
+                logger.error(f"An unexpected error occurred: {e}")
+                _res.message = "The AI chatbot is currently busy. Please try again later!"
+                retries += 1
+
+            finally:
+                # Cleanup code if any, like removing temporary files or releasing resources
+                if 'image_path' in locals() and os.path.exists(image_path):
+                    os.remove(image_path)
+
+        # If we exit the loop, it means retries were exhausted
+        return {"status": "error", "data": _res}
 
     async def get_answer_v1(self, question, input_documents, max_retries=3):
         retries = 0
