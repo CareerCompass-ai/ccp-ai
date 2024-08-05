@@ -75,3 +75,9 @@ class RedisRepository:
             self.redis.sadd(pattern, value)
         except RedisError as e:
             logger.error(f"[sadd] Failed to sadd with pattern:{pattern} with error: {traceback.format_exc()}")
+
+    def srem(self, pattern: str, value: str):
+        try:
+            self.redis.srem(pattern, value)
+        except RedisError as e:
+            logger.error(f"[srem] Failed to srem with pattern:{pattern} and value:{value} with error: {traceback.format_exc()}")

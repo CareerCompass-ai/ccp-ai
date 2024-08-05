@@ -20,6 +20,16 @@ class CommonRouter:
         self.router.add_api_route("/common/types", self.list_common_types, methods=["GET"], response_model=common.ListCommonTypes)
         self.router.add_api_route("/v2/common/types", self.list_common_types_v2, methods=["GET"], response_model=common.ListCommonTypesv2)
         self.router.add_api_route("/common/search-suggestion", self.list_search_suggestion, methods=["GET"])
+        self.router.add_api_route("/common/search-suggestion", self.delete_search_suggestions, methods=["DELETE"])
+
+    async def delete_search_suggestions(self, req: common.DeleteSearchSuggestions):
+        try:
+            pattern = "search_suggestion"
+            for value in req.keys:
+                self.redis_repo.srem(pattern, value)
+        except Exception:
+            logger.error(f"delete_search_suggestions failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Oops, sorry, our server went wrong")
 
     async def list_search_suggestion(self):
         try:
