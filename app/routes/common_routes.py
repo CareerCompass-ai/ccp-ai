@@ -25,7 +25,8 @@ class CommonRouter:
         try:
             pattern = f"search_suggestion"
             keys = self.redis_repo.smembers(pattern=pattern)
-            return keys
+            sorted_keys = sorted(keys)
+            return sorted_keys
         except Exception:
             logger.error(f"list_search_suggestion failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
