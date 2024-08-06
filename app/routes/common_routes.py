@@ -88,7 +88,8 @@ class CommonRouter:
                 company_type=constant.COMPANY_TYPES,
                 work_place=constant.WORK_PLACES,
                 countries=list_countries,
-                cities=rec_countries
+                cities=rec_countries,
+                common_job_title=constant.COMMON_JOB_TITLES
             )
             return data
         except Exception:
