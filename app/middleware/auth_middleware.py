@@ -77,6 +77,12 @@ class JWTMiddleware(BaseHTTPMiddleware):
             else:
                 return True
             
+
+        # FIXME: temp hack for special case
+        if current_path == "/api/job/close" or current_path == "/api/recruiter/jobs-posted":
+            if payload.get("role") == "ADMIN":
+                return True
+            
         # Check if the path requires recruiter role
         if current_path in auth_constant.RECRUITER_PAHTS:
             if payload.get("role") != "RECRUITER":
