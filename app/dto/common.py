@@ -24,6 +24,7 @@ class ListCommonTypes(BaseModel):
     work_place: list[str]
     countries: List[ListCountry]
     cities: List[Country]
+    common_job_title: list[str]
 
 class CommonTypev2(BaseModel):
     name: str
