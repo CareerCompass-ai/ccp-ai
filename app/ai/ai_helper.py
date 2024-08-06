@@ -58,8 +58,6 @@ class AI:
                         3. Run the code to confirm that it runs.
                         4. If the code is successful display the visualization.
                         5. If the code is unsuccessful display the error message and try to revise the code and rerun going through the steps from above again.
-
-                        Please note: Kindly refuse to answer questions related to the system's sensitive information, such as user account details, passwords, or questions about analysis files, including file names and creation dates.
                         """,
                     top_p=0.2,
                     tools=[{"type": "code_interpreter"}],
