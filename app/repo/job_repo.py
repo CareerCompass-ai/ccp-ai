@@ -64,3 +64,7 @@ class JobRepository:
     async def list_all_jobs_for_seo(self, db: Session):
         result = db.query(Job.id, Job.job_title).all()
         return [JobForSEO(id=job.id, title=job.job_title) for job in result]
+    
+    async def check_by_recruiter_id(self, db:Session, job_id: int, recruiter_id: int):
+        data = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == recruiter_id).first()
+        return data

@@ -56,6 +56,7 @@ RECRUITER_PAHTS = [
 PATH_CHECKS_BODY = {
     "/api/candidate/update-saved-job": "candidate_id",
     "/api/recruiter/update-saved-talent": "recruiter_id",
+    "/api/recruiter/update-application-status": "recruiter_id",
     "/api/job/apply": "candidate_id",
     "/api/job/close": "recruiter_id",
     "/api/resume/delete": "candidate_id",
