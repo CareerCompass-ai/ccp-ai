@@ -7,6 +7,7 @@ from app.dto.job import JobAggregate
 class AppliedJobsResponse(JobAggregate):
     resume_id: int
     resume_url: str
+    status: int
 
 class ListAppliedJobsResponse(BaseModel):
     count: int
@@ -17,6 +18,7 @@ class ResumesAppliedResponse(BaseModel):
     job_id: int
     resume_id: int
     resume_url: str
+    status: int
 class ListResumesAppliedResponse(BaseModel):
     count: Optional[int] = 0
     records: List[ResumesAppliedResponse]

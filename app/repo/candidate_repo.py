@@ -14,7 +14,7 @@ class CandidateRepository:
         return db.query(Candidate).filter(Candidate.id == id).first()
     
     async def get_applied_jobs(self, db: Session, candidate_id: int, input: str, offset: int, limit: int) -> candidate.ListResumesAppliedResponse:
-        query = db.query(Application.job_id, Application.resume_id, Resume.resume_link)\
+        query = db.query(Application.job_id, Application.resume_id, Application.status, Resume.resume_link)\
                 .join(Resume, Application.resume_id == Resume.id)\
                 .join(Job, Application.job_id == Job.id)\
                 .filter(Resume.candidate_id == candidate_id)
@@ -31,7 +31,8 @@ class CandidateRepository:
             candidate.ResumesAppliedResponse(
                 job_id=app.job_id,
                 resume_id=app.resume_id,
-                resume_url=app.resume_link
+                resume_url=app.resume_link,
+                status=app.status
             )
             for app in applications
         ]

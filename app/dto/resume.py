@@ -40,12 +40,14 @@ class ResumeAggregate(ResumeBase):
     self_introduction: Optional[str] = None
     introduction: Optional[str] = None
     combined_content: Optional[str] = None
+    status: Optional[int] = None
 
 
 class ListResumeRequest(BaseModel):
     page: Optional[int] = None
     size: Optional[int] = None
     job_id: Optional[int] = None
+    type: Optional[int] = None
 
 class ListResumeResponse(BaseModel):
     job_id: Optional[int]= None

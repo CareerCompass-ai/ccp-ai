@@ -46,15 +46,17 @@ class CandidateRouter:
             job_ids = []
             resume_ids = []
             resume_urls = []
+            app_status = []
 
             for record in response:
                 job_ids.append(record['job_id'])
                 resume_ids.append(record['resume_id'])
                 resume_urls.append(record['resume_url'])
+                app_status.append(record['status'])
 
             total_records = _response.model_dump().get('count')
 
-            data = await self.job_qdrant_repo.list_jobs_applied(job_ids, resume_ids, resume_urls)
+            data = await self.job_qdrant_repo.list_jobs_applied(job_ids, resume_ids, resume_urls, app_status)
             return candidate.ListAppliedJobsResponse(
                 count=total_records,
                 page=page,

@@ -26,3 +26,12 @@ class ListCandidatesSaved(BaseModel):
     page: int
     size: int
     records: List[ResumeAggregate]
+
+class UpdateApplicationStatusRequest(BaseModel):
+    recruiter_id: int
+    job_id: int
+    resume_id: int
+    type: int #0: pending, 1: processing, 2: approved, 3: rejected
+
+class UpdateApplicationStatusResponse(BaseModel):
+    msg: str
