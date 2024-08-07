@@ -107,7 +107,7 @@ def toResumeDTO(payload: dict) -> resume.ResumeAggregate:
         introduction=payload["introduction"]
     )
 
-def toAppliedJobDTO(payload: dict, resume_id, resume_url) -> candidate.AppliedJobsResponse:
+def toAppliedJobDTO(payload: dict, resume_id, resume_url, status) -> candidate.AppliedJobsResponse:
     # Helper function to format salary without float display
     def format_salary(salary):
         return int(salary) if salary == int(salary) else salary
@@ -160,5 +160,6 @@ def toAppliedJobDTO(payload: dict, resume_id, resume_url) -> candidate.AppliedJo
         resume_id=resume_id,
         resume_url=resume_url,
         is_verified=is_verified,
-        recruiter_email=recruiter_email
+        recruiter_email=recruiter_email,
+        status=status
     )

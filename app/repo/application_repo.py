@@ -50,3 +50,13 @@ class ApplicationRepository:
         db.commit()
         db.refresh(record)
         return record
+    
+    async def get_status(self, db:Session, job_id, resume_id):
+        res = (
+            db.query(Application.status)
+            .filter(Application.resume_id == resume_id, Application.job_id == job_id)
+            .first()
+        )
+        if res is not None:
+            return res.status
+        return None

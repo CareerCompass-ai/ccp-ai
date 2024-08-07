@@ -474,6 +474,7 @@ class JobRouter:
             data = await self.resume_qdrant_repo.list_resumes(input=req)
             for item in data.records:
                 item.is_saved = await self.talent_saved_repo.check_saved_talent(db=db, resume_id=item.id, recruiter_id=recruiter_id)
+                item.status = await self.application_repo.get_status(db=db, job_id=id, resume_id=item.id) or 0
 
             data.job_id = id
             job_title = await self.job_repo.get_job_title(db=db, job_id=id)
