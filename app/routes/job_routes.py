@@ -319,7 +319,7 @@ class JobRouter:
 
                 now = datetime.now()
 
-                _common_job_title = common_job_title if common_job_title != "" else await self.ai_helper.get_common_job_title(job_title)
+                _common_job_title = common_job_title if common_job_title else await self.ai_helper.get_common_job_title(job_title)
 
                 record = job.JobBase(
                     job_title=job_title,
@@ -355,7 +355,7 @@ class JobRouter:
 
                 now = datetime.now()
 
-                _common_job_title = common_job_title if common_job_title != "" else await self.ai_helper.get_common_job_title(job_title)
+                _common_job_title = common_job_title if common_job_title else await self.ai_helper.get_common_job_title(job_title)
 
                 record = job.JobBase(
                     job_title=job_title,
