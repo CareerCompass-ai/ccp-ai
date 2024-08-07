@@ -570,6 +570,7 @@ class JobRouter:
         recruiter_id: str = Form(None),
         file: UploadFile = File(None),
         description: str = Form(None),
+        common_job_title: str = Form(None),
         session: Session = Depends(postgres.PostgresDB.get_db),
     ):
         try:
@@ -600,6 +601,7 @@ class JobRouter:
                 "company_type": company_type,
                 "hiring_level": hiring_level,
                 "work_place": work_place,
+                "common_job_title": common_job_title,
                 "updated_at": now,
             }
 
@@ -634,10 +636,11 @@ class JobRouter:
             if is_hiring == "true":
                 props["is_hiring"] = True
 
-            # Change common_job_title if changing job_title
-            if new_job_title is not None:
-                common_job_title = await self.ai_helper.get_common_job_title(job_title)
-                props["common_job_title"] = common_job_title
+            # TODO: Double check, business rule changed as user can choose common_job_title when create, so when update, we already have the common_job_title
+            # # Change common_job_title if changing job_title
+            # if new_job_title is not None:
+            #     common_job_title = await self.ai_helper.get_common_job_title(job_title)
+            #     props["common_job_title"] = common_job_title
 
             # Handle description field if provided
             if description:
