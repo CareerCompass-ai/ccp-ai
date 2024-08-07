@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from typing import Optional
 from models.ccp_application import Application
 
 
@@ -37,3 +37,16 @@ class ApplicationRepository:
         )
         
         return [resume_id for (resume_id,) in resume_ids]
+
+    async def update_with_map(self, db:Session, job_id: int, resume_id: int, props: dict) -> Optional[Application]:
+        record = db.query(Application).filter(Application.job_id == job_id, Application.resume_id == resume_id).first()
+        if not record:
+            return None
+        
+        for key, val in props.items():
+            if hasattr(record, key):
+                setattr(record, key, val)
+        
+        db.commit()
+        db.refresh(record)
+        return record

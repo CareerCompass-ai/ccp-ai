@@ -4,6 +4,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from typing import List
 from app.dto import recruiter, resume, job
 from app.factory.factory import RepositoryFactory as factory
@@ -20,10 +21,12 @@ class RecruiterRouter:
         self.job_qdrant_repo = factory.get_job_qdrant_repo()
         self.job_repo = factory.get_job_repo()
         self.aggregate_repo = factory.get_aggregate_repo()
+        self.application_repo = factory.get_application_repo()
         self.router = APIRouter(prefix="/api", tags=['Recruiter'])
         self.router.add_api_route("/recruiter/jobs-posted", self.list_jobs_posted, methods=["GET"], response_model=recruiter.ListJobsPostedAggregate)
         self.router.add_api_route("/recruiter/update-saved-talent", self.update_saved_talent, methods=["PUT"], response_model=recruiter.SaveTalentResponse)
         self.router.add_api_route("/recruiter/candidates-saved", self.list_candidates_saved, methods=["GET"], response_model=recruiter.ListCandidatesSaved)
+        self.router.add_api_route("/recruiter/update-application-status", self.update_application_status, methods=["PUT"], response_model=recruiter.UpdateApplicationStatusResponse)
 
     async def list_jobs_posted(
         self,
@@ -79,7 +82,7 @@ class RecruiterRouter:
                 return recruiter.SaveTalentResponse(msg="Unsave Talent Successfully!")
 
         except Exception:
-            logger.error(f"update_saved_tent failed error = {traceback.format_exc()}")
+            logger.error(f"update_saved_talent failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
     async def list_candidates_saved(
@@ -116,5 +119,28 @@ class RecruiterRouter:
             logger.error(f"list_candidates_saved failed error = {traceback.format_exc()}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
 
+    async def update_application_status(self, req: recruiter.UpdateApplicationStatusRequest, db: Session = Depends(PostgresDB.get_db)):
+        try:
+            now = datetime.now()
+            props = {
+                "updated_at": now,
+                "status": req.type
+            }
+            try:
+                job = await self.job_repo.check_by_recruiter_id(db=db, job_id=req.job_id, recruiter_id=req.recruiter_id)
+                if job is None:
+                    return recruiter.UpdateApplicationStatusResponse(msg="This recruiter not have this job")
+                
+                res = await self.application_repo.update_with_map(db=db, job_id=req.job_id, resume_id=req.resume_id, props=props)
+                if res is not None: 
+                    return recruiter.UpdateApplicationStatusResponse(msg="Successfully!")
+                return recruiter.UpdateApplicationStatusResponse(msg="This resume has not applied to this job")
+            except SQLAlchemyError:
+                db.rollback()
+                logger.error(f"update_application_status failed error [SQLAlchemyError] = {traceback.format_exc()}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))
+        except Exception:
+            logger.error(f"update_application_status failed error = {traceback.format_exc()}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str("Oops, sorry, our server went wrong"))    
 
 recruiter_router = RecruiterRouter().router
