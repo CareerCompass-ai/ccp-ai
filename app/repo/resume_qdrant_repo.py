@@ -76,15 +76,25 @@ class ResumeQdrantRepository:
                 records=[]
             )
 
-        filter = models.Filter()
-        filter.must = []
-        
-        filter.must.append(
-            models.FieldCondition(
-                key="applied_jobs",
-                match=models.MatchValue(value=input.job_id)
+        filter = models.Filter(
+        must=[
+            models.NestedCondition(
+                nested=models.Nested(
+                    key="applied_jobs",
+                    filter=models.Filter(
+                        must=[
+                            models.FieldCondition(
+                                key="job_id", match=models.MatchValue(value=input.job_id)
+                            ),
+                            models.FieldCondition(
+                                key="status", match=models.MatchValue(value=input.type)
+                            ),
+                        ]
+                    ),
+                )
             )
-        )
+        ],
+    )   
         _res = await self.count_total_record(filter)
         total_record = _res.count
 
@@ -100,8 +110,7 @@ class ResumeQdrantRepository:
         for item in hits:
             score = item.score
             payload = item.payload
-
-            result = mapper.toResumeDTO(payload)
+            result = mapper.toResumeDTOv2(payload, input.job_id)
             result.matching_score = score
 
             records.append(result)

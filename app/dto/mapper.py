@@ -163,3 +163,33 @@ def toAppliedJobDTO(payload: dict, resume_id, resume_url, status) -> candidate.A
         recruiter_email=recruiter_email,
         status=status
     )
+
+def toResumeDTOv2(payload: dict, job_id: int) -> resume.ResumeAggregate:
+    applied_jobs = payload["applied_jobs"]
+    status = 0
+    for i in applied_jobs:
+        if i.get("job_id") == job_id:
+            status = i.get("status")
+            break
+    return resume.ResumeAggregate (
+        id=payload["id"],
+        candidate_id=payload["candidate_id"],
+        candidate_name=payload["candidate_name"],
+        work_title=payload["work_title"],
+        open_to_work=payload["open_to_work"],
+        level=payload["level"],
+        candidate_address=payload["candidate_address"],
+        s_content=payload["s_content"],
+        content=payload["content"],
+        skills=payload["skills"],
+        projects=payload["projects"],
+        certificates=payload["certificates"],
+        educations=payload["educations"],
+        work_expericences=payload["work_expericences"],
+        resume_link=payload["resume_link"],
+        email=payload["email"],
+        phone=payload["phone"],
+        self_introduction=payload["self_introduction"],
+        introduction=payload["introduction"],
+        status=status
+    )
