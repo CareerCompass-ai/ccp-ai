@@ -319,7 +319,7 @@ class JobRouter:
 
                 now = datetime.now()
 
-                _common_job_title = common_job_title if common_job_title != "" else await self.ai_helper.get_common_job_title(job_title)
+                _common_job_title = common_job_title if common_job_title else await self.ai_helper.get_common_job_title(job_title)
 
                 record = job.JobBase(
                     job_title=job_title,
@@ -355,7 +355,7 @@ class JobRouter:
 
                 now = datetime.now()
 
-                _common_job_title = common_job_title if common_job_title != "" else await self.ai_helper.get_common_job_title(job_title)
+                _common_job_title = common_job_title if common_job_title else await self.ai_helper.get_common_job_title(job_title)
 
                 record = job.JobBase(
                     job_title=job_title,
@@ -499,15 +499,27 @@ class JobRouter:
                 resume_id=req.resume_id,
                 job_id=req.job_id,
                 created_at=now,
-                updated_at=now
+                updated_at=now,
+                status=0
             )
 
             session.autocommit = False # TODO: remove this?
             with session.begin():
                 try:
-                    await self.application_repo.create(session, record)
+                    new_record = await self.application_repo.create(session, record)
 
-                    return job.ApplyJobResponse()
+                    if new_record is not None:
+                        payload = {
+                            "action_type": "apply-job",
+                            "payload": {
+                                "candidate_id": req.candidate_id,
+                                "resume_id": req.resume_id,
+                                "job_id": req.job_id,
+                            }
+                        }
+
+                        self.kafka_producer.produce_message(cfg.KAFKA_TOPIC_APPLICATION_ACTION, payload)
+                        return job.ApplyJobResponse()
                 
                 except IntegrityError:
                     session.rollback()
