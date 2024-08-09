@@ -134,21 +134,21 @@ class RecruiterRouter:
                 if job is None:
                     return recruiter.UpdateApplicationStatusResponse(msg="This recruiter not have this job")
                 
-                res = await self.application_repo.update_with_map(db=db, job_id=req.job_id, resume_id=req.resume_id, props=props)
-                if res is not None: 
-                    payload = {
-                        "action_type": "update-application-status",
-                        "payload": {
-                            "recruiter_id": req.recruiter_id,
-                            "job_id": req.job_id,
-                            "resume_id": req.resume_id,
-                            "type": req.type
-                        }
+                # res = await self.application_repo.update_with_map(db=db, job_id=req.job_id, resume_id=req.resume_id, props=props)
+                # if res is not None: 
+                payload = {
+                    "action_type": "update-application-status",
+                    "payload": {
+                        "recruiter_id": req.recruiter_id,
+                        "job_id": req.job_id,
+                        "resume_id": req.resume_id,
+                        "type": req.type
                     }
+                }
 
-                    self.kafka_producer.produce_message(cfg.KAFKA_TOPIC_APPLICATION_ACTION, payload)
-                    return recruiter.UpdateApplicationStatusResponse(msg="Successfully!")
-                return recruiter.UpdateApplicationStatusResponse(msg="This resume has not applied to this job")
+                self.kafka_producer.produce_message(cfg.KAFKA_TOPIC_APPLICATION_ACTION, payload)
+                return recruiter.UpdateApplicationStatusResponse(msg="Successfully!")
+                # return recruiter.UpdateApplicationStatusResponse(msg="This resume has not applied to this job")
             except SQLAlchemyError:
                 db.rollback()
                 logger.error(f"update_application_status failed error [SQLAlchemyError] = {traceback.format_exc()}")
