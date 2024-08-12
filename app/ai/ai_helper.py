@@ -769,16 +769,58 @@ class AI:
 
             ## Input Example 7 ##
             Original Input: "Devops 2-3 years"
-            ## Response Example 6 ##
+            ## Response Example 7 ##
             {{
                 "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer", "Devops Engineer", "devops engineer"]
             }}
 
-            ## Input Example 7 ##
+            ## Input Example 8 ##
             Original Input: "Less then 1 year of experience with python"
-            ## Response Example 6 ##
+            ## Response Example 8 ##
             {{
                 "answer": ["Entry-level Python Developer", "entry level python developer", "Entry-level Python Software Engineer", "entry level python software engineer", "Entry-level Python Engineer", "entry level python engineer", "Entry-level Python Backend Engineer", "entry level python backend engineer", "Entry-level Python Developer", "entry level python developer", "Entry-level Data Analyst", "entry level data analyst", "Entry-level Data Engineer", "entry level data engineer"]
+            }}
+
+            ## Input Example 9 ##
+            Original Input: "Proficiency with golang, experienced with python"
+            ## Response Example 9 ##
+            {{
+                "answer": ["Mid-Level Backend Engineer Golang/Python", "mid-level backend engineer golang/python", "Mid-Level Software Engineer Golang/Python", "mid-level software engineer golang/python", "Senior Golang Developer", "senior golang developer", "Senior Backend Developer Golang", "senior backend developer golang", "Golang Developer with Python Experience", "golang developer with python experience", "Mid-Level Software Engineer Golang/Python", "mid-level software engineer golang/python"]
+            }}
+
+            ## Input Example 10 ##
+            Original Input: "Frontend Engineer in Ho Chi Minh"
+            ## Response Example 10 ##
+            {{
+                "answer": ["Frontend Engineer Ho Chi Minh City", "frontend engineer ho chi minh city", "Frontend Developer Ho Chi Minh City", "frontend developer ho chi minh city", "UI Engineer Ho Chi Minh City", "ui engineer ho chi minh city"]
+            }}
+
+            ## Input Example 11 ##
+            Original Input: "Data Engineer with AWS experience"
+            ## Response Example 11 ##
+            {{
+                "answer": ["AWS Data Engineer", "aws data engineer", "Cloud Data Engineer AWS", "cloud data engineer aws", "Big Data Engineer AWS", "big data engineer aws"]
+            }}
+
+            ## Input Example 12 ##
+            Original Input: "AWS Certified Solutions Architect"
+            ## Response Example 12 ##
+            {{
+                "answer": ["AWS Solutions Architect", "aws solutions architect", "Certified AWS Architect", "certified aws architect", "Cloud Architect AWS", "cloud architect aws"]
+            }}
+
+            ## Input Example 13 ##
+            Original Input: "Machine Learning with TensorFlow"
+            ## Response Example 13 ##
+            {{
+                "answer": ["Machine Learning Engineer TensorFlow", "machine learning engineer tensorflow", "Data Scientist TensorFlow", "data scientist tensorflow", "AI Engineer TensorFlow", "ai engineer tensorflow"]
+            }}
+
+            ## Input Example 14 ##
+            Original Input: "Senior Data Scientist with NLP experience"
+            ## Response Example 14 ##
+            {{
+                "answer": ["Senior Data Scientist NLP", "senior data scientist nlp", "Senior Data Scientist Natural Language Processing", "senior data scientist natural language processing", "Lead Data Scientist NLP", "lead data scientist nlp", "Principal Data Scientist NLP", "principal data scientist nlp", "Senior Machine Learning Engineer NLP", "senior machine learning engineer nlp", "NLP Specialist", "nlp specialist"]
             }}
         """
         content = prompt
