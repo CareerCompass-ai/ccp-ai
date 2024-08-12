@@ -784,45 +784,45 @@ class AI:
             }}
 
             ## Input Example 9 ##
-            Original Input: "python"
-            ## Response Example 9 ##
-            {{
-                "answer": ["Python Developer", "python developer", "Python Engineer", "python engineer", "Backend Developer Python", "backend developer python", "Data Scientist", "data scientist", "Data Analyst", "data analyst", "Machine Learning Engineer", "machine learning engineer"]
-            }}
-
-            ## Input Example 10 ##
-            Original Input: "be"
-            ## Response Example 10 ##
-            {{
-                "answer": ["Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Software Engineer", "software engineer", "Software Developer", "software developer"]
-            }}
-
-            ## Input Example 11 ##
-            Original Input: "game"
-            ## Response Example 11 ##
-            {{
-                "answer": ["Game Developer", "game developer", "Game Programmer", "game programmer", "Game Designer", "game designer", "Game Engineer", "game engineer", "Gameplay Developer", "gameplay developer", "Gameplay Engineer", "gameplay engineer", "Unity Developer", "unity developer", "Unreal Engine Developer", "unreal engine developer", "3D Game Developer", "3d game developer", "2D Game Developer", "2d game developer", "VR Developer", "vr developer", "AR Developer", "ar developer"]
-            }}
-
-            ## Input Example 12 ##
             Original Input: "Devops 2-3 years"
-            ## Response Example 12 ##
+            ## Response Example 9 ##
             {{
                 "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer", "Devops Engineer", "devops engineer"]
             }}
 
-            ## Input Example 13 ##
+            ## Input Example 10 ##
             Original Input: "Less then 1 year of experience with python"
-            ## Response Example 13 ##
+            ## Response Example 10 ##
             {{
                 "answer": [“Fresher Python Developer fresher python developer Junior Python Software Engineer junior python software engineer Fresher Python Engineer fresher python engineer Junior Python Backend Engineer junior python backend engineer Fresher Python Developer fresher python developer Junior Data Analyst junior data analyst Junior Data Engineer junior data engineer”]
             }}
 
-            ## Input Example 14 ##
+            ## Input Example 11 ##
             Original Input: "Proficiency with golang, experienced with python"
-            ## Response Example 14 ##
+            ## Response Example 11 ##
             {{
                 "answer": ["Mid-Level Backend Engineer Golang/Python", "mid-level backend engineer golang/python", "Mid-Level Software Engineer Golang/Python", "mid-level software engineer golang/python", "Senior Golang Developer", "senior golang developer", "Senior Backend Developer Golang", "senior backend developer golang", "Golang Developer with Python Experience", "golang developer with python experience", "Mid-Level Software Engineer Golang/Python", "mid-level software engineer golang/python"]
+            }}
+
+            ## Input Example 12 ##
+            Original Input: "python"
+            ## Response Example 12 ##
+            {{
+                "answer": ["Python Developer", "python developer", "Python Engineer", "python engineer", "Backend Developer Python", "backend developer python", "Data Scientist", "data scientist", "Data Analyst", "data analyst", "Machine Learning Engineer", "machine learning engineer"]
+            }}
+
+            ## Input Example 13 ##
+            Original Input: "be"
+            ## Response Example 13 ##
+            {{
+                "answer": ["Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Software Engineer", "software engineer", "Software Developer", "software developer"]
+            }}
+
+            ## Input Example 14 ##
+            Original Input: "game"
+            ## Response Example 14 ##
+            {{
+                "answer": ["Game Developer", "game developer", "Game Programmer", "game programmer", "Game Designer", "game designer", "Game Engineer", "game engineer", "Gameplay Developer", "gameplay developer", "Gameplay Engineer", "gameplay engineer", "Unity Developer", "unity developer", "Unreal Engine Developer", "unreal engine developer", "3D Game Developer", "3d game developer", "2D Game Developer", "2d game developer", "VR Developer", "vr developer", "AR Developer", "ar developer"]
             }}
 
             ## Input Example 15 ##
