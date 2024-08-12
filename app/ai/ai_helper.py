@@ -773,6 +773,13 @@ class AI:
             {{
                 "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer", "Devops Engineer", "devops engineer"]
             }}
+
+            ## Input Example 7 ##
+            Original Input: "Less then 1 year of experience with python"
+            ## Response Example 6 ##
+            {{
+                "answer": ["Entry-level Python Developer", "entry level python developer", "Entry-level Python Software Engineer", "entry level python software engineer", "Entry-level Python Engineer", "entry level python engineer", "Entry-level Python Backend Engineer", "entry level python backend engineer", "Entry-level Python Developer", "entry level python developer", "Entry-level Data Analyst", "entry level data analyst", "Entry-level Data Engineer", "entry level data engineer"]
+            }}
         """
         content = prompt
 
