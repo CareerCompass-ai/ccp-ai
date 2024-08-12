@@ -778,7 +778,7 @@ class AI:
             Original Input: "Less then 1 year of experience with python"
             ## Response Example 8 ##
             {{
-                "answer": ["Entry-level Python Developer", "entry level python developer", "Entry-level Python Software Engineer", "entry level python software engineer", "Entry-level Python Engineer", "entry level python engineer", "Entry-level Python Backend Engineer", "entry level python backend engineer", "Entry-level Python Developer", "entry level python developer", "Entry-level Data Analyst", "entry level data analyst", "Entry-level Data Engineer", "entry level data engineer"]
+                "answer": [“Fresher Python Developer fresher python developer Junior Python Software Engineer junior python software engineer Fresher Python Engineer fresher python engineer Junior Python Backend Engineer junior python backend engineer Fresher Python Developer fresher python developer Junior Data Analyst junior data analyst Junior Data Engineer junior data engineer”]
             }}
 
             ## Input Example 9 ##
@@ -821,6 +821,14 @@ class AI:
             ## Response Example 14 ##
             {{
                 "answer": ["Senior Data Scientist NLP", "senior data scientist nlp", "Senior Data Scientist Natural Language Processing", "senior data scientist natural language processing", "Lead Data Scientist NLP", "lead data scientist nlp", "Principal Data Scientist NLP", "principal data scientist nlp", "Senior Machine Learning Engineer NLP", "senior machine learning engineer nlp", "NLP Specialist", "nlp specialist"]
+            }}
+
+            ## Input Example 15 ##
+            Original Input: "Software Engineer in Fintech"
+            ## Response Example 15 ##
+            {{
+                "answer": ["Fintech Software Engineer", "fintech software engineer", "Financial Technology Software Engineer", "financial technology software engineer", "Blockchain Software Engineer Fintech", "blockchain software engineer fintech", "Payment Systems Software Engineer", "payment systems software engineer", "Fintech Software Engineer", "fintech software engineer"
+    ]
             }}
         """
         content = prompt
