@@ -711,6 +711,7 @@ class AI:
             Given the input term provided, your task is to generate a concise and accurate list of relevant search terms related to job searches in the Information Technology (IT) domain. 
             The list should include variations, related terms, job titles, common job titles and common abbreviations of the given role. 
             The generated list should exclude unrelated roles or job functions and avoid including job levels if the input term does not reference them.
+            **You must follow the instructions below and learn from all given examples to provide the response**
 
             **Instructions:**
             1. **Relevance:** Include only those roles that are directly related to the input term. For example:
