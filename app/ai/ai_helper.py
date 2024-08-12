@@ -724,7 +724,8 @@ class AI:
             5.	Response Order: The experience or proficiency level must be placed at the beginning of the response.
             6. **Format:** The response must strictly be a JSON object (not json string, do not wrapped in triple backticks and labeled as json) with a single field "answer" which contains a list/array of the enhanced search terms.
             7. **With Given Shorthand Input:** Interpret abbreviations correctly within the IT domain. For example: DE is Data Engineer, DS is Data Scientist, SWE is Software Engineer, BE is Backend Engineer, FE is Frontend Engineer, etc.
-
+            8. **Search Domain Focus:** If the input term specifies a search domain or context (e.g., "Fintech"), exclude job roles like "Software Engineer" and focus on related terms specific to that domain.
+            
             ## Input Example 1 ##
             Original Input: "SWE"
             ## Response Example 1 ##
@@ -827,8 +828,7 @@ class AI:
             Original Input: "Software Engineer in Fintech"
             ## Response Example 15 ##
             {{
-                "answer": ["Fintech Software Engineer", "fintech software engineer", "Financial Technology Software Engineer", "financial technology software engineer", "Blockchain Software Engineer Fintech", "blockchain software engineer fintech", "Payment Systems Software Engineer", "payment systems software engineer", "Fintech Software Engineer", "fintech software engineer"
-    ]
+                "answer": ["Fintech", "fintech", "Financial Technology", "financial technology", "Blockchain", "blockchain", "Payment Systems", "payment systems"]
             }}
         """
         content = prompt
