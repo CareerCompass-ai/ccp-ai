@@ -17,7 +17,7 @@ class CandidateRepository:
         query = db.query(Application.job_id, Application.resume_id, Application.status, Resume.resume_link)\
                 .join(Resume, Application.resume_id == Resume.id)\
                 .join(Job, Application.job_id == Job.id)\
-                .filter(Resume.candidate_id == candidate_id)
+                .filter(Resume.candidate_id == candidate_id, Job.status == 1)
         
         if input:
             query = query.filter(Job.job_title.ilike(f"%{input}%"))
@@ -52,7 +52,7 @@ class CandidateRepository:
     async def get_saved_jobs(self, db: Session, candidate_id: int, input: str, offset: int, limit: int):
         query = db.query(JobSaved.job_id)\
                 .join(Job, JobSaved.job_id == Job.id)\
-                .filter(JobSaved.candidate_id == candidate_id)
+                .filter(JobSaved.candidate_id == candidate_id, Job.status == 1)
         
         if input:
             query = query.filter(Job.job_title.ilike(f"%{input}%"))

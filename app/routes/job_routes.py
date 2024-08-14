@@ -340,6 +340,7 @@ class JobRouter:
                     display_content=markdown_content,
                     created_at=now,
                     updated_at=now,
+                    status = 0
                 )
             # Handle file upload if present and no description provided
             elif file:

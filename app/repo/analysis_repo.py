@@ -15,7 +15,7 @@ from pkg.logging import logger
 class AnalysisRepository:
     async def get_top_job_titles(self, db:Session, top_number, time_from=None, time_to=None) -> analysis.ListTopJobTitlesResponse:
         query = db.query(Job.common_job_title, func.count(Job.id).label('job_count')) \
-                    .filter(and_( Job.updated_at >= time_from, Job.updated_at<= time_to )) 
+                    .filter(and_( Job.updated_at >= time_from, Job.updated_at<= time_to ), Job.status == 1) 
 
         query = query.group_by(Job.common_job_title).order_by(func.count(Job.id).desc()).limit(top_number)
 
@@ -52,6 +52,7 @@ class AnalysisRepository:
         LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
         LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
+            ccp_job.status = 1 AND
             common_job_title != 'Other position' and country_name = {country_name} 
             '''
         if time is not None and time.lower() != 'none':
@@ -163,7 +164,7 @@ class AnalysisRepository:
         return analysis.GetTopSkillResponse(data=data) 
     
     async def number_of_company_type (self, db:Session) -> analysis.GetNumberOfCompanyTypeResponse:
-        records = db.query(Job.company_type, func.count(Job.id).label('company_type_count')).group_by(Job.company_type).all()
+        records = db.query(Job.company_type, func.count(Job.id).label('company_type_count')).filter(Job.status == 1).group_by(Job.company_type).all()
         
         data = []
         for item in records:
@@ -259,6 +260,7 @@ class AnalysisRepository:
 
     async def percentage_of_different_job_status(self, db:Session) -> analysis.GetNumberOfJobStatus:
         records = db.query(Job.is_hiring, func.count(Job.id).label('status_count')) \
+                        .filter(Job.status == 1) \
                         .group_by(Job.is_hiring) \
                         .all()
         
@@ -281,19 +283,21 @@ class AnalysisRepository:
                 ccp_user u
             ON
                 j.recruiter_id = u.id
+            WHERE
+                j.status = 1
                 '''
         if time is not None and time.lower() != 'none':
             time = time.lower()
             if "'" in time:
                 time = time.replace("'", "")
             sql_query += f'''
-             where j.created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE + INTERVAL '1 day' - INTERVAL '1 second' '''
+             and j.created_at BETWEEN CURRENT_DATE - INTERVAL '1 {time}' AND CURRENT_DATE + INTERVAL '1 day' - INTERVAL '1 second' '''
         elif time_from and time_to and time_from.lower() != 'none' and time_to.lower() != 'none':
             if "'" in time_to or "'" in time_from:
                 time_from = time_from.replace("'", "")
                 time_to =  time_to.replace("'", "")
             sql_query += f'''
-            where j.created_at >= to_date('{time_from}', 'YYYY/MM')  AND
+            and j.created_at >= to_date('{time_from}', 'YYYY/MM')  AND
             j.created_at < to_date('{time_to}', 'YYYY/MM') + interval '1 month'
             '''
         sql_query += f'''
@@ -392,7 +396,7 @@ class AnalysisRepository:
         LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
         LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
         WHERE 
-            common_job_title = '{job_title}' AND country_name = '{country_name}'
+            ccp_job.status = 1 AND common_job_title = '{job_title}' AND country_name = '{country_name}'
         '''
         if time is not None and time.lower() != 'none':
             time = time.lower()
@@ -441,6 +445,7 @@ class AnalysisRepository:
             Job.common_job_title,
             func.avg((Job.salary_from + Job.salary_to) / 2).label('salary')
         ).filter (
+            Job.status == 1,
             Job.updated_at.between(time_from, time_to))
 
         if level is not None:
@@ -483,6 +488,7 @@ class AnalysisRepository:
             LEFT JOIN ccp_city ON ccp_address.city_id = ccp_city.id
             LEFT JOIN ccp_country ON ccp_city.country_id = ccp_country.id
             WHERE 
+                ccp_job.status = 1 AND
                 country_name = {country_name}
             '''
         if time is not None and time.lower() != 'none':
