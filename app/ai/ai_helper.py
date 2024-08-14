@@ -711,6 +711,7 @@ class AI:
             Given the input term provided, your task is to generate a concise and accurate list of relevant search terms related to job searches in the Information Technology (IT) domain. 
             The list should include variations, related terms, job titles, common job titles and common abbreviations of the given role. 
             The generated list should exclude unrelated roles or job functions and avoid including job levels if the input term does not reference them.
+            **You must follow the instructions below and learn from all given examples to provide the response**
 
             **Instructions:**
             1. **Relevance:** Include only those roles that are directly related to the input term. For example:
@@ -724,7 +725,8 @@ class AI:
             5.	Response Order: The experience or proficiency level must be placed at the beginning of the response.
             6. **Format:** The response must strictly be a JSON object (not json string, do not wrapped in triple backticks and labeled as json) with a single field "answer" which contains a list/array of the enhanced search terms.
             7. **With Given Shorthand Input:** Interpret abbreviations correctly within the IT domain. For example: DE is Data Engineer, DS is Data Scientist, SWE is Software Engineer, BE is Backend Engineer, FE is Frontend Engineer, etc.
-
+            8. **Search Domain Focus:** If the input term specifies a search domain or context (e.g., "Fintech"), exclude job roles like "Software Engineer" and focus on related terms specific to that domain.
+            
             ## Input Example 1 ##
             Original Input: "SWE"
             ## Response Example 1 ##
@@ -747,31 +749,87 @@ class AI:
             }}
 
             ## Input Example 4 ##
-            Original Input: "python"
+            Original Input: "Data Engineer with AWS experience"
             ## Response Example 4 ##
+            {{
+                "answer": ["AWS Data Engineer", "aws data engineer", "Cloud Data Engineer AWS", "cloud data engineer aws", "Big Data Engineer AWS", "big data engineer aws"]
+            }}
+
+            ## Input Example 5 ##
+            Original Input: "AWS Certified Solutions Architect"
+            ## Response Example 5 ##
+            {{
+                "answer": ["AWS Solutions Architect", "aws solutions architect", "Certified AWS Architect", "certified aws architect", "Cloud Architect AWS", "cloud architect aws"]
+            }}
+
+            ## Input Example 6 ##
+            Original Input: "Machine Learning with TensorFlow"
+            ## Response Example 6 ##
+            {{
+                "answer": ["Machine Learning Engineer TensorFlow", "machine learning engineer tensorflow", "Data Scientist TensorFlow", "data scientist tensorflow", "AI Engineer TensorFlow", "ai engineer tensorflow"]
+            }}
+
+            ## Input Example 7 ##
+            Original Input: "Senior Data Scientist with NLP experience"
+            ## Response Example 7 ##
+            {{
+                "answer": ["Senior Data Scientist NLP", "senior data scientist nlp", "Senior Data Scientist Natural Language Processing", "senior data scientist natural language processing", "Lead Data Scientist NLP", "lead data scientist nlp", "Principal Data Scientist NLP", "principal data scientist nlp", "Senior Machine Learning Engineer NLP", "senior machine learning engineer nlp", "NLP Specialist", "nlp specialist"]
+            }}
+
+            ## Input Example 8 ##
+            Original Input: "Software Engineer in Fintech"
+            ## Response Example 8 ##
+            {{
+                "answer": ["Fintech", "fintech", "Financial Technology", "financial technology", "Blockchain", "blockchain", "Payment Systems", "payment systems"]
+            }}
+
+            ## Input Example 9 ##
+            Original Input: "Devops 2-3 years"
+            ## Response Example 9 ##
+            {{
+                "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer", "Devops Engineer", "devops engineer"]
+            }}
+
+            ## Input Example 10 ##
+            Original Input: "Less then 1 year of experience with python"
+            ## Response Example 10 ##
+            {{
+                "answer": [“Fresher Python Developer fresher python developer Junior Python Software Engineer junior python software engineer Fresher Python Engineer fresher python engineer Junior Python Backend Engineer junior python backend engineer Fresher Python Developer fresher python developer Junior Data Analyst junior data analyst Junior Data Engineer junior data engineer”]
+            }}
+
+            ## Input Example 11 ##
+            Original Input: "Proficiency with golang, experienced with python"
+            ## Response Example 11 ##
+            {{
+                "answer": ["Mid-Level Backend Engineer Golang/Python", "mid-level backend engineer golang/python", "Mid-Level Software Engineer Golang/Python", "mid-level software engineer golang/python", "Senior Golang Developer", "senior golang developer", "Senior Backend Developer Golang", "senior backend developer golang", "Golang Developer with Python Experience", "golang developer with python experience", "Mid-Level Software Engineer Golang/Python", "mid-level software engineer golang/python"]
+            }}
+
+            ## Input Example 12 ##
+            Original Input: "python"
+            ## Response Example 12 ##
             {{
                 "answer": ["Python Developer", "python developer", "Python Engineer", "python engineer", "Backend Developer Python", "backend developer python", "Data Scientist", "data scientist", "Data Analyst", "data analyst", "Machine Learning Engineer", "machine learning engineer"]
             }}
 
-            ## Input Example 5 ##
+            ## Input Example 13 ##
             Original Input: "be"
-            ## Response Example 5 ##
+            ## Response Example 13 ##
             {{
                 "answer": ["Backend Engineer", "backend engineer", "Backend Developer", "backend developer", "Software Engineer", "software engineer", "Software Developer", "software developer"]
             }}
 
-            ## Input Example 6 ##
+            ## Input Example 14 ##
             Original Input: "game"
-            ## Response Example 6 ##
+            ## Response Example 14 ##
             {{
                 "answer": ["Game Developer", "game developer", "Game Programmer", "game programmer", "Game Designer", "game designer", "Game Engineer", "game engineer", "Gameplay Developer", "gameplay developer", "Gameplay Engineer", "gameplay engineer", "Unity Developer", "unity developer", "Unreal Engine Developer", "unreal engine developer", "3D Game Developer", "3d game developer", "2D Game Developer", "2d game developer", "VR Developer", "vr developer", "AR Developer", "ar developer"]
             }}
 
-            ## Input Example 7 ##
-            Original Input: "Devops 2-3 years"
-            ## Response Example 6 ##
+            ## Input Example 15 ##
+            Original Input: "Frontend Engineer in Ho Chi Minh"
+            ## Response Example 15 ##
             {{
-                "answer": ["Intermediate Devops Engineer", "intermediate devops engineer", "2-3 years experiences devops", "Middle Devops Engineer", "middle devops engineer", "Associate Devops Engineer", "associate devops engineer", "Intermediate Site Reliability Engineer", "intermediate site reliability engineer", "Intermediate Infrastructure Engineer", "intermediate infrastructure engineer", "Intermediate Cloud Engineer", "intermediate cloud engineer", "Devops Engineer", "devops engineer"]
+                "answer": ["Frontend Engineer Ho Chi Minh City", "frontend engineer ho chi minh city", "Frontend Developer Ho Chi Minh City", "frontend developer ho chi minh city", "UI Engineer Ho Chi Minh City", "ui engineer ho chi minh city"]
             }}
         """
         content = prompt
