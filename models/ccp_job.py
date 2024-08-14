@@ -29,4 +29,5 @@ class Job(Base):
     display_content = Column(String, nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    status = Column(Integer, nullable=True)
 

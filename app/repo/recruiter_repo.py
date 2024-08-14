@@ -20,6 +20,7 @@ class RecruiterRepository:
         query = db.query(Job.id).filter(
             Job.recruiter_id == id,
             Job.is_hiring == is_hiring,
+            Job.status == 1
         )
         
         if input:
