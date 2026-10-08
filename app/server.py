@@ -12,6 +12,9 @@ from .routes.resume_routes import resume_router
 
 from .middleware.auth_middleware import JWTMiddleware
 
+# Agent v2 — new agentic workflow router (does not affect existing routes)
+from .routes.agent_routes import agent_router
+
 app = FastAPI()
 
 origins = ["https://hcmus-careercompass.me", "http://localhost:3000"]
@@ -41,6 +44,9 @@ app.include_router(common_router)
 
 # AI router
 app.include_router(ai_router)
+
+# Agent v2 router — prefix /api/v2/agent/
+app.include_router(agent_router)
 
 @app.get("/health-check")
 async def root():

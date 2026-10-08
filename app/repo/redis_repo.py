@@ -81,3 +81,35 @@ class RedisRepository:
             self.redis.srem(pattern, value)
         except RedisError as e:
             logger.error(f"[srem] Failed to srem with pattern:{pattern} and value:{value} with error: {traceback.format_exc()}")
+
+    def publish(self, channel: str, message: str) -> int:
+        """Publish a message to a Redis Pub/Sub channel."""
+        try:
+            return self.redis.publish(channel, message)
+        except RedisError as e:
+            logger.error(f"[publish] Failed to publish to channel {channel}: {e}")
+            return 0
+
+    def get_pubsub(self):
+        """Get a pubsub object to subscribe to channels."""
+        return self.redis.pubsub()
+
+    def rpush(self, key: str, value: str):
+        try:
+            self.redis.rpush(key, value.encode('utf-8'))
+        except RedisError as e:
+            logger.error(f"[rpush] Failed to push to {key}: {e}")
+
+    def lrange(self, key: str, start: int = 0, stop: int = -1) -> list[str]:
+        try:
+            items = self.redis.lrange(key, start, stop)
+            return [x.decode('utf-8') for x in items]
+        except RedisError as e:
+            logger.error(f"[lrange] Failed to lrange {key}: {e}")
+            return []
+
+    def expire(self, key: str, seconds: int):
+        try:
+            self.redis.expire(key, seconds)
+        except RedisError as e:
+            logger.error(f"[expire] Failed to expire {key}: {e}")

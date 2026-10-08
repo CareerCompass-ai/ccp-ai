@@ -26,7 +26,10 @@ WHITELIST_PATHS = [
     "/robots.txt",
     "/",
     "/api/resume/generate",
+    # Agent v2 internal callback (called by background worker, not by user JWT)
+    "/api/v2/agent/status",
 ] 
+
 
 ADMIN_PATHS = [
     "/api/analysis/top-job-titles",
